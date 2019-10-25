@@ -93,38 +93,38 @@ Returns a JSON string in the format:
   (spotify-when-device-active
    (spotify-api-previous)))
 
-(defun spotify-connect-volume-up ()
+(defun spotify-connect-volume-up (amount)
   "Turn up the volume on the actively playing device."
   (spotify-when-device-active
    (spotify-api-get-player-status
     (lambda (status)
-      (lexical-let ((new-volume (min (+ (spotify-connect-get-volume status) 10) 100)))
+      (lexical-let ((new-volume (min (+ (spotify-connect-get-volume status) amount) 100)))
         (spotify-api-set-volume
          (spotify-connect-get-device-id status)
          new-volume
          (lambda (_)
            (message "Volume increased to %d%%" new-volume))))))))
 
-(defun spotify-connect-volume-down ()
+(defun spotify-connect-volume-down (amount)
   "Turn down the volume (for what?) on the actively playing device."
   (spotify-when-device-active
    (spotify-api-get-player-status
     (lambda (status)
-      (lexical-let ((new-volume (max (- (spotify-connect-get-volume status) 10) 0)))
+      (lexical-let ((new-volume (max (- (spotify-connect-get-volume status) amount) 0)))
         (spotify-api-set-volume
          (spotify-connect-get-device-id status)
          new-volume
          (lambda (_)
            (message "Volume decreased to %d%%" new-volume))))))))
 
-(defun spotify-connect-volume-mute-unmute ()
+(defun spotify-connect-volume-mute-unmute (volume)
   "Mute/unmute the volume on the actively playing device by setting the volume to 0."
   (spotify-when-device-active
    (spotify-api-get-player-status
     (lambda (status)
       (let ((volume (spotify-connect-get-volume status)))
         (if (eq volume 0)
-            (spotify-api-set-volume (spotify-connect-get-device-id status) 100
+            (spotify-api-set-volume (spotify-connect-get-device-id status) volume
                                     (lambda (_) (message "Volume unmuted")))
           (spotify-api-set-volume (spotify-connect-get-device-id status) 0
                                   (lambda (_) (message "Volume muted")))))))))

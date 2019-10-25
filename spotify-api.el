@@ -43,6 +43,10 @@ relevant to a particular country. If omitted, the returned items will be
 globally relevant."
   :type 'string)
 
+(defvar spotify--player-status-redirect nil
+  "If set to a function, send `spotify-api-get-player-status' there w/ callback
+  as arg instead of sending directly callback.")
+
 ;; Do not rely on the auto-refresh logic from oauth2.el, which seems broken for async requests
 (defun spotify-oauth2-token ()
   "Retrieve the Oauth2 access token that must be used to interact with the
@@ -382,11 +386,16 @@ which must be a number between 0 and 100."
 
 (defun spotify-api-get-player-status (callback)
   "Get the Spotify Connect status of the currently active player."
-  (spotify-api-call-async
-   "GET"
-   "/me/player"
-   nil
-   callback))
+  (lexical-let ((callback (if (functionp spotify--player-status-redirect)
+                              (lambda (status)
+                                (funcall spotify--player-status-redirect
+                                         callback status))
+                            callback)))
+    (spotify-api-call-async
+     "GET"
+     "/me/player"
+     nil
+     callback)))
 
 (defun spotify-api-play (&optional callback uri context)
   "Play a track. If no args, resume playing current track. Otherwise, play URI in CONTEXT."

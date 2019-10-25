@@ -76,13 +76,13 @@
   "Play previous previous."
   (spotify-dbus-call "Previous"))
 
-(defun spotify-dbus-volume-up ()
+(defun spotify-dbus-volume-up (amount)
   (message "Changing the volume not supported by the Spotify DBus client"))
 
-(defun spotify-dbus-volume-down ()
+(defun spotify-dbus-volume-down (amount)
   (message "Changing the volume not supported by the Spotify DBus client"))
 
-(defun spotify-dbus-volume-mute-unmute ()
+(defun spotify-dbus-volume-mute-unmute (volume)
   (message "Changing the volume not supported by the Spotify DBus client"))
 
 (defun spotify-dbus-toggle-repeat ()

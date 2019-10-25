@@ -80,13 +80,13 @@ end tell
 (defun spotify-apple-player-previous-track ()
   (spotify-apple-command "previous track"))
 
-(defun spotify-apple-volume-up ()
+(defun spotify-apple-volume-up (amount)
   (message "Changing the volume not supported by the Spotify AppleScript client"))
 
-(defun spotify-apple-volume-down ()
+(defun spotify-apple-volume-down (amount)
   (message "Changing the volume not supported by the Spotify AppleScript client"))
 
-(defun spotify-apple-volume-mute-unmute ()
+(defun spotify-apple-volume-mute-unmute (volume)
   (message "Changing the volume not supported by the Spotify AppleScript client"))
 
 (defun spotify-apple-toggle-repeat ()

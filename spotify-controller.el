@@ -9,6 +9,10 @@
 ;;; Code:
 
 (require 'spotify-remote)
+(require 'spotify-player-status)
+
+(add-hook 'spotify--player-status-cache-hook
+          #'spotify--controller-status-updated)
 
 (defmacro if-gnu-linux (then else)
   "Evaluate THEN form if Emacs is running in GNU/Linux, otherwise evaluate ELSE form."
@@ -33,6 +37,7 @@
                  (symbol :tag "Connect" connect))
   :group 'spotify)
 
+;; §-TODO-§ [2019-10-25]: move all these to player-status.el
 (defcustom spotify-player-status-refresh-interval 5
   "The interval, in seconds, that the mode line must be updated. When using the
 'connect transport, avoid using values smaller than 5 to avoid being rate
@@ -93,6 +98,19 @@ The following placeholders are supported:
 * %r - Player repeating status indicator"
   :type 'string
   :group 'spotify)
+
+(defcustom spotify-unmute-volume-default 75
+  "Default in case there was no pre-mute remembered."
+  :type  'integer
+  :group 'spotify)
+
+(defcustom spotify-volume-adjust-amount 10
+  "Adjust volume up/down this amount (percent)."
+  :type  'integer
+  :group 'spotify)
+
+(defvar spotify--mute-volume nil
+  "Remember what percent the volume was when we muted.")
 
 (defvar spotify-timer nil)
 
@@ -196,17 +214,42 @@ This corresponds to the current REPEATING state."
 (defun spotify-volume-up ()
   "Increase the volume for the active device."
   (interactive)
-  (spotify-apply "volume-up"))
+  (spotify-apply "volume-up" spotify-volume-adjust-amount))
 
 (defun spotify-volume-down ()
   "Increase the volume for the active device."
   (interactive)
-  (spotify-apply "volume-down"))
+  (spotify-apply "volume-down" spotify-volume-adjust-amount))
 
 (defun spotify-volume-mute-unmute ()
-  "Mute/unmute the volume for the active device."
+  "Mute/unmute the volume for the active device. But try to be
+smartish about it to not blow out anyone's eardrums..."
   (interactive)
-  (spotify-apply "volume-mute-unmute"))
+
+  (if (null spotify-player-status-cache-enabled)
+      ;; dumb version - ask for mute/unmute up to max volume.
+      (spotify-apply "volume-mute-unmute" spotify-unmute-volume-default)
+
+    ;; smarter?
+    (if (spotify-player-status-field 'muted)
+        (let ((set-volume (cond
+                           ;; use what we remember
+                           ((bound-and-true-p spotify--mute-volume)
+                            spotify--mute-volume)
+                           ;; or the max
+                           ((bound-and-true-p spotify-unmute-volume-default)
+                            spotify-unmute-volume-default)
+                           ;; or give up and 100% it
+                           (t 100))))
+              (spotify-apply "volume-mute-unmute" set-volume)
+              (message "Volume unmuted to %s." set-volume)
+              ;; Save what we've set it to.
+              (setq spotify--mute-volume set-volume))
+
+      ;; Save what volume we're leaving.
+      (setq spotify--mute-volume volume)
+      (spotify-apply "volume-mute-unmute" 0)
+      (message "Volume muted."))))
 
 (defun spotify-toggle-repeat ()
   "Sends a command to Spotify process to toggle the repeating flag."
@@ -225,6 +268,15 @@ This corresponds to the current REPEATING state."
 (defun spotify-is-shuffling ()
   "Sends a command to the Spotify process to get the current shuffling state."
   (spotify-apply "is-shuffling"))
+
+(defun spotify--controller-status-updated ()
+  "Do anything desired from receiving a status cache update."
+  (when spotify-player-status-cache-enabled
+    ;; smarter mute - save positive volumes for unmuting to them
+    (let ((volume (spotify-player-status-field 'volume)))
+      (when (> volume 0)
+        (setq spotify--mute-volume volume)))))
+
 
 (provide 'spotify-controller)
 
