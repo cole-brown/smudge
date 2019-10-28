@@ -13,21 +13,44 @@
 
 ;;; Code:
 
+;;---------------------------------Spotify.el-----------------------------------
+;;--                         Player Status and Cache                          --
+;;------------------------------------------------------------------------------
+
 (require 'spotify-api)
 
 ;; §-TODO-§ [2019-10-25]: translate connect's hashtable to json string, see
 ;; what's there for use?
 
+;; §-TODO-§ [2019-10-28]: Check cache's age, fire off async request for update
+;; if older than refresh interval defcustom? Return stale to maintain
+;; sync interface?
+
+
+;;------------------------------------------------------------------------------
+;; Settings (defcustom) Setters
+;;------------------------------------------------------------------------------
+
+;; has to come before its defcustom if we want to also use it
+;; for :initialize (which is the default functionality).
+(defun spotify--player-status-cache-enabled-set (option-name value)
+  "Setter for `spotify-player-status-cache-enabled'.
+Enables/disables player status redirect in spotify-api."
+  (when (eq option-name 'spotify-player-status-cache-enabled)
+    (set-default option-name value)
+    (setq spotify--player-status-redirect
+          (if (null value)
+              nil
+            #'spotify--player-status-callback))))
+;; (customize-set-variable 'spotify-player-status-cache-enabled nil)
+;; (customize-set-variable 'spotify-player-status-cache-enabled t)
+;; spotify-player-status-cache-enabled
+;; spotify--player-status-redirect
+
 
 ;;------------------------------------------------------------------------------
 ;; Settings
 ;;------------------------------------------------------------------------------
-
-(defcustom spotify-player-status-duration-fmt "%m:502s"
-  "Format string to use with `format-seconds' to get track duration string."
-  :type  'string
-  :group 'spotify)
-
 
 (defcustom spotify-player-status-cache-enabled nil
   "Enable or disable caching statuses from `spotify-api-get-player-status'.
@@ -44,19 +67,10 @@ Or do something like the following:
   :set   #'spotify--player-status-cache-enabled-set)
 
 
-(defun spotify--player-status-cache-enabled-set (option-name value)
-  "Setter for `spotify-player-status-cache-enabled'.
-Enables/disables player status redirect in spotify-api."
-  (when (eq option-name 'spotify-player-status-cache-enabled)
-    (set-default option-name value)
-    (setq spotify--player-status-redirect
-          (if (null value)
-              nil
-            #'spotify--player-status-callback))))
-;; (customize-set-variable 'spotify-player-status-cache-enabled nil)
-;; (customize-set-variable 'spotify-player-status-cache-enabled t)
-;; spotify-player-status-cache-enabled
-;; spotify--player-status-redirect
+(defcustom spotify-player-status-duration-fmt "%m:502s"
+  "Format string to use with `format-seconds' to get track duration string."
+  :type  'string
+  :group 'spotify)
 
 
 ;;------------------------------------------------------------------------------
@@ -221,16 +235,20 @@ untouched return value of `spotify-api-get-player-status'.")
 ;; (spotify-player-status-field 'muted)
 
 
-(defun spotify-player-status-field-async (field)
+(defun spotify-player-status-field-async (callback field)
   "Request a new update of player status from
-`spotify-api-get-player-status'. Relies on lexical-bindings."
+`spotify-api-get-player-status', caches it, then returns the
+result's FIELD to the CALLBACK. Relies on lexical-bindings."
   (spotify-api-get-player-status
    (lambda (status)
+     ;; first, update our cache
      (spotify--player-status-callback nil status)
      ;; or this?
      ;; (funcall #'spotify--player-status-callback
      ;;          callback status)
-     (spotify-player-status-field field))
+
+     ;; finally, update caller via callback
+     (funcall callback (spotify-player-status-field field)))))
 
 
 ;; (defun spotify-player-status-async (callback)
@@ -241,6 +259,10 @@ untouched return value of `spotify-api-get-player-status'.")
 ;;      (funcall #'spotify--player-status-callback
 ;;               callback status))))
 
+
+;;------------------------------------------------------------------------------
+;; Helper Functions
+;;------------------------------------------------------------------------------
 
 (defun spotify--player-status-callback (callback json)
   "Receive updated player status, cache it, and return to
@@ -258,3 +280,9 @@ callback unmodified."
 
   ;; and also run the hooks
   (run-hook 'spotify--player-status-cache-hook))
+
+
+;;------------------------------------------------------------------------------
+;; The End.
+;;------------------------------------------------------------------------------
+(provide 'spotify-player-status)
