@@ -243,9 +243,6 @@ untouched return value of `spotify-api-get-player-status'.")
 ;;    (lambda (status)
 ;;      ;; first, update our cache
 ;;      (spotify--player-status-callback nil status)
-;;      ;; or this?
-;;      ;; (funcall #'spotify--player-status-callback
-;;      ;;          callback status)
 
 ;;      ;; finally, update caller via callback
 ;;      (funcall callback (spotify-player-status-field field)))))
