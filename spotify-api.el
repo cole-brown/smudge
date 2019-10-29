@@ -386,11 +386,9 @@ which must be a number between 0 and 100."
 
 (defun spotify-api-get-player-status (callback)
   "Get the Spotify Connect status of the currently active player."
-  (lexical-let ((callback (if (functionp spotify--player-status-redirect)
-                              (lambda (status)
-                                (funcall spotify--player-status-redirect
-                                         callback status))
-                            callback)))
+  (let ((callback (if (functionp spotify--player-status-redirect)
+                      (funcall spotify--player-status-redirect callback)
+                    callback)))
     (spotify-api-call-async
      "GET"
      "/me/player"

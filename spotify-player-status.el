@@ -41,7 +41,7 @@ Enables/disables player status redirect in spotify-api."
     (setq spotify--player-status-redirect
           (if (null value)
               nil
-            #'spotify--player-status-callback))))
+            #'spotify--player-status-get-closure))))
 ;; (customize-set-variable 'spotify-player-status-cache-enabled nil)
 ;; (customize-set-variable 'spotify-player-status-cache-enabled t)
 ;; spotify-player-status-cache-enabled
@@ -61,13 +61,13 @@ Or do something like the following:
  (setq spotify--player-status-redirect nil)
 
  (setq spotify-player-status-cache-enabled t)
- (setq spotify--player-status-redirect #'spotify--player-status-callback)"
+ (setq spotify--player-status-redirect #'spotify--player-status-get-closure)"
   :type  'boolean
   :group 'spotify
   :set   #'spotify--player-status-cache-enabled-set)
 
 
-(defcustom spotify-player-status-duration-fmt "%m:502s"
+(defcustom spotify-player-status-duration-fmt "%m:%02s"
   "Format string to use with `format-seconds' to get track duration string."
   :type  'string
   :group 'spotify)
@@ -139,7 +139,7 @@ untouched return value of `spotify-api-get-player-status'.")
 
 (defun spotify-player-status-field (field)
   "Returns value of field in cached status, or nil."
-  (if (not (seq-contains 'spotify-player-status-fields field))
+  (if (not (seq-contains spotify-player-status-fields field))
       (error "spotify-player-status: field '%s' unknown. Choose from: %s"
              field spotify-player-status-fields)
 
@@ -223,10 +223,10 @@ untouched return value of `spotify-api-get-player-status'.")
       ;; And return nil in case you're debugging... >.>
       nil)))
 ;; (spotify-player-status-field 'artist)
-;; (spotify-player-status-field 'name)
+;; (spotify-player-status-field 'track)
 ;; (spotify-player-status-field 'track-number)
 ;; (spotify-player-status-field 'duration)
-;; (spotify-player-status-field 'duration-formatted)
+;; (spotify-player-status-field 'duration-millisecond)
 ;; (spotify-player-status-field 'shuffling)
 ;; (spotify-player-status-field 'repeating)
 ;; (spotify-player-status-field 'playing)
@@ -235,20 +235,20 @@ untouched return value of `spotify-api-get-player-status'.")
 ;; (spotify-player-status-field 'muted)
 
 
-(defun spotify-player-status-field-async (callback field)
-  "Request a new update of player status from
-`spotify-api-get-player-status', caches it, then returns the
-result's FIELD to the CALLBACK. Relies on lexical-bindings."
-  (spotify-api-get-player-status
-   (lambda (status)
-     ;; first, update our cache
-     (spotify--player-status-callback nil status)
-     ;; or this?
-     ;; (funcall #'spotify--player-status-callback
-     ;;          callback status)
+;; (defun spotify-player-status-field-async (callback field)
+;;   "Request a new update of player status from
+;; `spotify-api-get-player-status', caches it, then returns the
+;; result's FIELD to the CALLBACK. Relies on lexical-bindings."
+;;   (spotify-api-get-player-status
+;;    (lambda (status)
+;;      ;; first, update our cache
+;;      (spotify--player-status-callback nil status)
+;;      ;; or this?
+;;      ;; (funcall #'spotify--player-status-callback
+;;      ;;          callback status)
 
-     ;; finally, update caller via callback
-     (funcall callback (spotify-player-status-field field)))))
+;;      ;; finally, update caller via callback
+;;      (funcall callback (spotify-player-status-field field)))))
 
 
 ;; (defun spotify-player-status-async (callback)
@@ -279,7 +279,24 @@ callback unmodified."
     (funcall callback json))
 
   ;; and also run the hooks
-  (run-hook 'spotify--player-status-cache-hook))
+  (run-hooks 'spotify--player-status-cache-hook))
+
+
+(defun spotify--player-status-get-closure (callback)
+  "Spotify-api.el isn't using lexical-binding, so do this over
+here I guess.
+
+Want to curry \"(spotify--player-status-callback callback status)\"
+down to \"(something status)\", so I need to get a closure with
+callback bound and json ready to be received as only
+parameter, in order to conform to cache-disabled interface.
+
+This will wrap CALLBACK into a `spotify--player-status-callback'
+call, which will let spotify-api send out for async status, and
+return to CALLBACK - or redirect to us and let us return to
+CALLBACK."
+  (lambda (status)
+    (spotify--player-status-callback callback status)))
 
 
 ;;------------------------------------------------------------------------------
