@@ -45,6 +45,9 @@
 
 (require 'spotify-connect)
 
+(require 'spotify-player-status)
+(require 'spotify-hydra)
+
 (defgroup spotify nil
   "Spotify client."
   :version "0.0.1"

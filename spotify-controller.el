@@ -141,6 +141,7 @@ This corresponds to the current REPEATING state."
       spotify-player-status-repeating-text
     spotify-player-status-not-repeating-text))
 
+;; §-TODO-§ [2019-10-29]: move to the new one
 (defun spotify-replace-player-status-flags (metadata)
   "Compose the playing status string to be displayed in the player-status from METADATA."
   (let* ((player-status spotify-player-status-format)
@@ -273,7 +274,7 @@ smartish about it to not blow out anyone's eardrums..."
   "Do anything desired from receiving a status cache update."
   (when spotify-player-status-cache-enabled
     ;; smarter mute - save positive volumes for unmuting to them
-    (let ((volume (spotify-player-status-field 'volume)))
+    (if-let ((volume (spotify-player-status-field 'volume)))
       (when (> volume 0)
         (setq spotify--mute-volume volume)))))
 
