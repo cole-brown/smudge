@@ -129,6 +129,7 @@ untouched return value of `spotify-api-get-player-status'.")
 getting values from the player status.")
 
 
+;; §-TODO-§ [2019-10-30]: combine this and spotify--player-status-translations
 (defconst spotify--player-status-requires-translating
   '((duration  duration-millisecond)
     (shuffling shuffling-bool)
@@ -144,7 +145,12 @@ etc.")
 
 ;; §-TODO-§ [2019-10-30]: Caller should supply this built from defcustoms?
 (defconst spotify--player-status-translations
-  '((duration-millisecond format-seconds spotify-player-status-duration-fmt)
+  ;; Duration: convert ms to sec then format with format-seconds and defcustom
+  ;; setting
+  '((duration-millisecond (lambda (fmt ms) (format-seconds fmt (/ ms 1000)))
+                          spotify-player-status-duration-fmt)
+
+    ;; The Rest: us one string or the other depending on value
     (shuffling-bool ((nil "-") (t "S")))
     (repeating-bool ((nil "-") (t "R")))
     (playing-bool   ((nil "-") (t "P")))
@@ -152,7 +158,27 @@ etc.")
     (muted-bool     ((nil "-") (t "M"))))
   "A dictionary for translating fields in
 `spotify--player-status-requires-translating'. Probably should
-use something built from user's defcustom settings instead...")
+use something built from user's defcustom settings instead...
+
+VALUE's entry in DICTIONARY will be grabbed, and sub-value in
+func-or-alist returned if list. Else func-or-alist will be called
+via: (apply func-or-alist arg value)")
+
+(defconst spotify--player-status-dictionary
+  '((duration-millisecond format-seconds spotify-player-status-duration-fmt)
+    ;; For these, show status in box before "Toggle <field>"
+    (shuffling-bool ((t "[S]") (nil "[-]"))) ;;
+    (repeating-bool ((t "[R]") (nil "[-]")))
+    (muted-bool     ((t "[M]") (nil "[-]")))
+    ;; If playing, show "pause" else show "play" as action that will be taken
+    ;; if play/pause invoked.
+    (playing-bool   ((t "Pause Track") (nil "Play Track")))
+    (paused-bool    ((t "Play Track")  (nil "Pause Track"))))
+  "A dictionary for translating fields in
+`spotify--player-status-requires-translating'.
+
+§-TODO-§ [2019-10-30]: Probably should use something built from
+user's defcustom settings instead...")
 
 
 (defconst spotify--player-status-field->format-spec
@@ -189,7 +215,7 @@ use something built from user's defcustom settings instead...")
 ;; Player Status Fields
 ;;------------------------------------------------------------------------------
 
-(defun spotify-player-status-field (field dictionary)
+(defun spotify-player-status-field (field &optional dictionary)
   "Returns value of FIELD in cached status, or nil.
 
 §-TODO-§ [2019-10-30]: dictionary info"
@@ -235,7 +261,7 @@ STATUS must be JSON or nil. If STATUS is nil, cached value will be used.
 
 §-TODO-§ [2019-10-30]: talk about translating dictionary, default spotify--player-status-translations"
 
-  (if (not (member spotify-player-status-fields field))
+  (if (not (member field spotify-player-status-fields))
       (error "spotify-player-status: field '%s' unknown. Choose from: %s"
              field spotify-player-status-fields)
 
@@ -252,7 +278,7 @@ STATUS must be JSON or nil. If STATUS is nil, cached value will be used.
       (if (not trans-entry)
           value
         ;; Else translate it using dictionary.
-        (spotify--player-status-translate value dictionary)))))
+        (spotify--player-status-translate field field-true value dictionary)))))
 
 
 (defun spotify--player-status-field-raw (status field)
@@ -274,7 +300,9 @@ And how they're not actually raw, they're just field values elisp'd into numbers
               (track (gethash 'item status))
               (valid-field
                (and (member field spotify-player-status-fields)
-                    (null (assoc spotify--player-status-requires-translating)))))
+                    (null
+                     (assoc field
+                            spotify--player-status-requires-translating)))))
 
         ;; if-let* success case
         ;; get the field from the cache
@@ -347,7 +375,7 @@ And how they're not actually raw, they're just field values elisp'd into numbers
       nil))
 
 
-(defun spotify--player-status-translate (value dictionary)
+(defun spotify--player-status-translate (field field-true value dictionary)
   "Translates our VALUE according to the DICTIONARY provided.
 
 DICTIONARY is an alist of format:
@@ -359,25 +387,31 @@ VALUE's entry in DICTIONARY will be grabbed, and sub-value in
 func-or-alist returned if list. Else func-or-alist will be called
 via: (apply func-or-alist arg value)"
 
-  (if-let* ((entry (assoc value dictionary))
-            (func-or-alist (nth 0 entry))
-            (arg (nth 1 entry)))
-      (if (functionp func-or-alist)
-          ;; Call the function and that's the return.
-          (funcall func-or-alist arg value)
-        ;; Else func-or-alist is a sub-alist. Get its entry for value.
-        (nth 1(assoc value func-or-alist)))
-
-    ;; Probably wise to not error here - will likely be called in hooks and
-    ;; other repetitive places.
-    ))
+  (let* ((entry (assoc field-true dictionary))
+         (func-or-alist (nth 1 entry))
+         (arg (nth 2 entry))
+         ;; do we have symbol we need to eval or just a pass-through?
+         (arg (if (and arg ;; have arg
+                       (boundp arg)) ;; it's bound to something
+                  (symbol-value arg)
+                arg)))
+    (if (functionp func-or-alist)
+        ;; Call the function and that's the return.
+        (funcall func-or-alist arg value)
+      ;; Else func-or-alist is a sub-alist. Get its entry for value.
+      (nth 1 (assoc value func-or-alist)))))
+;; (spotify--player-status-translate 'shuffling 'shuffling-bool nil spotify--player-status-translations)
+;; (spotify--player-status-translate 'shuffling 'shuffling-bool t spotify--player-status-translations)
+;; (spotify-player-status-field 'shuffling)
+;; (spotify-player-status-field 'duration)
 
 
 ;;------------------------------------------------------------------------------
 ;; Player Status Formatting
 ;;------------------------------------------------------------------------------
 
-(defun spotify--player-status-format (fmt-str &optional status truncate)
+(defun spotify--player-status-format (fmt-str &optional
+                                              status truncate dictionary)
   "Returns a formatted string based on FMT-STR and STATUS.
 
 STATUS must be JSON or nil. If STATUS is nil, cached value will be used.
@@ -418,19 +452,23 @@ The following format specifications are supported:
               (spotify--player-status-format-field ret-val
                                                    (nth 1 fmt-spec)
                                                    (nth 0 fmt-spec)
-                                                   truncate)))
+                                                   status
+                                                   truncate
+                                                   dictionary)))
 
   ;; if-let got a null - return empty string instead of nil to not
   ;; muck up formatting strings
   ""))
 
 
-(defun spotify--player-status-format-field (input fmt-spec field status truncate)
+(defun spotify--player-status-format-field (input fmt-spec field status
+                                                  truncate dictionary)
   "Returns INPUT string with FMT-SPEC replaced by FIELD's value
 from STATUS, truncated to TRUNCATE length if non-nil and
 non-zero."
   ;; get value, trucate if needed, null checks by if-let.
-  (if-let* ((value (spotify-player-status-field field))
+  (if-let* ((value (spotify-player-status-field field
+                                                dictionary))
             (value (if truncate
                        (truncate-string-to-width
                         value
@@ -460,7 +498,7 @@ non-zero."
 ;;      (spotify--player-status-caching-callback nil status)
 
 ;;      ;; finally, update caller via callback
-;;      (funcall callback (spotify-player-status-field field)))))
+;;      (funcall callback (spotify-player-status-field field dictionary)))))
 
 
 ;; (defun spotify-player-status-async (callback)

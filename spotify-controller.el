@@ -232,7 +232,8 @@ smartish about it to not blow out anyone's eardrums..."
       (spotify-apply "volume-mute-unmute" spotify-unmute-volume-default)
 
     ;; smarter?
-    (if (spotify-player-status-field 'muted)
+    (if (spotify-player-status-field 'muted
+                                     spotify--player-status-dictionary)
         (let ((set-volume (cond
                            ;; use what we remember
                            ((bound-and-true-p spotify--mute-volume)
@@ -272,11 +273,18 @@ smartish about it to not blow out anyone's eardrums..."
 
 (defun spotify--controller-status-updated ()
   "Do anything desired from receiving a status cache update."
-  (when spotify-player-status-cache-enabled
-    ;; smarter mute - save positive volumes for unmuting to them
-    (if-let ((volume (spotify-player-status-field 'volume)))
-      (when (> volume 0)
-        (setq spotify--mute-volume volume)))))
+
+  ;; Prevent an error somewhere from being super annoying cuz it interrupts
+  ;; every N seconds. Demotes them to messages.
+  ;; Could do `condition-case-unless-debug' to demote to ignored if desired.
+  (with-demoted-errors "Spotify status update error: %S"
+    (when spotify-player-status-cache-enabled
+      ;; smarter mute - save positive volumes for unmuting to them
+      (if-let ((volume (spotify-player-status-field
+                        'volume
+                        spotify--player-status-dictionary)))
+          (when (> volume 0)
+            (setq spotify--mute-volume volume))))))
 
 
 (provide 'spotify-controller)

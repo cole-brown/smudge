@@ -120,7 +120,7 @@ executing its body."
 ;; Consts & Vars
 ;;------------------------------------------------------------------------------
 
-(defconst spotify--player-status-hydra-dictionary
+(defconst spotify--hydra-status-dictionary
   '((duration-millisecond format-seconds spotify-player-status-duration-fmt)
     ;; For these, show status in box before "Toggle <field>"
     (shuffling-bool ((t "[S]") (nil "[-]"))) ;;
@@ -185,7 +185,7 @@ _q_: quit             ^   ^                      _t s_: ?t s?^^^^^^^^^^^^^"
     ("p" spotify-toggle-play
      (format "%-11s" (spotify-player-status-field
                       'playing
-                      'spotify--player-status-hydra-dictionary)))
+                      spotify--hydra-status-dictionary)))
 
     ("b" spotify-previous-track :color red)
     ("f" spotify-next-track);; :color red)
@@ -205,12 +205,12 @@ _q_: quit             ^   ^                      _t s_: ?t s?^^^^^^^^^^^^^"
     ("t r" spotify-toggle-repeat
      (concat (spotify-player-status-field
              'repeating
-             'spotify--player-status-hydra-dictionary)
+             spotify--hydra-status-dictionary)
              "Toggle Repeat"))
     ("t s" spotify-toggle-shuffle
      (concat (spotify-player-status-field
               'shuffling
-              'spotify--player-status-hydra-dictionary)
+              spotify--hydra-status-dictionary)
              "Toggle Shuffle"))
 
     ;;---
@@ -221,7 +221,7 @@ _q_: quit             ^   ^                      _t s_: ?t s?^^^^^^^^^^^^^"
     ("t m" spotify-volume-mute-unmute
      (concat (spotify-player-status-field
               'muted
-              'spotify--player-status-hydra-dictionary)
+              spotify--hydra-status-dictionary)
              "Toggle Mute"))
 
     ("d"   spotify-select-device)
@@ -247,7 +247,8 @@ centers string at that length."
     (let ((ret-val (spotify--player-status-format
                     spotify-hydra-player-status-format
                     nil
-                    spotify-hydra-player-status-truncate)))
+                    spotify-hydra-player-status-truncate
+                    spotify--hydra-status-dictionary)))
       (if (and center-at
                (integerp center-at)
                (functionp 's-center))
