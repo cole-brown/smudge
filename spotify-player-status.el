@@ -151,8 +151,8 @@ etc.")
     (paused-bool    ((nil "P") (t "-")))
     (muted-bool     ((nil "-") (t "M"))))
   "A dictionary for translating fields in
-  `spotify--player-status-requires-translating'. Probably should
-  use something built from user's defcustom settings instead...")
+`spotify--player-status-requires-translating'. Probably should
+use something built from user's defcustom settings instead...")
 
 
 (defconst spotify--player-status-field->format-spec

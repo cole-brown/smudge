@@ -111,6 +111,7 @@ executing its body."
   ;; repeating
   ;; shuffling
   ;; muted
+  ;; todo: setter for updating dictionary
 
   ) ;; end Setting's spotify--with-hydra block
 
@@ -118,6 +119,22 @@ executing its body."
 ;;------------------------------------------------------------------------------
 ;; Consts & Vars
 ;;------------------------------------------------------------------------------
+
+(defconst spotify--player-status-hydra-dictionary
+  '((duration-millisecond format-seconds spotify-player-status-duration-fmt)
+    ;; For these, show status in box before "Toggle <field>"
+    (shuffling-bool ((t "[S]") (nil "[-]"))) ;;
+    (repeating-bool ((t "[R]") (nil "[-]")))
+    (muted-bool     ((t "[M]") (nil "[-]")))
+    ;; If playing, show "pause" else show "play" as action that will be taken
+    ;; if play/pause invoked.
+    (playing-bool   ((t "Pause Track") (nil "Play Track")))
+    (paused-bool    ((t "Play Track")  (nil "Pause Track"))))
+  "A dictionary for translating fields in
+`spotify--player-status-requires-translating'.
+
+§-TODO-§ [2019-10-30]: Probably should use something built from
+user's defcustom settings instead...")
 
 
 ;;------------------------------------------------------------------------------
@@ -145,36 +162,36 @@ executing its body."
 ;;------------------------------------------------------------------------------
 ;; Just skip the Hydra if we don't have Hydra? Seems reasonable...
 (spotify--with-hydra
-  (defhydra spotify-hydra (:color blue ;; default exit heads
-                           :idle 0.25  ;; no help for this long
-                           :hint none  ;; no hint - just docstr
+  (defhydra spotify-hydra (:color blue ;; default to exit heads after invoked
+                           :idle 0.25  ;; delay help display for this many secs
+                           :hint none  ;; no hint - just help display docstr
                            ;; run this before running main hydra body
-                           :body-pre #'spotify--hydra-pre-check)
+                           :body-pre (spotify--hydra-pre-check))
     "
-%s(spotify--hydra-status-format)
+%s(spotify--hydra-status-format 65)
 ^Track^                 ^Playlists^                ^Misc^
 ^-^---------------------^-^------------------------^-^-----------------
-_p_:   ?p?^^^^^^^^      _l m_: My Lists            _d_:   Select Device
-_b_:   Back a Track     _l f_: Featured Lists
-_f_:   Forward a Track  _l u_: User Lists          _v u_: Volume Up
-_t s_: Search Track     _l s_: Search List         _v d_: Volume Down
-_t p_: Recently Played  _l c_: Create list         _v m_: ?v m?
-^ ^                     _l r_: ?l r?^^^^^^^^^^^^
-_q_:   quit             _l s_: ?l s?^^^^^^^^^^^^^"
+_p_: ?p?^^^^^^^^      _l m_: My Lists            _d_:   Select Device
+_b_: Back a Track     _l f_: Featured Lists
+_f_: Forward a Track  _l u_: User Lists          _u_: Volume Up
+_s_: Search Track     _l s_: Search List         _d_: Volume Down
+_r_: Recently Played  _l c_: Create list         _t m_: ?t m?^^^^^^^^^^
+^ ^                   ^   ^                      _t r_: ?t r?^^^^^^^^^^^^
+_q_: quit             ^   ^                      _t s_: ?t s?^^^^^^^^^^^^^"
 
     ;;---
     ;; Track
     ;;---
     ("p" spotify-toggle-play
-     (format "%-11s" (if (spotify-player-status-field 'playing)
-                         "Pause Track"
-                       "Play Track")))
+     (format "%-11s" (spotify-player-status-field
+                      'playing
+                      'spotify--player-status-hydra-dictionary)))
 
     ("b" spotify-previous-track :color red)
     ("f" spotify-next-track);; :color red)
 
-    ("t s" spotify-track-search)
-    ("t p" spotify-recently-played)
+    ("s" spotify-track-search)
+    ("r" spotify-recently-played)
 
     ;;---
     ;; Playlist
@@ -185,36 +202,40 @@ _q_:   quit             _l s_: ?l s?^^^^^^^^^^^^^"
     ("l s" spotify-playlist-search)
     ("l c" spotify-create-playlist)
 
-    ("l r" spotify-toggle-repeat
-     (concat (if (spotify-player-status-field 'repeating)
-                 "[R] " "[-] ")
+    ("t r" spotify-toggle-repeat
+     (concat (spotify-player-status-field
+             'repeating
+             'spotify--player-status-hydra-dictionary)
              "Toggle Repeat"))
-    ("l s" spotify-toggle-shuffle
-     (concat (if (spotify-player-status-field 'shuffling)
-                 "[S] " "[-] ")
+    ("t s" spotify-toggle-shuffle
+     (concat (spotify-player-status-field
+              'shuffling
+              'spotify--player-status-hydra-dictionary)
              "Toggle Shuffle"))
 
     ;;---
     ;; Volume & Misc
     ;;---
-    ("v u" spotify-volume-up   :color red)
-    ("v d" spotify-volume-down :color red)
-    ("v m" spotify-volume-mute-unmute
-     (concat (if (spotify-player-status-field 'muted)
-                 "[M] " "[-] ")
+    ("u" spotify-volume-up   :color red)
+    ("d" spotify-volume-down :color red)
+    ("t m" spotify-volume-mute-unmute
+     (concat (spotify-player-status-field
+              'muted
+              'spotify--player-status-hydra-dictionary)
              "Toggle Mute"))
 
     ("d"   spotify-select-device)
     ;; quit - no need to do anything; just nil
-    ("q"   nil)))
+    ("q"   nil :color blue))
+  )
 
 
 ;;------------------------------------------------------------------------------
 ;; Hydra Helpers
 ;;------------------------------------------------------------------------------
 
-(defun spotify--hydra-status-format (fmt-str &optional center-at)
-  "Formats `spotify-hydra-player-status-format' using FMT-STR and
+(defun spotify--hydra-status-format (&optional center-at)
+  "Formats `spotify-hydra-player-status-format' using
 cached status. Requires `spotify-player-status-cache-enabled' to
 be non-nil.
 
@@ -237,7 +258,7 @@ centers string at that length."
 (defun spotify--hydra-pre-check ()
   "Sanity check before running hydra..."
   (unless spotify-remote-mode
-    (if (bound-and-true-p 'spotify-hydra-auto-remote-mode)
+    (if (bound-and-true-p spotify-hydra-auto-remote-mode)
         (global-spotify-remote-mode 1)
       (error (concat "Spotify-Remote-Mode is not enabled... "
                      "Call `spotify-remote-mode' or "
