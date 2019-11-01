@@ -11,7 +11,7 @@
 (require 'spotify-remote)
 (require 'spotify-player-status)
 
-(add-hook 'spotify--player-status-cache-hook
+(add-hook 'spotify--cache-player-status-hook
           #'spotify--controller-status-updated)
 
 (defmacro if-gnu-linux (then else)
@@ -37,81 +37,6 @@
                  (symbol :tag "Connect" connect))
   :group 'spotify)
 
-;; §-TODO-§ [2019-10-25]: move all these to player-status.el
-(defcustom spotify-player-status-refresh-interval 5
-  "The interval, in seconds, that the mode line must be updated. When using the
-'connect transport, avoid using values smaller than 5 to avoid being rate
-limited. Set to 0 to disable this feature."
-  :type 'integer
-  :group 'spotify)
-
-(defcustom spotify-player-status-truncate-length 15
-  "The maximum number of characters to truncated fields in `spotify-player-status-format'."
-  :type 'integer
-  :group 'spotify)
-
-(defcustom spotify-player-status-playing-text "Playing"
-  "Text to be displayed when Spotify is playing."
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-player-status-paused-text "Paused"
-  "Text to be displayed when Spotify is paused."
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-player-status-stopped-text "Stopped"
-  "Text to be displayed when Spotify is stopped."
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-player-status-repeating-text "R"
-  "Text to be displayed when repeat is enabled."
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-player-status-not-repeating-text "-"
-  "Text to be displayed when repeat is disabled."
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-player-status-shuffling-text "S"
-  "Text to be displayed when shuffling is enabled."
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-player-status-not-shuffling-text "-"
-  "Text to be displayed when shuffling is disabled."
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-player-status-format "[%p: %a - %t ◷ %l %r%s]"
-  "Format used to display the current Spotify client player status.
-The following placeholders are supported:
-
-* %a - Artist name (truncated)
-* %t - Track name (truncated)
-* %n - Track #
-* %l - Track duration, in minutes (i.e. 01:35)
-* %p - Player status indicator for 'playing', 'paused', and 'stopped' states
-* %s - Player shuffling status indicator
-* %r - Player repeating status indicator"
-  :type 'string
-  :group 'spotify)
-
-(defcustom spotify-unmute-volume-default 75
-  "Default in case there was no pre-mute remembered."
-  :type  'integer
-  :group 'spotify)
-
-(defcustom spotify-volume-adjust-amount 10
-  "Adjust volume up/down this amount (percent)."
-  :type  'integer
-  :group 'spotify)
-
-(defvar spotify--mute-volume nil
-  "Remember what percent the volume was when we muted.")
-
 (defvar spotify-timer nil)
 
 (defun spotify-apply (suffix &rest args)
@@ -120,48 +45,10 @@ Apply SUFFIX to spotify-prefixed functions, applying ARGS."
   (let ((func-name (format "spotify-%s-%s" spotify-transport suffix)))
     (apply (intern func-name) args)))
 
-(defun spotify-player-status-playing-indicator (str)
-  "Return the value of the player state variable.
-This value corresponding to the player's current state in STR."
-  (cond ((string= "playing" str) spotify-player-status-playing-text)
-        ((string= "stopped" str) spotify-player-status-stopped-text)
-        ((string= "paused" str) spotify-player-status-paused-text)))
-
-(defun spotify-player-status-shuffling-indicator (shuffling)
-  "Return the value of the shuffling state variable.
-This value corresponds to the current SHUFFLING state."
-  (if (eq shuffling t)
-      spotify-player-status-shuffling-text
-    spotify-player-status-not-shuffling-text))
-
-(defun spotify-player-status-repeating-indicator (repeating)
-  "Return the value of the repeating state variable.
-This corresponds to the current REPEATING state."
-  (if (eq repeating t)
-      spotify-player-status-repeating-text
-    spotify-player-status-not-repeating-text))
-
-;; §-TODO-§ [2019-10-29]: move to the new one
-(defun spotify-replace-player-status-flags (metadata)
-  "Compose the playing status string to be displayed in the player-status from METADATA."
-  (let* ((player-status spotify-player-status-format)
-         (duration-format "%m:%02s")
-         (json-object-type 'hash-table)
-         (json-key-type 'symbol)
-         (json (condition-case nil
-                   (json-read-from-string metadata)
-                 (error (spotify-update-player-status "")
-                        nil))))
-    (when json
-      (progn
-        (setq player-status (replace-regexp-in-string "%a" (truncate-string-to-width (gethash 'artist json) spotify-player-status-truncate-length 0 nil "...") player-status))
-        (setq player-status (replace-regexp-in-string "%t" (truncate-string-to-width (gethash 'name json) spotify-player-status-truncate-length 0 nil "...") player-status))
-        (setq player-status (replace-regexp-in-string "%n" (number-to-string (gethash 'track_number json)) player-status))
-        (setq player-status (replace-regexp-in-string "%l" (format-seconds duration-format (/ (gethash 'duration json) 1000)) player-status))
-        (setq player-status (replace-regexp-in-string "%s" (spotify-player-status-shuffling-indicator (gethash 'player_shuffling json)) player-status))
-        (setq player-status (replace-regexp-in-string "%r" (spotify-player-status-repeating-indicator (gethash 'player_repeating json)) player-status))
-        (setq player-status (replace-regexp-in-string "%p" (spotify-player-status-playing-indicator (gethash 'player_state json)) player-status))
-        (spotify-update-player-status player-status)))))
+(defun spotify-player-status-refresh-string (metadata)
+  "Compose the playing status string to be displayed in the
+player-status from METADATA."
+  (spotify-update-player-status (spotify-player-status-get metadata)))
 
 (defun spotify-start-player-status-timer ()
   "Start the timer that will update the mode line according to the Spotify player status."
@@ -227,29 +114,29 @@ This corresponds to the current REPEATING state."
 smartish about it to not blow out anyone's eardrums..."
   (interactive)
 
-  (if (null spotify-player-status-cache-enabled)
+  (if (null spotify-cache-player-status-enabled)
       ;; dumb version - ask for mute/unmute up to max volume.
-      (spotify-apply "volume-mute-unmute" spotify-unmute-volume-default)
+      (spotify-apply "volume-mute-unmute" spotify-volume-unmute-default)
 
     ;; smarter?
     (if (spotify-player-status-field 'muted
-                                     spotify--player-status-dictionary)
+                                     spotify--player-status-translators)
         (let ((set-volume (cond
                            ;; use what we remember
-                           ((bound-and-true-p spotify--mute-volume)
-                            spotify--mute-volume)
+                           ((bound-and-true-p spotify--cache-volume-unmute)
+                            spotify--cache-volume-unmute)
                            ;; or the max
-                           ((bound-and-true-p spotify-unmute-volume-default)
-                            spotify-unmute-volume-default)
+                           ((bound-and-true-p spotify-volume-unmute-default)
+                            spotify-volume-unmute-default)
                            ;; or give up and 100% it
                            (t 100))))
               (spotify-apply "volume-mute-unmute" set-volume)
               (message "Volume unmuted to %s." set-volume)
               ;; Save what we've set it to.
-              (setq spotify--mute-volume set-volume))
+              (setq spotify--cache-volume-unmute set-volume))
 
       ;; Save what volume we're leaving.
-      (setq spotify--mute-volume volume)
+      (setq spotify--cache-volume-unmute volume)
       (spotify-apply "volume-mute-unmute" 0)
       (message "Volume muted."))))
 
@@ -278,13 +165,13 @@ smartish about it to not blow out anyone's eardrums..."
   ;; every N seconds. Demotes them to messages.
   ;; Could do `condition-case-unless-debug' to demote to ignored if desired.
   (with-demoted-errors "Spotify status update error: %S"
-    (when spotify-player-status-cache-enabled
+    (when spotify-cache-player-status-enabled
       ;; smarter mute - save positive volumes for unmuting to them
       (if-let ((volume (spotify-player-status-field
                         'volume
-                        spotify--player-status-dictionary)))
+                        spotify--player-status-translators)))
           (when (> volume 0)
-            (setq spotify--mute-volume volume))))))
+            (setq spotify--cache-volume-unmute volume))))))
 
 
 (provide 'spotify-controller)

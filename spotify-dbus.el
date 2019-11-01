@@ -51,7 +51,7 @@
               (track-number  (car (car (cdr (assoc "xesam:trackNumber" metadata)))))
               (duration      (/ (car (car (cdr (assoc "mpris:length" metadata)))) 1000)))
           (if (> track-number 0)
-              (spotify-replace-player-status-flags
+              (spotify-player-status-refresh-string
                (concat "{"
                        " \"artist\": \"" artist "\""
                        ",\"duration\": " (number-to-string duration) ""

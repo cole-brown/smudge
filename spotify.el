@@ -50,7 +50,7 @@
 
 (defgroup spotify nil
   "Spotify client."
-  :version "0.0.1"
+  :version "0.1.0"
   :group 'multimedia)
 
 ;;;###autoload
