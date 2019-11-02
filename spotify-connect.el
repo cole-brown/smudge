@@ -117,17 +117,20 @@ Returns a JSON string in the format:
          (lambda (_)
            (message "Volume decreased to %d%%" new-volume))))))))
 
-(defun spotify-connect-volume-mute-unmute (volume)
+(defvar spotify--connect-volume-unmute nil
+  "§-TODO-§ [2019-11-01]: turn file into lexical bindings and get rid of this.")
+(defun spotify-connect-volume-mute-unmute (unmute-volume)
   "Mute/unmute the volume on the actively playing device by setting the volume to 0."
+  (setq spotify--connect-volume-unmute unmute-volume)
   (spotify-when-device-active
    (spotify-api-get-player-status
     (lambda (status)
       (let ((volume (spotify-connect-get-volume status)))
         (if (eq volume 0)
-            (spotify-api-set-volume (spotify-connect-get-device-id status) volume
-                                    (lambda (_) (message "Volume unmuted")))
+            (spotify-api-set-volume (spotify-connect-get-device-id status) spotify--connect-volume-unmute
+                                    (lambda (_) (message "Volume unmuted to %s." spotify--connect-volume-unmute)))
           (spotify-api-set-volume (spotify-connect-get-device-id status) 0
-                                  (lambda (_) (message "Volume muted")))))))))
+                                  (lambda (_) (message "Volume muted.")))))))))
 
 (defun spotify-connect-toggle-repeat ()
   "Toggle repeat for the current track."

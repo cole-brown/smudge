@@ -19,6 +19,9 @@
 
 (require 'spotify-api)
 
+;; §-TODO-§ [2019-11-01]: move cache normalizing, cache actually-getting-value
+;; functions to backends (connect, etc)
+
 ;; §-TODO-§ [2019-10-25]: translate connect's hashtable to json string, see
 ;; what's there for use?
 

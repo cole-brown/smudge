@@ -118,27 +118,22 @@ smartish about it to not blow out anyone's eardrums..."
       ;; dumb version - ask for mute/unmute up to max volume.
       (spotify-apply "volume-mute-unmute" spotify-volume-unmute-default)
 
-    ;; smarter?
-    (if (spotify-player-status-field 'muted
-                                     spotify--player-status-translators)
-        (let ((set-volume (cond
-                           ;; use what we remember
-                           ((bound-and-true-p spotify--cache-volume-unmute)
-                            spotify--cache-volume-unmute)
-                           ;; or the max
-                           ((bound-and-true-p spotify-volume-unmute-default)
-                            spotify-volume-unmute-default)
-                           ;; or give up and 100% it
-                           (t 100))))
-              (spotify-apply "volume-mute-unmute" set-volume)
-              (message "Volume unmuted to %s." set-volume)
-              ;; Save what we've set it to.
-              (setq spotify--cache-volume-unmute set-volume))
-
-      ;; Save what volume we're leaving.
-      (setq spotify--cache-volume-unmute volume)
-      (spotify-apply "volume-mute-unmute" 0)
-      (message "Volume muted."))))
+    ;; Don't try to be /too/ smart... yet... here(?). Have backend request fresh
+    ;; volume status and then go from there.
+    (let ((set-volume (cond
+                       ;; use what we remember
+                       ((bound-and-true-p spotify--cache-volume-unmute)
+                        spotify--cache-volume-unmute)
+                       ;; or the max
+                       ((bound-and-true-p spotify-volume-unmute-default)
+                        spotify-volume-unmute-default)
+                       ;; or give up and 100% it
+                       (t 100))))
+      ;; backend will either mute or unmute to `set-volume'
+      (spotify-apply "volume-mute-unmute" set-volume)
+      ;; Save what we've set it to?
+      (when (and set-volume (> set-volume 0))
+        (setq spotify--cache-volume-unmute set-volume)))))
 
 (defun spotify-toggle-repeat ()
   "Sends a command to Spotify process to toggle the repeating flag."
