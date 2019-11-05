@@ -10,6 +10,46 @@
 
 (require 'spotify-api)
 
+
+(defun spotify--connect-build-json (status)
+  "§-TODO-§ [2019-11-04]: This really should get deprecated and just allow
+normalized-get to take care of things instead of building a
+reduced set out of full return JSON...
+
+Properly use Emacs JSON lib to convert from Spotify Connect API's
+full JSON output to a reduced JSON usable by spotify.el.
+"
+  (if-let* ((status status)
+            (track (gethash 'item status))
+            (json-object-type 'hash-table)
+            (json-key-type 'symbol)
+            (json-obj (json-new-object)))
+      ;; Read status into new json-obj using json lib functions so the json
+      ;; stays properly escaped and e.g. artist "Weird Al" doesn't ruin
+      ;; everything for our baby json.
+      (progn
+        (setq json-obj (json-add-to-object json-obj "artist"
+                                           (gethash 'name (car (gethash 'artists track)))))
+        (setq json-obj (json-add-to-object json-obj "duration_ms"
+                                           (gethash 'duration_ms track)))
+        (setq json-obj (json-add-to-object json-obj "track_number"
+                                           (gethash 'track_number track)))
+        (setq json-obj (json-add-to-object json-obj "name"
+                                           (gethash 'name track)))
+        (setq json-obj (json-add-to-object json-obj "player_state"
+                                           (if (eq (gethash 'is_playing status) :json-false) "paused" "playing")))
+        (setq json-obj (json-add-to-object json-obj "player_shuffling"
+                                           (if (not (eq (gethash 'shuffle_state status) :json-false))"true" "false")))
+        (setq json-obj (json-add-to-object json-obj "player_repeating"
+                                           (if (string= (gethash 'repeat_state status) "off") "false" "true")))
+
+        ;; convert new baby json to string and return it
+        (json-encode json-obj))
+
+    ;; failed to convert json - return nil
+    nil))
+
+
 (defun spotify-connect-player-status ()
   "Get the player status of the currently playing device, if any.
 Returns a JSON string in the format:
@@ -26,16 +66,18 @@ Returns a JSON string in the format:
    (lambda (status)
      (if-let* ((status status)
                (track (gethash 'item status))
-               (json (concat
+               (json ;;(spotify--connect-build-json status)))
+                (concat
                       "{"
                       (format "\"artist\":\"%s\","
-                              (gethash 'name (car (gethash 'artists track))))
+                              ;; encode for "Weird Al".
+                              (json-encode (gethash 'name (car (gethash 'artists track)))))
                       (format "\"duration\": %d,"
                               (gethash 'duration_ms track))
                       (format "\"track_number\":%d,"
                               (gethash 'track_number track))
                       (format "\"name\":\"%s\","
-                              (gethash 'name track))
+                              (json-encode (gethash 'name track)))
                       (format "\"player_state\":\"%s\","
                               (if (eq (gethash 'is_playing status) :json-false) "paused" "playing"))
                       (format "\"player_shuffling\":%s,"

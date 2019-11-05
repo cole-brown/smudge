@@ -19,6 +19,13 @@
 
 (require 'spotify-api)
 
+
+;; §-TODO-§ [2019-11-04]: Rather big bug caused by Weird Al...
+;; This fails:
+;;   json-read-from-string("{\"artist\":\"\"Weird Al\" Yankovic\",\"duration\": 142946,\"track_number\":3,\"name\":\"Foil\",\"player_state\":\"playing\",\"player_shuffling\":false,\"player_repeating\":false}")
+;; Is this our's?
+
+
 ;; §-TODO-§ [2019-11-01]: move cache normalizing, cache actually-getting-value
 ;; functions to backends (connect, etc)
 
@@ -185,13 +192,16 @@ Or do something like the following:
 
 (defvar spotify--cache-player-status nil
   "Tuple of (current-time raw-status) where raw-status is
-untouched return value of `spotify-api-get-player-status'.")
+untouched return value of `spotify-api-get-player-status'.
+
+NOTE: use foo")
 
 
 (defvar spotify--cache-player-status-hook nil
   "Listeners for every single status update that hits the cache."
   ;; Could make a public-er version if desired...
   )
+
 
 ;; Cache Junior
 ;; Save "unmute-to-this" separate for easier separation of concerns.
@@ -241,16 +251,22 @@ getting values from the player status.")
   ;; Use defcustom symbols so we don't have to keep this up-to-date.
   '(;; Artist/Track: truncate to length
     (artist    artist
-               (lambda (len str) (truncate-string-to-width str len
-                                                           0 nil "..."))
+               (lambda (len str) (if (stringp str)
+                                     (truncate-string-to-width str len
+                                                               0 nil "...")
+                                   ""))
                spotify-player-status-truncate-length)
     (track     track
-               (lambda (len str) (truncate-string-to-width str len
-                                                           0 nil "..."))
+               (lambda (len str) (if (stringp str)
+                                     (truncate-string-to-width str len
+                                                               0 nil "...")
+                                   ""))
                spotify-player-status-truncate-length)
     ;; Duration: Format duration-ms to duration string
     (duration  duration-millisecond
-               (lambda (fmt ms) (format-seconds fmt (/ ms 1000)))
+               (lambda (fmt ms) (if (numberp ms)
+                                    (format-seconds fmt (/ ms 1000))
+                                  ""))
                spotify-player-status-duration-format)
 
     ;; Device Active bool: translate from each device-active-state to bool
@@ -317,26 +333,29 @@ Translation alists should have format of:
 
 See `spotify--player-status-translators' for dictionary info.
 "
-  (if-let* ((cache spotify--cache-player-status) ;; null check
-            (status (nth 1 cache)))
+  ;; Allow null cache and status -
+  ;; I think asking "playing?" on a null status should do the full check,
+  ;; translate, and whatever else, and be allowed to come back with "Paused".
+  (let* ((status (spotify--cache-get-status-if nil)))
 
-      (spotify--player-status-field status field dictionary)
+    (spotify--player-status-field status field dictionary)))
 
-    ;; if-let* fail case. Can debug it, but so far just nil for normal
-    ;; things like no music for a while.
-    ;; (message
-    ;;  (concat "spotify-player-status: Something null in if-let*... "
-    ;;          "What's not null? cache?: %s, status?: %s, track?: %s")
-    ;;  (not (null spotify--cache-player-status))
-    ;;  (not (null (nth 1 spotify--cache-player-status)))
-    ;;  (not (null
-    ;;        (if (null (nth 1 spotify--cache-player-status))
-    ;;            nil
-    ;;          (gethash 'item
-    ;;                   (nth 1 spotify--cache-player-status))))))
+;; if-let*'s else clause?
+;; ;; if-let* fail case. Can debug it, but so far just nil for normal
+;; ;; things like no music for a while.
+;; ;; (message
+;; ;;  (concat "spotify-player-status: Something null in if-let*... "
+;; ;;          "What's not null? cache?: %s, status?: %s, track?: %s")
+;; ;;  (not (null spotify--cache-player-status))
+;; ;;  (not (null (nth 1 spotify--cache-player-status)))
+;; ;;  (not (null
+;; ;;        (if (null (nth 1 spotify--cache-player-status))
+;; ;;            nil
+;; ;;          (gethash 'item
+;; ;;                   (nth 1 spotify--cache-player-status))))))
 
-    ;; And return nil in case you're debugging... >.>
-    nil))
+;; ;; And return nil in case you're debugging... >.>
+;; nil))
 ;; (spotify-player-status-field 'artist)
 ;; (spotify-player-status-field 'track)
 ;; (spotify-player-status-field 'track-number)
@@ -505,8 +524,8 @@ The following format specifications are supported:
 * %r - 'Player Repeating' indicator
 * %v - Player Volume (0-100)
 "
-  (if-let* ((status (or status ;; supplied status or use cache
-                        (nth 1 spotify--cache-player-status)))
+  ;; supplied status or use cache
+  (if-let* ((status (spotify--cache-get-status-if status))
             (ret-val fmt-str))
 
       ;; fmt-spec here is '(field-symbol field-spec-string)
@@ -715,8 +734,7 @@ So our current check can be: \"Does it have 'item' as a field?\"
                    (eq (nth 0 translate-entry)
                        (nth 1 translate-entry))))
       ;; status or default to cache
-      (let ((status-n (or status-n
-                          spotify--player-status-cache)))
+      (let ((status-n (spotify--cache-get-status-if status-n)))
         ;; Our current checks...
         (cond
          ;; Easy out.
@@ -889,18 +907,30 @@ FIELD-TRUE is assumed valid.
 
      ;; raw duration
      ((eq field-true 'duration-millisecond)
+      (message "simple duration-ms: %S->%S"
+               (gethash 'duration status-n)
+               (gethash 'duration status-n))
       (gethash 'duration status-n))
 
      ;;---
      ;; Player Status
      ;;---
      ((eq field-true 'shuffling-bool)
+      (message "simple shuffling: %S->%S"
+               (gethash 'player_shuffling status-n)
+               (not (eq (gethash 'player_shuffling status-n) :json-false)))
       (not (eq (gethash 'player_shuffling status-n) :json-false)))
 
      ((eq field-true 'repeating-bool)
+      (message "simple repeating: %S->%S"
+               (gethash 'player_repeating status-n)
+               (not (eq (gethash 'player_repeating status-n) :json-false)))
       (not (eq (gethash 'player_repeating status-n) :json-false)))
 
      ((eq field-true 'playing-bool)
+      (message "simple playing: %S->%S"
+               (gethash 'player_state status-n)
+               (string= (gethash 'player_state status-n) "playing"))
       ;; ...if it's not not playing, it's playing!
       (string= (gethash 'player_state status-n) "playing"))
 
@@ -934,15 +964,36 @@ FIELD-TRUE is assumed valid.
 ;; Caching Functions
 ;;------------------------------------------------------------------------------
 
+(defun spotify--cache-set-status (status)
+  "Sets `spotify--cache-player-status' to STATUS with current
+time as timestamp as long as its fresher than the currently held status."
+  (let ((time (current-time)))
+    (when (or (null spotify--cache-player-status)
+              (time-less-p (car spotify--cache-player-status)
+                           time))
+      (setq spotify--cache-player-status (list time status)))))
+
+
+(defun spotify--cache-get-status-if (status)
+  "Returns `spotify--cache-player-status' if STATUS is nil."
+ (if (null status)
+      (nth 1 spotify--cache-player-status)
+    status))
+;; (spotify--cache-get-status-if nil)
+
+
+(defun spotify--cache-get-timestamp-if (status)
+  "Returns `spotify--cache-player-status' if STATUS is nil."
+  (if (null status)
+      (nth 0 spotify--cache-player-status)
+    status))
+
+
 (defun spotify--player-status-caching-callback (callback status)
   "Receive updated player status, cache it, and return to
 CALLBACK unmodified."
   ;; cache status w/ timestamp
-  (let ((time (current-time)))
-    (when (or (null spotify--cache-player-status)
-              (time-less-p (car spotify--cache-player-status)
-                           (current-time)))
-      (setq spotify--cache-player-status (list time status))))
+  (spotify--cache-set-status status)
 
   ;; and pass on unchanged status
   (when (functionp callback)
