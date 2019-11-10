@@ -227,32 +227,32 @@ NOTE: Probably use these accessors:
   '(;;---
     ;; Track Status
     ;;---
-    artist       ;; string of artist's name
-    track        ;; string of track's name
-    track-number ;; integer of track number
+    :artist       ;; string of artist's name
+    :track        ;; string of track's name
+    :track-number ;; integer of track number
     ;; string of track's duration formatted by `format-seconds'
     ;; with `spotify-player-status-duration-format'
-    duration
-    duration-millisecond ;; integer of milliseconds in track
+    :duration
+    :duration-millisecond ;; integer of milliseconds in track
 
     ;;---
     ;; Player Status
     ;;---
     ;; device-active      ;; §-TODO-§ [2019-11-01]: string of active device's name?
-    device-active-bool  ;; boolean: state mapped to t, nil, nil, nil
-    device-active-state ;; symbol: t, nil, undefined, unsupported
-    shuffling      ;; string
-    shuffling-bool ;; boolean
-    repeating      ;; string
-    repeating-bool ;; boolean
-    playing        ;; string
-    playing-bool   ;; boolean
-    paused         ;; string
-    paused-bool    ;; boolean
+    :device-active-bool  ;; boolean: state mapped to t, nil, nil, nil
+    :device-active-state ;; symbol: t, nil, undefined, unsupported
+    :shuffling      ;; string
+    :shuffling-bool ;; boolean
+    :repeating      ;; string
+    :repeating-bool ;; boolean
+    :playing        ;; string
+    :playing-bool   ;; boolean
+    :paused         ;; string
+    :paused-bool    ;; boolean
 
-    volume         ;; integer 0-100
-    muted          ;; string
-    muted-bool)    ;; boolean
+    :volume         ;; integer 0-100
+    :muted          ;; string
+    :muted-bool)    ;; boolean
   "Symbols that can be passed into `spotify-player-status' for
 getting values from the player status.")
 
@@ -261,47 +261,47 @@ getting values from the player status.")
   ;; Use symbols and delay their eval to values so we don't have to bother
   ;; keeping this up-to-date.
   '(;; Artist/Track: truncate to length
-    (artist    artist
-               (lambda (len str) (if (stringp str)
-                                     (truncate-string-to-width str len
-                                                               0 nil "...")
-                                   ""))
-               spotify-player-status-truncate-length)
-    (track     track
-               (lambda (len str) (if (stringp str)
-                                     (truncate-string-to-width str len
-                                                               0 nil "...")
-                                   ""))
-               spotify-player-status-truncate-length)
+    (:artist    :artist
+                (lambda (len str) (if (stringp str)
+                                      (truncate-string-to-width str len
+                                                                0 nil "...")
+                                    ""))
+                spotify-player-status-truncate-length)
+    (:track     :track
+                (lambda (len str) (if (stringp str)
+                                      (truncate-string-to-width str len
+                                                                0 nil "...")
+                                    ""))
+                spotify-player-status-truncate-length)
     ;; Duration: Format duration-ms to duration string
-    (duration  duration-millisecond
-               (lambda (fmt ms) (if (numberp ms)
-                                    (format-seconds fmt (/ ms 1000))
-                                  ""))
-               spotify-player-status-duration-format)
+    (:duration  :duration-millisecond
+                (lambda (fmt ms) (if (numberp ms)
+                                     (format-seconds fmt (/ ms 1000))
+                                   ""))
+                spotify-player-status-duration-format)
 
     ;; Device Active bool: translate from each device-active-state to bool
-    (device-active-bool device-active-state
-                        ;; Just map all non-true to nil/false.
-                        ((t t) (nil nil)
-                         (undefined nil) (unsupported nil)))
+    (:device-active-bool :device-active-state
+                         ;; Just map all non-true to nil/false.
+                         ((t t) (nil nil)
+                          (undefined nil) (unsupported nil)))
 
     ;; The Rest: translate from bool to text
-    (shuffling shuffling-bool
-               ((t spotify-player-status-shuffling-text)
-                (nil spotify-player-status-not-shuffling-text)))
-    (repeating repeating-bool
-               ((t spotify-player-status-repeating-text)
-                (nil spotify-player-status-not-repeating-text)))
-    (playing   playing-bool
-               ((t spotify-player-status-playing-text)
-                (nil spotify-player-status-paused-text)))
-    (paused    paused-bool
-               ((nil spotify-player-status-paused-text)
-                (t spotify-player-status-playing-text)))
-    (muted     muted-bool
-               ((t spotify-player-status-muted-text)
-                (nil spotify-player-status-not-muted-text))))
+    (:shuffling :shuffling-bool
+                ((t spotify-player-status-shuffling-text)
+                 (nil spotify-player-status-not-shuffling-text)))
+    (:repeating :repeating-bool
+                ((t spotify-player-status-repeating-text)
+                 (nil spotify-player-status-not-repeating-text)))
+    (:playing   :playing-bool
+                ((t spotify-player-status-playing-text)
+                 (nil spotify-player-status-paused-text)))
+    (:paused    :paused-bool
+                ((nil spotify-player-status-paused-text)
+                 (t spotify-player-status-playing-text)))
+    (:muted     :muted-bool
+                ((t spotify-player-status-muted-text)
+                 (nil spotify-player-status-not-muted-text))))
   "`spotify-player-status-fields' that will require translation
 from their raw values returned from status. e.g. from
 milliseconds to formatted string, from t/nil to 'playing'/'',
@@ -322,15 +322,15 @@ Translation alists should have format of:
 
 ;; §-TODO-§ [2019-11-09]: change to keywords? e.g. :artist
 (defconst spotify--player-status-field->format-spec
-  '((artist       "%a")
-    (track        "%t")
-    (track-number "%n")
-    (duration     "%l")
-    (playing      "%p")
-    (shuffling    "%s")
-    (repeating    "%r")
-    (volume       "%v")
-    (muted        "%m"))
+  '((:artist       "%a")
+    (:track        "%t")
+    (:track-number "%n")
+    (:duration     "%l")
+    (:playing      "%p")
+    (:shuffling    "%s")
+    (:repeating    "%r")
+    (:volume       "%v")
+    (:muted        "%m"))
   "Translates from elisp-friendly symbol names for
 `spotify-player-status-fields' to
 `spotify--player-status-format' field specifications.")
@@ -369,17 +369,17 @@ See `spotify--player-status-translators' for dictionary info.
 
 ;; ;; And return nil in case you're debugging... >.>
 ;; nil))
-;; (spotify-player-status-field 'artist)
-;; (spotify-player-status-field 'track)
-;; (spotify-player-status-field 'track-number)
-;; (spotify-player-status-field 'duration)
-;; (spotify-player-status-field 'duration-millisecond)
-;; (spotify-player-status-field 'shuffling)
-;; (spotify-player-status-field 'repeating)
-;; (spotify-player-status-field 'playing)
-;; (spotify-player-status-field 'paused)
-;; (spotify-player-status-field 'volume)
-;; (spotify-player-status-field 'muted)
+;; (spotify-player-status-field :artist)
+;; (spotify-player-status-field :track)
+;; (spotify-player-status-field :track-number)
+;; (spotify-player-status-field :duration)
+;; (spotify-player-status-field :duration-millisecond)
+;; (spotify-player-status-field :shuffling)
+;; (spotify-player-status-field :repeating)
+;; (spotify-player-status-field :playing)
+;; (spotify-player-status-field :paused)
+;; (spotify-player-status-field :volume)
+;; (spotify-player-status-field :muted)
 
 ;; §-TODO-§ [2019-10-29]: "stopped"? spotify-player-status-playing-indicator
 
@@ -394,7 +394,7 @@ DICTIONARY must be alist or nil. If nil,
 `spotify--player-status-translators' for dictionary info.
 "
   (if (not (member field spotify-player-status-fields))
-      (error "spotify-player-status: field '%s' unknown. Choose from: %s"
+      (error "spotify--player-status: field '%s' unknown. Choose from: %s"
              field spotify-player-status-fields)
 
     ;; Are we actually getting FIELD, or are we getting another and
@@ -479,10 +479,10 @@ via: (apply func-or-alist arg value)"
                  (boundp return-value))
             (symbol-value return-value)
           return-value)))))
-;; (spotify--player-status-translate 'shuffling 'shuffling-bool nil spotify--player-status-translators)
-;; (spotify--player-status-translate 'shuffling 'shuffling-bool t spotify--player-status-translators)
-;; (spotify-player-status-field 'shuffling)
-;; (spotify-player-status-field 'duration)
+;; (spotify--player-status-translate :shuffling :shuffling-bool nil spotify--player-status-translators)
+;; (spotify--player-status-translate :shuffling :shuffling-bool t spotify--player-status-translators)
+;; (spotify-player-status-field :shuffling)
+;; (spotify-player-status-field :duration)
 
 
 ;;------------------------------------------------------------------------------
@@ -542,7 +542,7 @@ The following format specifications are supported:
             (ret-val fmt-str))
 
       ;; fmt-spec here is '(field-symbol field-spec-string)
-      ;; e.g. '(artist "%a")
+      ;; e.g. '(:artist "%a")
       (progn
         ;; (message "%S -hi-> %S" fmt-str ret-val)
         (dolist (fmt-spec spotify--player-status-field->format-spec ret-val)
@@ -552,6 +552,12 @@ The following format specifications are supported:
                                                      (nth 0 fmt-spec)
                                                      status
                                                      dictionary))
+          ;; (message "spec: %S, field: %S, value: %S, out: %S"
+          ;;          (nth 1 fmt-spec)
+          ;;          (nth 0 fmt-spec)
+          ;;          (spotify--player-status-field status (nth 0 fmt-spec) dictionary)
+          ;;          ret-val)
+
           ;; (if (string=  fmt-str "%a - %t")
           ;;     (progn
           ;;       (message "ps-fmt: status? %S,  dict? %S, spec: %S, field: %S,\n %S-(%S==%S)->%S"
@@ -770,7 +776,7 @@ or nil. If STATUS-N is nil, nil will be return value.
 
 FIELD-TRUE is assumed valid.
 "
-  ;; (when (eq field-true 'device-active-state)
+  ;; (when (eq field-true :device-active-state)
   ;;     (message "spotify--full-field-get: %S (or %S %S %S)->%S %S %S"
   ;;              field-true
 
@@ -800,44 +806,44 @@ FIELD-TRUE is assumed valid.
        ;;---
        ;; Track Status
        ;;---
-       ((eq field-true 'artist)
+       ((eq field-true :artist)
         (gethash 'name (car (gethash 'artists track))))
 
-       ((eq field-true 'track)
+       ((eq field-true :track)
         (gethash 'name track))
 
-       ((eq field-true 'track-number)
+       ((eq field-true :track-number)
         (gethash 'track_number track))
 
        ;; raw duration
-       ((eq field-true 'duration-millisecond)
+       ((eq field-true :duration-millisecond)
         (gethash 'duration_ms track))
 
        ;;---
        ;; Player Status
        ;;---
-       ((eq field-true 'shuffling-bool)
+       ((eq field-true :shuffling-bool)
         (not (eq (gethash 'shuffle_state status-n) :json-false)))
 
-       ((eq field-true 'repeating-bool)
+       ((eq field-true :repeating-bool)
         (not (string= (gethash 'repeat_state status-n) "off")))
 
-       ((eq field-true 'playing-bool)
+       ((eq field-true :playing-bool)
         ;; ...if it's not not playing, it's playing!
         (not (eq (gethash 'is_playing status-n) :json-false)))
 
-       ((eq field-true 'paused-bool)
+       ((eq field-true :paused-bool)
         ;; ...if it's not playing, it's paused?
         ;; What about stopped or not started yet? *shrug* Paused I guess.
         (eq (gethash 'is_playing status-n) :json-false))
 
-       ((eq field-true 'volume)
+       ((eq field-true :volume)
         (gethash 'volume_percent device))
 
-       ((eq field-true 'muted-bool)
+       ((eq field-true :muted-bool)
         (= (gethash 'volume_percent device) 0))
 
-       ((eq field-true 'device-active-state)
+       ((eq field-true :device-active-state)
         ;; (message "device-active-state: %S %S"
         ;;          device
         ;;          (gethash 'is_active device))
@@ -909,17 +915,17 @@ FIELD-TRUE is assumed valid.
      ;;---
      ;; Track Status
      ;;---
-     ((eq field-true 'artist)
+     ((eq field-true :artist)
       (gethash 'artist status-n))
 
-     ((eq field-true 'track)
+     ((eq field-true :track)
       (gethash 'name status-n))
 
-     ((eq field-true 'track-number)
+     ((eq field-true :track-number)
       (gethash 'track_number status-n))
 
      ;; raw duration
-     ((eq field-true 'duration-millisecond)
+     ((eq field-true :duration-millisecond)
       ;; (message "simple duration-ms: %S->%S"
       ;;          (gethash 'duration status-n)
       ;;          (gethash 'duration status-n))
@@ -928,26 +934,26 @@ FIELD-TRUE is assumed valid.
      ;;---
      ;; Player Status
      ;;---
-     ((eq field-true 'shuffling-bool)
+     ((eq field-true :shuffling-bool)
       ;; (message "simple shuffling: %S->%S"
       ;;          (gethash 'player_shuffling status-n)
       ;;          (not (eq (gethash 'player_shuffling status-n) :json-false)))
       (not (eq (gethash 'player_shuffling status-n) :json-false)))
 
-     ((eq field-true 'repeating-bool)
+     ((eq field-true :repeating-bool)
       ;; (message "simple repeating: %S->%S"
       ;;          (gethash 'player_repeating status-n)
       ;;          (not (eq (gethash 'player_repeating status-n) :json-false)))
       (not (eq (gethash 'player_repeating status-n) :json-false)))
 
-     ((eq field-true 'playing-bool)
+     ((eq field-true :playing-bool)
       ;; (message "simple playing: %S->%S"
       ;;          (gethash 'player_state status-n)
       ;;          (string= (gethash 'player_state status-n) "playing"))
       ;; ...if it's not not playing, it's playing!
       (string= (gethash 'player_state status-n) "playing"))
 
-     ((eq field-true 'paused-bool)
+     ((eq field-true :paused-bool)
       ;; ...if it's not playing, it's paused?
       ;; What about stopped or not started yet? *shrug* Paused I guess.
       (not (string= (gethash 'player_state status-n) "playing")))
@@ -955,13 +961,13 @@ FIELD-TRUE is assumed valid.
      ;;---
      ;; Unsupported
      ;;---
-     ((eq field-true 'volume)
+     ((eq field-true :volume)
       nil)
 
-     ((eq field-true 'muted-bool)
+     ((eq field-true :muted-bool)
       nil)
 
-     ((eq field-true 'device-active-state)
+     ((eq field-true :device-active-state)
       'unsupported)
 
      ;;---
@@ -989,7 +995,7 @@ time as timestamp as long as its fresher than the currently held status."
 
 (defun spotify--cache-get-status-if (status)
   "Returns `spotify--cache-player-status' if STATUS is nil."
- (if (null status)
+  (if (null status)
       (nth 1 spotify--cache-player-status)
     status))
 ;; (spotify--cache-get-status-if nil)

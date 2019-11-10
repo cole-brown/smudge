@@ -205,41 +205,41 @@ top line of the Hydra docstring. The following placeholders are supported:
   ;; Use defcustom symbols so we don't have to keep this up-to-date.
   '(;; Don't truncate these in the Hydra by default.
     ;; Artist/Track: truncate to length
-    ;; (artist    artist
+    ;; (:artist    :artist
     ;;            (lambda (len str) (truncate-string-to-width str len
     ;;                                                        0 nil "..."))
     ;;            spotify-player-status-truncate-length)
-    ;; (track     track
+    ;; (:track     :track
     ;;            (lambda (len str) (truncate-string-to-width str len
     ;;                                                        0 nil "..."))
     ;;            spotify-player-status-truncate-length)
 
     ;; Duration: Format duration-ms to duration string
-    (duration  duration-millisecond
-               (lambda (fmt ms) (format-seconds fmt (/ ms 1000)))
-               spotify-player-status-duration-format)
+    (:duration  :duration-millisecond
+                (lambda (fmt ms) (format-seconds fmt (/ ms 1000)))
+                spotify-player-status-duration-format)
 
     ;; Device Active bool: translate from trilean state
-    (device-active-bool device-active-trilean
-                        ;; map both nil/false and undefined to nil/false
-                        ((t t) (nil nil) (undefined nil)))
+    (:device-active-bool :device-active-trilean
+                         ;; map both nil/false and undefined to nil/false
+                         ((t t) (nil nil) (undefined nil)))
 
     ;; The Rest: translate from bool to text
-    (shuffling shuffling-bool
-               ((t spotify-hydra-shuffling-text)
-                (nil spotify-hydra-not-shuffling-text)))
-    (repeating repeating-bool
-               ((t spotify-hydra-repeating-text)
-                (nil spotify-hydra-not-repeating-text)))
-    (playing   playing-bool
-               ((t spotify-hydra-playing-text)
-                (nil spotify-hydra-paused-text)))
-    (paused    paused-bool
-               ((nil spotify-hydra-paused-text)
-                (t spotify-hydra-playing-text)))
-    (muted     muted-bool
-               ((t spotify-hydra-muted-text)
-                (nil spotify-hydra-not-muted-text))))
+    (:shuffling :shuffling-bool
+                ((t spotify-hydra-shuffling-text)
+                 (nil spotify-hydra-not-shuffling-text)))
+    (:repeating :repeating-bool
+                ((t spotify-hydra-repeating-text)
+                 (nil spotify-hydra-not-repeating-text)))
+    (:playing   :playing-bool
+                ((t spotify-hydra-playing-text)
+                 (nil spotify-hydra-paused-text)))
+    (:paused    :paused-bool
+                ((nil spotify-hydra-paused-text)
+                 (t spotify-hydra-playing-text)))
+    (:muted     :muted-bool
+                ((t spotify-hydra-muted-text)
+                 (nil spotify-hydra-not-muted-text))))
   "A dictionary for translating fields in
 `spotify-player-status-field'.
 
@@ -272,10 +272,10 @@ See docstring for `spotify--player-status-translators' for more info.")
 ;; Just skip the Hydra if we don't have Hydra? Seems reasonable...
 (spotify--with-hydra
   (defhydra spotify-hydra (:color blue ;; default to exit heads after invoked
-                           :idle 0.25  ;; delay help display for this many secs
-                           :hint none  ;; no hint - just help display docstr
-                           ;; run this before running main hydra body
-                           :body-pre (spotify--hydra-pre-check))
+                                  :idle 0.25  ;; delay docstr for this many secs
+                                  :hint none  ;; no head hints - just the docstr
+                                  ;; run this before running main hydra body
+                                  :body-pre (spotify--hydra-pre-check))
     "
 %s(spotify--hydra-status-format 65)
 ^Track^                 ^Playlists^                ^Misc^
@@ -294,22 +294,22 @@ _q_/_ESC_: quit         ^   ^                      _t s_: ?t s?^^^^^^^^^^^^^
     ;;---
     ("p" spotify-toggle-play
      (format "%-15s" (spotify-player-status-field
-                      'playing
+                      :playing
                       spotify--hydra-translators)))
 
     ("t r" spotify-toggle-repeat
      (format "%-18s" (spotify-player-status-field
-                      'repeating
+                      :repeating
                       spotify--hydra-translators)))
 
     ("t s" spotify-toggle-shuffle
      (format "%-18s" (spotify-player-status-field
-                      'shuffling
+                      :shuffling
                       spotify--hydra-translators)))
 
     ("t m" spotify-volume-mute-unmute
      (format "%-18s" (spotify-player-status-field
-                      'muted
+                      :muted
                       spotify--hydra-translators)))
 
     ("x" spotify-select-device)
@@ -359,12 +359,12 @@ If CENTER-AT is an integer and `s-center' is present (functionp),
 centers string at that length."
   (spotify--hydra-or-error "spotify--hydra-status-format"
 
-    ;; (message "hydra hello: %S" (spotify-player-status-field 'device-active-state))
+    ;; (message "hydra hello: %S" (spotify-player-status-field :device-active-state))
 
-    (let ((state (spotify-player-status-field 'device-active-state)))
+    (let ((state (spotify-player-status-field :device-active-state)))
       (cond
-       ;; device-active of true is fine.
-       ;; device-active of 'unsupported I want to ignore, so also fine.
+       ;; :device-active of true is fine.
+       ;; :device-active of 'unsupported I want to ignore, so also fine.
        ((or (eq state t)
             (eq state 'unsupported))
         ;; get and return format, centered if we can/want

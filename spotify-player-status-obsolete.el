@@ -37,9 +37,9 @@ This value corresponding to the player's current state in STR."
         ((string= "stopped" str) spotify-player-status-stopped-text)
         ((string= "paused" str) spotify-player-status-paused-text)))
 
-;; obsoleted by: (spotify-player-status-field 'playing)
-;;               (spotify-player-status-field 'paused)
-;;               (spotify-player-status-field 'stopped)
+;; obsoleted by: (spotify-player-status-field :playing)
+;;               (spotify-player-status-field :paused)
+;;               (spotify-player-status-field :stopped)
 (make-obsolete 'spotify-player-status-playing-indicator
                'spotify-player-status-field
                "0.1.0")
@@ -52,7 +52,7 @@ This value corresponds to the current SHUFFLING state."
       spotify-player-status-shuffling-text
     spotify-player-status-not-shuffling-text))
 
-;; obsoleted by: (spotify-player-status-field 'shuffling)
+;; obsoleted by: (spotify-player-status-field :shuffling)
 (make-obsolete 'spotify-player-status-shuffling-indicator
                'spotify-player-status-field
                "0.1.0")
@@ -65,7 +65,7 @@ This corresponds to the current REPEATING state."
       spotify-player-status-repeating-text
     spotify-player-status-not-repeating-text))
 
-;; obsoleted by: (spotify-player-status-field 'repeating)
+;; obsoleted by: (spotify-player-status-field :repeating)
 (make-obsolete 'spotify-player-status-repeating-indicator
                'spotify-player-status-field
                "0.1.0")

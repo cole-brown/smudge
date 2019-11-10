@@ -67,8 +67,8 @@ full JSON output to a reduced JSON usable by spotify.el.
         (setq json-obj (json-add-to-object
                         json-obj "player_repeating"
                         (spotify--connect-build-json-bool
-                         (string= (gethash 'repeat_state status)
-                                  "off"))))
+                         (not (string= (gethash 'repeat_state status)
+                                  "off")))))
 
         ;; convert new baby json to string and return it
         (json-encode json-obj))

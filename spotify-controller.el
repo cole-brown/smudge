@@ -10,7 +10,7 @@
 
 (require 'spotify-remote)
 (require 'spotify-player-status)
-(require 'spotify-player-status-feedback)
+(require 'spotify-player-feedback)
 
 (add-hook 'spotify--cache-player-status-hook
           #'spotify--controller-status-updated)
@@ -169,7 +169,7 @@ smartish about it to not blow out anyone's eardrums..."
     (when spotify-cache-player-status-enabled
       ;; smarter mute - save positive volumes for unmuting to them
       (if-let ((volume (spotify-player-status-field
-                        'volume
+                        :volume
                         spotify--player-status-translators)))
           (when (> volume 0)
             (setq spotify--cache-volume-unmute volume))))))
