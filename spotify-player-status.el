@@ -21,6 +21,7 @@
 
 (require 'spotify-api)
 
+;; §-TODO-§ [2019-11-09]: lexical binding for rest of spotify files
 
 ;; §-TODO-§ [2019-11-01]: move cache normalizing, cache actually-getting-value
 ;; functions to backends (connect, etc)
