@@ -1,4 +1,4 @@
-;; spotify-apple.el --- Apple-specific code for Spotify.el
+;;; spotify-apple.el --- Apple-specific code for Spotify.el -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2019 Daniel Fernandes Martins
 

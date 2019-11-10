@@ -1,4 +1,4 @@
-;; spotify-playlist-search.el --- Spotify.el playlist search major mode
+;;; spotify-playlist-search.el --- Spotify.el playlist search major mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2018 Daniel Fernandes Martins
 
@@ -48,8 +48,8 @@
 (defun spotify-playlist-follow ()
   "Adds the current user as the follower of the playlist under the cursor."
   (interactive)
-  (lexical-let* ((selected-playlist (tabulated-list-get-id))
-                 (name (spotify-get-item-name selected-playlist)))
+  (let* ((selected-playlist (tabulated-list-get-id))
+         (name (spotify-get-item-name selected-playlist)))
     (when (y-or-n-p (format "Follow playlist '%s'?" name))
       (spotify-api-playlist-follow
        selected-playlist
@@ -59,8 +59,8 @@
 (defun spotify-playlist-unfollow ()
   "Removes the current user as the follower of the playlist under the cursor."
   (interactive)
-  (lexical-let* ((selected-playlist (tabulated-list-get-id))
-                 (name (spotify-get-item-name selected-playlist)))
+  (let* ((selected-playlist (tabulated-list-get-id))
+         (name (spotify-get-item-name selected-playlist)))
     (when (y-or-n-p (format "Unfollow playlist '%s'?" name))
       (spotify-api-playlist-unfollow
        selected-playlist
@@ -69,9 +69,9 @@
 
 (defun spotify-playlist-search-update (query current-page)
   "Fetches the given page of results using the search endpoint."
-  (lexical-let ((current-page current-page)
-                (query query)
-                (buffer (current-buffer)))
+  (let ((current-page current-page)
+        (query query)
+        (buffer (current-buffer)))
     (spotify-api-search
      'playlist
      query
@@ -88,9 +88,9 @@
 
 (defun spotify-user-playlists-update (user-id current-page)
   "Fetches the given page of results using the user's playlist endpoint."
-  (lexical-let ((user-id user-id)
-                (current-page current-page)
-                (buffer (current-buffer)))
+  (let ((user-id user-id)
+        (current-page current-page)
+        (buffer (current-buffer)))
     (spotify-api-user-playlists
      user-id
      current-page
@@ -106,8 +106,8 @@
 
 (defun spotify-featured-playlists-update (current-page)
   "Fetches the given page of results using of Spotify's featured playlists"
-  (lexical-let ((current-page current-page)
-                (buffer (current-buffer)))
+  (let ((current-page current-page)
+        (buffer (current-buffer)))
     (spotify-api-featured-playlists
      current-page
      (lambda (json)

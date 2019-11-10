@@ -1,5 +1,4 @@
-;; -*- mode: emacs-lisp; lexical-binding: t -*-
-;;; spotify-player-feedback.el --- Spotify action feedback messages
+;;; spotify-player-feedback.el --- Spotify action feedback messages -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 

@@ -1,4 +1,4 @@
-;;; spotify.el --- control the Spotify app from Emacs
+;;; spotify.el --- control the Spotify app from Emacs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2018 Daniel Fernandes Martins
 
@@ -114,8 +114,8 @@
          (y-or-n-p "Make the playlist public? ")))
   (if (string= name "")
       (message "Playlist name not provided; aborting")
-    (lexical-let ((name name)
-                  (is-public is-public))
+    (let ((name name)
+          (is-public is-public))
       (spotify-current-user
        (lambda (user)
          (spotify-api-playlist-create

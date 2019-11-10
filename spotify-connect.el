@@ -1,5 +1,4 @@
-;; -*- mode: emacs-lisp; lexical-binding: t -*-
-;;; spotify-connect.el --- Spotify.el transport for the Spotify Connect API
+;;; spotify-connect.el --- Spotify.el transport for the Spotify Connect API -*- lexical-binding: t -*-
 
 ;;; Commentary:
 

@@ -1,8 +1,6 @@
-;;; package --- Summary
+;;; spotify-controller.el --- Generic player controller interface for Spotify.el -*- lexical-binding: t -*-
 
 ;;; Commentary:
-
-;;; spotify-controller.el --- Generic player controller interface for Spotify.el
 
 ;; Copyright (C) 2014-2019 Daniel Fernandes Martins
 

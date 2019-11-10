@@ -1,5 +1,4 @@
-;; -*- mode: emacs-lisp; lexical-binding: t -*-
-;;; spotify-player-status-obsolete.el --- obsoleted Player Status functions
+;;; spotify-player-status-obsolete.el --- obsoleted Player Status functions -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 

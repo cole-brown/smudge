@@ -1,5 +1,4 @@
-;; -*- mode: emacs-lisp; lexical-binding: t -*-
-;;; spotify-player-status.el --- Player Status functions and cache.
+;;; spotify-player-status.el --- Player Status functions and cache. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 
@@ -20,8 +19,6 @@
 ;;------------------------------------------------------------------------------
 
 (require 'spotify-api)
-
-;; §-TODO-§ [2019-11-09]: lexical binding for rest of spotify files
 
 ;; §-TODO-§ [2019-11-01]: move cache normalizing, cache actually-getting-value
 ;; functions to backends (connect, etc)
@@ -1023,10 +1020,7 @@ CALLBACK unmodified."
 
 
 (defun spotify--player-status-caching-closure (callback)
-  "Spotify-api.el isn't using lexical-binding, so do this over
-here I guess.
-
-Want to curry \"(spotify--player-status-caching-callback CALLBACK status)\"
+  "Want to curry \"(spotify--player-status-caching-callback CALLBACK status)\"
 down to \"(something status)\", so I need to get a closure with
 CALLBACK bound and status ready to be received as only
 parameter, in order to conform to cache-disabled interface.

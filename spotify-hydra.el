@@ -1,5 +1,4 @@
-;; -*- mode: emacs-lisp; lexical-binding: t -*-
-;;; spotify-hydra.el --- Pre-defined Hydra, in case that interests anyone...
+;;; spotify-hydra.el --- Pre-defined Hydra, in case that interests anyone... -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 

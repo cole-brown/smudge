@@ -1,8 +1,6 @@
-;;; package --- Summary
+;;; spotify-device-select.el --- Spotify.el device selection major mode -*- lexical-binding: t -*-
 
 ;;; Commentary:
-
-;; spotify-device-select.el --- Spotify.el device selection major mode
 
 ;; Copyright (C) 2019 Jason Dufair
 
@@ -27,7 +25,7 @@
 (defun spotify-device-select-update ()
   "Fetches the list of devices using the device list endpoint."
   (interactive)
-  (lexical-let ((buffer (current-buffer)))
+  (let ((buffer (current-buffer)))
     (spotify-api-device-list
      (lambda (json)
        (if-let ((devices (gethash 'devices json))

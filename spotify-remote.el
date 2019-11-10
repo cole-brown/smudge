@@ -1,4 +1,4 @@
-;; spotify-remote.el --- Spotify.el remote minor mode
+;;; spotify-remote.el --- Spotify.el remote minor mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2019 Daniel Fernandes Martins
 

@@ -1,5 +1,4 @@
-;; -*- mode: emacs-lisp; lexical-binding: t -*-
-;;; spotify-api.el --- Spotify Connect API integration layer
+;;; spotify-api.el --- Spotify Connect API integration layer -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2019 Daniel Fernandes Martins
 
@@ -78,11 +77,11 @@ Spotify API."
 (defun spotify-api-call-async (method uri &optional data callback is-retry)
   "Make a request to the given Spotify service endpoint and calls CALLBACK with
 the parsed JSON response."
-  (lexical-let ((method method)
-                (uri uri)
-                (data data)
-                (callback callback)
-                (is-retry is-retry))
+  (let ((method method)
+        (uri uri)
+        (data data)
+        (callback callback)
+        (is-retry is-retry))
     (oauth2-url-retrieve
      (spotify-oauth2-token)
      (concat spotify-api-endpoint uri)
@@ -118,7 +117,7 @@ the parsed JSON response."
   ""
   (if *spotify-user*
       (funcall callback *spotify-user*)
-    (lexical-let ((callback callback))
+    (let ((callback callback))
       (spotify-api-call-async
        "GET"
        "/me"
@@ -359,7 +358,7 @@ which must be a number between 0 and 100."
 
 (defun spotify-api-device-list (callback)
   "Call CALLBACK with the list of devices available for use with Spotify Connect."
-  (lexical-let ((callback callback))
+  (let ((callback callback))
     (spotify-api-call-async
      "GET"
      "/me/player/devices"

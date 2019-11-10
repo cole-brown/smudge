@@ -1,4 +1,4 @@
-;; spotify-track-search.el --- Spotify.el track search major mode
+;;; spotify-track-search.el --- Spotify.el track search major mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2018 Daniel Fernandes Martins
 
@@ -31,10 +31,10 @@ Otherwise, play the track selected."
   (interactive)
   (let ((button-type (spotify-track-selected-button-type)))
     (cond ((eq 'artist button-type)
-	   (spotify-track-artist-select))
-	  ((eq 'album button-type)
-	   (spotify-track-album-select))
-	  (t (spotify-track-select-default)))))
+     (spotify-track-artist-select))
+    ((eq 'album button-type)
+     (spotify-track-album-select))
+    (t (spotify-track-select-default)))))
 
 (defun spotify-track-select-default ()
   "Plays the track under the cursor. If the track list represents a playlist,
@@ -71,7 +71,7 @@ otherwise, it will be played without a context."
   "Adds the current user as the follower of the selected playlist."
   (interactive)
   (if (bound-and-true-p spotify-selected-playlist)
-      (lexical-let ((playlist spotify-selected-playlist))
+      (let ((playlist spotify-selected-playlist))
         (when (y-or-n-p (format "Follow playlist '%s'?" (spotify-get-item-name playlist)))
           (spotify-api-playlist-follow
            playlist
@@ -83,7 +83,7 @@ otherwise, it will be played without a context."
   "Removes the current user as the follower of the selected playlist."
   (interactive)
   (if (bound-and-true-p spotify-selected-playlist)
-      (lexical-let ((playlist spotify-selected-playlist))
+      (let ((playlist spotify-selected-playlist))
         (when (y-or-n-p (format "Unfollow playlist '%s'?" (spotify-get-item-name playlist)))
           (spotify-api-playlist-unfollow
            playlist
@@ -117,9 +117,9 @@ otherwise, it will be played without a context."
 
 (defun spotify-track-search-update (query current-page)
   "Fetches the given page of results using the search endpoint."
-  (lexical-let ((current-page current-page)
-                (query query)
-                (buffer (current-buffer)))
+  (let ((current-page current-page)
+        (query query)
+        (buffer (current-buffer)))
     (spotify-api-search
      'track
      query
@@ -137,8 +137,8 @@ otherwise, it will be played without a context."
 (defun spotify-playlist-tracks-update (current-page)
   "Fetches the given page of results for the current playlist."
   (when (bound-and-true-p spotify-selected-playlist)
-    (lexical-let ((current-page current-page)
-                  (buffer (current-buffer)))
+    (let ((current-page current-page)
+          (buffer (current-buffer)))
       (spotify-api-playlist-tracks
        spotify-selected-playlist
        current-page
@@ -153,9 +153,9 @@ otherwise, it will be played without a context."
 
 (defun spotify-album-tracks-update (album current-page)
   "Fetches the list of tracks for the given album."
-  (lexical-let ((album album)
-                (current-page current-page)
-                (buffer (current-buffer)))
+  (let ((album album)
+        (current-page current-page)
+        (buffer (current-buffer)))
     (spotify-api-album-tracks
      album
      current-page
@@ -171,8 +171,8 @@ otherwise, it will be played without a context."
 
 (defun spotify-recently-played-tracks-update (current-page)
   "Fetches the given page of results for the recently played tracks."
-  (lexical-let ((current-page current-page)
-                (buffer (current-buffer)))
+  (let ((current-page current-page)
+        (buffer (current-buffer)))
     (spotify-api-recently-played
      current-page
      (lambda (json)
@@ -223,13 +223,13 @@ otherwise, it will be played without a context."
                                         'follow-link t
                                         'action `(lambda (_) (spotify-track-search ,(format "artist:\"%s\"" artist-name)))
                                         'help-echo (format "Show %s's tracks" artist-name)
-					'artist-or-album 'artist))
+          'artist-or-album 'artist))
                               (cons album-name
                                   (list 'face 'link
                                         'follow-link t
                                         'action `(lambda (_) (spotify-album-tracks ,album))
                                         'help-echo (format "Show %s's tracks" album-name)
-					'artist-or-album 'album))
+          'artist-or-album 'album))
                               (spotify-get-track-duration-formatted song)
                               (when (not (bound-and-true-p spotify-selected-album))
                                 (spotify-popularity-bar (spotify-get-track-popularity song)))))
@@ -250,7 +250,7 @@ otherwise, it will be played without a context."
 (defun spotify-select-playlist (callback)
   "Ask the user to select a playlist and calls CALLBACK with the selected option."
   (interactive)
-  (lexical-let ((callback callback))
+  (let ((callback callback))
     (spotify-current-user
      (lambda (user)
        (spotify-api-user-playlists
@@ -267,7 +267,7 @@ otherwise, it will be played without a context."
 (defun spotify-track-add ()
   "Adds the track under the cursor on a playlist. Prompts for the playlist."
   (interactive)
-  (lexical-let ((selected-track (tabulated-list-get-id)))
+  (let ((selected-track (tabulated-list-get-id)))
     (spotify-select-playlist
      (lambda (playlist)
        (spotify-current-user
