@@ -10,6 +10,7 @@
 
 (require 'spotify-remote)
 (require 'spotify-player-status)
+(require 'spotify-player-status-feedback)
 
 (add-hook 'spotify--cache-player-status-hook
           #'spotify--controller-status-updated)
@@ -71,6 +72,9 @@ player-status from METADATA."
   "Update the mode line to display the current Spotify player status."
   (interactive)
   (spotify-apply "player-status")
+  ;; §-TODO-§ [2019-11-09]:
+  ;;  Only force if: a) using modeline, b) after async CALLBACK.
+  ;;  Could force title update if using title instead of modeline...
   (force-mode-line-update t))
 
 (defun spotify-play-uri (uri)

@@ -1,8 +1,9 @@
-;; spotify-api.el --- Spotify.el API integration layer
+;; -*- mode: emacs-lisp; lexical-binding: t -*-
+;;; spotify-api.el --- Spotify Connect API integration layer
 
 ;; Copyright (C) 2014-2019 Daniel Fernandes Martins
 
-;; Code:
+;;; Code:
 
 (defvar *spotify-user*         nil "Cached user object")
 (defvar *spotify-oauth2-token* nil "Cached OAuth2 token")

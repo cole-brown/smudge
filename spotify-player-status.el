@@ -5,9 +5,11 @@
 
 ;;; Commentary:
 
-;; Maintains a cache of the last received player status. When asking for
+;; Concentration of Player Status functions here, as they were growing numerous.
+
+;; Also can maintain a cache of the last received player status. When asking for
 ;; metadata (artist, track, shuffling, etc) will pull from the cache unless
-;; otherwise directed.
+;; otherwise directed (or disabled).
 
 ;; This should help avoid overdoing the Spotify Connect API calls, for example.
 
@@ -198,7 +200,10 @@ Or do something like the following:
   "Tuple of (current-time raw-status) where raw-status is
 untouched return value of `spotify-api-get-player-status'.
 
-NOTE: use foo")
+NOTE: Probably use these accessors:
+  - `spotify--cache-set-status'
+  - `spotify--cache-get-status-if'
+  - `spotify--cache-get-timestamp-if'")
 
 
 (defvar spotify--cache-player-status-hook nil
@@ -314,6 +319,7 @@ Translation alists should have format of:
    (status-field-valueN \"return value N\"))")
 
 
+;; §-TODO-§ [2019-11-09]: change to keywords? e.g. :artist
 (defconst spotify--player-status-field->format-spec
   '((artist       "%a")
     (track        "%t")
@@ -327,6 +333,7 @@ Translation alists should have format of:
   "Translates from elisp-friendly symbol names for
 `spotify-player-status-fields' to
 `spotify--player-status-format' field specifications.")
+
 
 
 ;;------------------------------------------------------------------------------

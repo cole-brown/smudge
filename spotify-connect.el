@@ -1,8 +1,9 @@
-;;; package --- Summary
+;; -*- mode: emacs-lisp; lexical-binding: t -*-
+;;; spotify-connect.el --- Spotify.el transport for the Spotify Connect API
 
 ;;; Commentary:
 
-;; spotify-connect.el --- Spotify.el transport for the Spotify Connect API
+;; Talks with Spotify Connect via spotify-api.el
 
 ;; Copyright (C) 2019 Jason Dufair
 
@@ -141,8 +142,8 @@ Returns a JSON string in the format:
 
 (defun spotify-connect-player-play-track (uri &optional context)
   "Play a track URI via Spotify Connect in an optional CONTEXT."
-  (lexical-let ((uri uri)
-                (context context))
+  (let ((uri uri)
+        (context context))
     (spotify-when-device-active
      (spotify-api-play nil uri context))))
 
@@ -181,7 +182,7 @@ Returns a JSON string in the format:
   (spotify-when-device-active
    (spotify-api-get-player-status
     (lambda (status)
-      (lexical-let ((new-volume (min (+ (spotify-connect-get-volume status) amount) 100)))
+      (let ((new-volume (min (+ (spotify-connect-get-volume status) amount) 100)))
         (spotify-api-set-volume
          (spotify-connect-get-device-id status)
          new-volume
@@ -193,25 +194,22 @@ Returns a JSON string in the format:
   (spotify-when-device-active
    (spotify-api-get-player-status
     (lambda (status)
-      (lexical-let ((new-volume (max (- (spotify-connect-get-volume status) amount) 0)))
+      (let ((new-volume (max (- (spotify-connect-get-volume status) amount) 0)))
         (spotify-api-set-volume
          (spotify-connect-get-device-id status)
          new-volume
          (lambda (_)
            (message "Volume decreased to %d%%" new-volume))))))))
 
-(defvar spotify--connect-volume-unmute nil
-  "§-TODO-§ [2019-11-01]: turn file into lexical bindings and get rid of this.")
 (defun spotify-connect-volume-mute-unmute (unmute-volume)
   "Mute/unmute the volume on the actively playing device by setting the volume to 0."
-  (setq spotify--connect-volume-unmute unmute-volume)
   (spotify-when-device-active
    (spotify-api-get-player-status
     (lambda (status)
       (let ((volume (spotify-connect-get-volume status)))
         (if (eq volume 0)
-            (spotify-api-set-volume (spotify-connect-get-device-id status) spotify--connect-volume-unmute
-                                    (lambda (_) (message "Volume unmuted to %s." spotify--connect-volume-unmute)))
+            (spotify-api-set-volume (spotify-connect-get-device-id status) unmute-volume
+                                    (lambda (_) (message "Volume unmuted to %s." unmute-volume)))
           (spotify-api-set-volume (spotify-connect-get-device-id status) 0
                                   (lambda (_) (message "Volume muted.")))))))))
 
