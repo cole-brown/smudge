@@ -20,12 +20,6 @@
 (require 'spotify-api)
 
 
-;; §-TODO-§ [2019-11-04]: Rather big bug caused by Weird Al...
-;; This fails:
-;;   json-read-from-string("{\"artist\":\"\"Weird Al\" Yankovic\",\"duration\": 142946,\"track_number\":3,\"name\":\"Foil\",\"player_state\":\"playing\",\"player_shuffling\":false,\"player_repeating\":false}")
-;; Is this our's?
-
-
 ;; §-TODO-§ [2019-11-01]: move cache normalizing, cache actually-getting-value
 ;; functions to backends (connect, etc)
 
@@ -35,7 +29,6 @@
 ;; §-TODO-§ [2019-10-28]: Check cache's age, fire off async request for update
 ;; if older than refresh interval defcustom? Return stale to maintain
 ;; sync interface?
-
 
 ;; §-TODO-§ [2019-10-31]: Remove the debugging messages and
 ;; commented out testing func calls
@@ -70,6 +63,17 @@ Enables/disables player status redirect in spotify-api."
 'connect transport, avoid using values smaller than 5 to avoid being rate
 limited. Set to 0 to disable this feature."
   :type 'integer
+  :group 'spotify)
+
+
+;; §-TODO-§ [2019-11-09]: implement this?
+(defcustom spotify-player-status-refresh-on-action nil
+  "Enable to allow player-status to ask for a refresh after
+actions are taken by the user. E.g. change track, playlist,
+pause, etc.
+
+Useful if you have set `spotify-player-status-refresh-interval' higher."
+  :type  'boolean
   :group 'spotify)
 
 
@@ -248,7 +252,8 @@ getting values from the player status.")
 
 
 (defconst spotify--player-status-translators
-  ;; Use defcustom symbols so we don't have to keep this up-to-date.
+  ;; Use symbols and delay their eval to values so we don't have to bother
+  ;; keeping this up-to-date.
   '(;; Artist/Track: truncate to length
     (artist    artist
                (lambda (len str) (if (stringp str)

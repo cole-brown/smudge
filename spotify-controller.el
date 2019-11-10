@@ -39,6 +39,8 @@
 
 (defvar spotify-timer nil)
 
+;; §-TODO-§ [2019-11-09]: Make backends reply to this any time they get status?
+
 (defun spotify-apply (suffix &rest args)
   "Simple facility to emulate multimethods.
 Apply SUFFIX to spotify-prefixed functions, applying ARGS."
