@@ -907,30 +907,30 @@ FIELD-TRUE is assumed valid.
 
      ;; raw duration
      ((eq field-true 'duration-millisecond)
-      (message "simple duration-ms: %S->%S"
-               (gethash 'duration status-n)
-               (gethash 'duration status-n))
+      ;; (message "simple duration-ms: %S->%S"
+      ;;          (gethash 'duration status-n)
+      ;;          (gethash 'duration status-n))
       (gethash 'duration status-n))
 
      ;;---
      ;; Player Status
      ;;---
      ((eq field-true 'shuffling-bool)
-      (message "simple shuffling: %S->%S"
-               (gethash 'player_shuffling status-n)
-               (not (eq (gethash 'player_shuffling status-n) :json-false)))
+      ;; (message "simple shuffling: %S->%S"
+      ;;          (gethash 'player_shuffling status-n)
+      ;;          (not (eq (gethash 'player_shuffling status-n) :json-false)))
       (not (eq (gethash 'player_shuffling status-n) :json-false)))
 
      ((eq field-true 'repeating-bool)
-      (message "simple repeating: %S->%S"
-               (gethash 'player_repeating status-n)
-               (not (eq (gethash 'player_repeating status-n) :json-false)))
+      ;; (message "simple repeating: %S->%S"
+      ;;          (gethash 'player_repeating status-n)
+      ;;          (not (eq (gethash 'player_repeating status-n) :json-false)))
       (not (eq (gethash 'player_repeating status-n) :json-false)))
 
      ((eq field-true 'playing-bool)
-      (message "simple playing: %S->%S"
-               (gethash 'player_state status-n)
-               (string= (gethash 'player_state status-n) "playing"))
+      ;; (message "simple playing: %S->%S"
+      ;;          (gethash 'player_state status-n)
+      ;;          (string= (gethash 'player_state status-n) "playing"))
       ;; ...if it's not not playing, it's playing!
       (string= (gethash 'player_state status-n) "playing"))
 
