@@ -19,6 +19,7 @@
 ;;------------------------------------------------------------------------------
 
 (require 'spotify-api)
+(require 'spotify-json)
 
 ;; §-TODO-§ [2019-11-01]: move cache normalizing, cache actually-getting-value
 ;; functions to backends (connect, etc)
@@ -317,7 +318,6 @@ Translation alists should have format of:
    (status-field-valueN \"return value N\"))")
 
 
-;; §-TODO-§ [2019-11-09]: change to keywords? e.g. :artist
 (defconst spotify--player-status-field->format-spec
   '((:artist       "%a")
     (:track        "%t")
@@ -403,8 +403,8 @@ DICTIONARY must be alist or nil. If nil,
             (assoc field dictionary))
            (field-true (or (nth 1 trans-entry)
                            field))
-           (value (spotify--normalized-field-get status field-true dictionary)))
-
+           (value (spotify--player-status-field-raw status field-true
+                                                    dictionary)))
 
       ;; (message "spotify--player-status-field: %S %S -> %S \ndict: %S"
       ;;          field
@@ -413,7 +413,8 @@ DICTIONARY must be alist or nil. If nil,
       ;;          (if (not trans-entry)
       ;;              value
       ;;            ;; Else translate it using dictionary.
-      ;;            (spotify--player-status-translate field field-true value dictionary))
+      ;;            (spotify--player-status-translate field field-true value
+      ;;                                                    dictionary))
 
       ;;          dictionary
       ;;          )
@@ -631,6 +632,9 @@ STATUS must be hashtable, string, or nil. See `spotify--normalized-status-type'.
 ;;------------------------------------------------------------------------------
 ;; Helpers
 ;;------------------------------------------------------------------------------
+
+;; §-TODO-§ [2019-11-10]: "normalized" isn't so great...
+;; And we probably shouldn't do this - that's what spotify-apply is for.
 (defun spotify--normalized-status-type (status)
   "Takes in a few kinds of STATUSes and returns a valid normalized STATUS.
 
@@ -675,7 +679,9 @@ Valid returns are:
    (t nil)))
 
 
-(defun spotify--normalized-field-get (status-n field-true translators)
+;; §-TODO-§ [2019-11-10]: requiring status to be figured out before it hits
+;; spotify-json is meh. Let spotify json handle it?
+(defun spotify--player-status-field-raw (status-n field-true translators)
   "STATUS-N must be normalized - i.e. STATUS-N should be passed
 through `spotify--normalized-status-type' first.
 
@@ -706,7 +712,7 @@ So our current check can be: \"Does it have 'item' as a field?\"
   ;; FIELD-TRUE validity checked here.
   (let ((translate-entry (assoc field-true
                                 spotify--player-status-translators)))
-    ;; (message "spotify--normalized-field-get: %S. ok? %S <- mem? %S and trans-ok? %S <- no trans %S or self-trans %S %S %S %S 0:%S 1:%S assoc:%S"
+    ;; (message "spotify--player-status-field-raw: %S. ok? %S <- mem? %S and trans-ok? %S <- no trans %S or self-trans %S %S %S %S 0:%S 1:%S assoc:%S"
     ;;          field-true
 
     ;;          (and (member field-true spotify-player-status-fields)
@@ -749,6 +755,9 @@ So our current check can be: \"Does it have 'item' as a field?\"
                    ;; is a self translation
                    (eq (nth 0 translate-entry)
                        (nth 1 translate-entry))))
+
+      ;; §-TODO-§ [2019-11-10]: spotify-apply instead of guessing based on cache?
+
       ;; status or default to cache
       (let ((status-n (spotify--cache-get-status-if status-n)))
         ;; Our current checks...
@@ -758,222 +767,11 @@ So our current check can be: \"Does it have 'item' as a field?\"
           nil)
          ;; full should have 'item' in status-n
          ((not (null (gethash 'item status-n)))
-          ;; (message "ffg: %S %S" field-true (spotify--full-field-get status-n field-true))
-          (spotify--full-field-get status-n field-true))
+          ;; (message "ffg: %S %S" field-true (spotify--json-api-status-field status-n field-true))
+          (spotify--json-api-status-field status-n field-true))
          ;; else we'll assume simple?
          (t
-          (spotify--simple-field-get status-n field-true)))))))
-
-
-(defun spotify--full-field-get (status-n field-true)
-  "Returns value of FIELD-TRUE in STATUS-N, or nil.
-
-STATUS-N must be full JSON structure returned from spotify-connect
-or nil. If STATUS-N is nil, nil will be return value.
-
-FIELD-TRUE is assumed valid.
-"
-  ;; (when (eq field-true :device-active-state)
-  ;;     (message "spotify--full-field-get: %S (or %S %S %S)->%S %S %S"
-  ;;              field-true
-
-  ;;              (not (null status-n))
-  ;;              (not (null (gethash 'item status-n)))
-  ;;              (not (null (gethash 'device status-n)))
-  ;;              (and (not (null status-n))
-  ;;                   (not (null (gethash 'item status-n)))
-  ;;                   (not (null (gethash 'device status-n))))
-
-  ;;              (gethash 'device status-n)
-
-  ;;              nil
-  ;;              ;;(gethash 'item status-n)
-
-  ;;              nil
-  ;;              ;; status-n
-  ;;              ))
-
-  (if-let* ((status-n status-n) ;; null check
-            (track (gethash 'item status-n))
-            (device (gethash 'device status-n)))
-
-      ;; if-let* success case
-      ;; get the field from the cache
-      (cond
-       ;;---
-       ;; Track Status
-       ;;---
-       ((eq field-true :artist)
-        (gethash 'name (car (gethash 'artists track))))
-
-       ((eq field-true :track)
-        (gethash 'name track))
-
-       ((eq field-true :track-number)
-        (gethash 'track_number track))
-
-       ;; raw duration
-       ((eq field-true :duration-millisecond)
-        (gethash 'duration_ms track))
-
-       ;;---
-       ;; Player Status
-       ;;---
-       ((eq field-true :shuffling-bool)
-        (not (eq (gethash 'shuffle_state status-n) :json-false)))
-
-       ((eq field-true :repeating-bool)
-        (not (string= (gethash 'repeat_state status-n) "off")))
-
-       ((eq field-true :playing-bool)
-        ;; ...if it's not not playing, it's playing!
-        (not (eq (gethash 'is_playing status-n) :json-false)))
-
-       ((eq field-true :paused-bool)
-        ;; ...if it's not playing, it's paused?
-        ;; What about stopped or not started yet? *shrug* Paused I guess.
-        (eq (gethash 'is_playing status-n) :json-false))
-
-       ((eq field-true :volume)
-        (gethash 'volume_percent device))
-
-       ((eq field-true :muted-bool)
-        (= (gethash 'volume_percent device) 0))
-
-       ((eq field-true :device-active-state)
-        ;; (message "device-active-state: %S %S"
-        ;;          device
-        ;;          (gethash 'is_active device))
-        ;; Found a device json structure - can return true/false.
-        ;; Active if 'is_active field says so.
-        (cond ((eq (gethash 'is_active device) t)
-               t)
-              ((eq (gethash 'is_active device) :json-false)
-               nil)
-              ;; didn't find device - undefined?
-              (t 'undefined)))
-
-       ;;---
-       ;; You should hopefully not get here.
-       ;;---
-       (t
-        (error (concat "spotify--full-field-get: "
-                       "field '%s' known but not handled? Sorry.")
-               field-true)))
-
-    ;; (message "fail")
-    ;; if-let* fail case. Can debug it, but so far just nil for normal
-    ;; things like no music for a while.
-    ;; (message
-    ;;  (concat "spotify-player-status: Something null in if-let*... "
-    ;;          "What's not null? cache?: %s, status-n?: %s, "
-    ;;          "track?: %s, valid?: %s")
-    ;;  (not (null spotify--cache-player-status))
-    ;;  (not (null (nth 1 spotify--cache-player-status)))
-    ;;  (not (null
-    ;;        (if (null (nth 1 spotify--cache-player-status))
-    ;;            nil
-    ;;          (gethash 'item
-    ;;                   (nth 1 spotify--cache-player-status)))))
-    ;;  (and (member field-true spotify-player-status-fields)
-    ;;               (null (assoc spotify--player-status-translators))))
-
-    ;; And return nil in case you're debugging... >.>
-    nil))
-
-
-(defun spotify--simple-field-get (status-n field-true)
-  "Returns value of FIELD-TRUE in STATUS-N, or nil.
-
-STATUS-N must be simplified JSON structure returned from e.g.
-spotify-dbus or nil. If STATUS-N is nil, nil will be return value.
-
-Simplified JSON is e.g.:
-{
-  \"artist\": \"<artist> \",
-  \"duration\": \"<duration-ms>\",
-  \"track_number\": \"<number>\",
-  \"name\": \"<track-name>\",
-  \"player_state\": \"playing|paused|stopped\",
-  \"player_shuffling\": \"-\",
-  \"player_repeating\": \"-\",
-}
-
-FIELD-TRUE is assumed valid.
-"
-  (if (or (not status-n)
-          (not (hash-table-p status-n)))
-      ;; nothing we can do...
-      nil
-
-    ;; if-let* success case
-    ;; get the field from the cache
-    (cond
-     ;;---
-     ;; Track Status
-     ;;---
-     ((eq field-true :artist)
-      (gethash 'artist status-n))
-
-     ((eq field-true :track)
-      (gethash 'name status-n))
-
-     ((eq field-true :track-number)
-      (gethash 'track_number status-n))
-
-     ;; raw duration
-     ((eq field-true :duration-millisecond)
-      ;; (message "simple duration-ms: %S->%S"
-      ;;          (gethash 'duration status-n)
-      ;;          (gethash 'duration status-n))
-      (gethash 'duration status-n))
-
-     ;;---
-     ;; Player Status
-     ;;---
-     ((eq field-true :shuffling-bool)
-      ;; (message "simple shuffling: %S->%S"
-      ;;          (gethash 'player_shuffling status-n)
-      ;;          (not (eq (gethash 'player_shuffling status-n) :json-false)))
-      (not (eq (gethash 'player_shuffling status-n) :json-false)))
-
-     ((eq field-true :repeating-bool)
-      ;; (message "simple repeating: %S->%S"
-      ;;          (gethash 'player_repeating status-n)
-      ;;          (not (eq (gethash 'player_repeating status-n) :json-false)))
-      (not (eq (gethash 'player_repeating status-n) :json-false)))
-
-     ((eq field-true :playing-bool)
-      ;; (message "simple playing: %S->%S"
-      ;;          (gethash 'player_state status-n)
-      ;;          (string= (gethash 'player_state status-n) "playing"))
-      ;; ...if it's not not playing, it's playing!
-      (string= (gethash 'player_state status-n) "playing"))
-
-     ((eq field-true :paused-bool)
-      ;; ...if it's not playing, it's paused?
-      ;; What about stopped or not started yet? *shrug* Paused I guess.
-      (not (string= (gethash 'player_state status-n) "playing")))
-
-     ;;---
-     ;; Unsupported
-     ;;---
-     ((eq field-true :volume)
-      nil)
-
-     ((eq field-true :muted-bool)
-      nil)
-
-     ((eq field-true :device-active-state)
-      'unsupported)
-
-     ;;---
-     ;; You should hopefully not get here.
-     ;;---
-     (t
-      (error (concat "spotify--simple-field-get: "
-                     "field '%s' known but not handled? Sorry.")
-             field-true)))))
+          (spotify--json-internal-status-field status-n field-true)))))))
 
 
 ;;------------------------------------------------------------------------------

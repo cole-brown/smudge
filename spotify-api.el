@@ -85,6 +85,7 @@ the parsed JSON response."
     (oauth2-url-retrieve
      (spotify-oauth2-token)
      (concat spotify-api-endpoint uri)
+     ;; §-TODO-§ [2019-11-10]: this whole lambda's contents into spotify-json.el
      (lambda (_)
        (toggle-enable-multibyte-characters t)
        (goto-char (point-min))

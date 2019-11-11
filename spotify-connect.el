@@ -9,132 +9,22 @@
 ;;; Code:
 
 (require 'spotify-api)
+(require 'spotify-json)
 
-
-(defun spotify--connect-build-json-bool (value &optional false)
-  "Converts Emacs t and nil (or values of FALSE) to json t/json-false."
-  (let ((false (or false nil)))
-    (if (eq value false)
-        json-false
-      t)))
-;; (spotify--connect-build-json-bool nil)
-;; (spotify--connect-build-json-bool t)
-;; (setq testfoo t)
-;; (spotify--connect-build-json-bool testfoo)
-
-
-(defun spotify--connect-build-json (status)
-  "§-TODO-§ [2019-11-04]: This really should get deprecated and just allow
-normalized-get to take care of things instead of building a
-reduced set out of full return JSON...
-
-Properly use Emacs JSON lib to convert from Spotify Connect API's
-full JSON output to a reduced JSON usable by spotify.el.
-"
-  (if-let* ((status status)
-            (track (gethash 'item status))
-            (json-object-type 'hash-table)
-            (json-key-type 'symbol)
-            (json-obj (json-new-object)))
-      ;; Read status into new json-obj using json lib functions so the json
-      ;; stays properly escaped and e.g. artist "Weird Al" doesn't ruin
-      ;; everything for our baby json.
-      (progn
-        (setq json-obj (json-add-to-object
-                        json-obj "artist"
-                        (gethash 'name (car (gethash 'artists track)))))
-        (setq json-obj (json-add-to-object
-                        json-obj "duration"
-                        (gethash 'duration_ms track)))
-        (setq json-obj (json-add-to-object
-                        json-obj "track_number"
-                        (gethash 'track_number track)))
-        (setq json-obj (json-add-to-object
-                        json-obj "name"
-                        (gethash 'name track)))
-        (setq json-obj (json-add-to-object
-                        json-obj "player_state"
-                        (if (eq (gethash 'is_playing status)
-                                :json-false)
-                            "paused"
-                          "playing")))
-        (setq json-obj (json-add-to-object
-                        json-obj "player_shuffling"
-                        (spotify--connect-build-json-bool
-                         (not (eq (gethash 'shuffle_state status)
-                                  :json-false)))))
-        (setq json-obj (json-add-to-object
-                        json-obj "player_repeating"
-                        (spotify--connect-build-json-bool
-                         (not (string= (gethash 'repeat_state status)
-                                  "off")))))
-
-        ;; convert new baby json to string and return it
-        (json-encode json-obj))
-
-    ;; failed to convert json - return nil
-    nil))
-
-
-;; with json-encode on artist/name:
-;;   actual string from this with %S:
-;;   "{\"artist\":\"\"Bobaflex\"\",\"duration\": 214533,\"track_number\":3,\"name\":\"\"Bury Me With My Guns\"\",\"player_state\":\"playing\",\"player_shuffling\":false,\"player_repeating\":false}"
-;;
-;;   actual string from this with %s:
-;;   {"artist":""Bobaflex"","duration": 214533,"track_number":3,"name":""Bury Me With My Guns"","player_state":"playing","player_shuffling":false,"player_repeating":false}
-;;
-;; without:
-;;   actual string from this with %S:
-;;   "{\"artist\":\"Heldmaschine\",\"duration\": 176398,\"track_number\":1,\"name\":\"®\",\"player_state\":\"playing\",\"player_shuffling\":false,\"player_repeating\":false}"
-;;
-;;   actual string from this with %s:
-;;   {"artist":"Heldmaschine","duration": 176398,"track_number":1,"name":"®","player_state":"playing","player_shuffling":false,"player_repeating":false}
-;;
 (defun spotify-connect-player-status ()
   "Get the player status of the currently playing device, if any.
-Returns a JSON string in the format:
-{
-  \"artist\": \"Aesop Rock\",
-  \"duration\": 265333,
-  \"track_number\": 9,
-  \"name\":  \"Shrunk\",
-  \"player_state\": \"playing\",
-  \"player_shuffling\": \"t\",
-  \"player_repeating\": \"context\"
-}"
+Returns a JSON string in the `spotify--encode-json-simple' format.
+"
   (spotify-api-get-player-status
    (lambda (status)
-     (if-let* ((status status)
-               (track (gethash 'item status))
-               (json (spotify--connect-build-json status)))
-                ;; §-TODO-§ [2019-11-09]: delete when I'm sure I don't need anymore.
-                ;; (concat
-                ;;  "{"
-                ;;  (format "\"artist\":\"%s\","
-                ;;          ;; encode for "Weird Al".
-                ;;          (gethash 'name (car (gethash 'artists track))))
-                ;;  (format "\"duration\": %d,"
-                ;;          (gethash 'duration_ms track))
-                ;;  (format "\"track_number\":%d,"
-                ;;          (gethash 'track_number track))
-                ;;  (format "\"name\":\"%s\","
-                ;;          (gethash 'name track))
-                ;;  (format "\"player_state\":\"%s\","
-                ;;          (if (eq (gethash 'is_playing status) :json-false) "paused" "playing"))
-                ;;  (format "\"player_shuffling\":%s,"
-                ;;          (if (not (eq (gethash 'shuffle_state status) :json-false))"true" "false"))
-                ;;  (format "\"player_repeating\":%s"
-                ;;          (if (string= (gethash 'repeat_state status) "off") "false" "true"))
-                ;;  "}")))
-         (spotify-player-status-refresh-string json)
-       (spotify-player-status-refresh-string nil)))))
+     (spotify-player-status-refresh-string
+      (spotify--json-api-to-internal status)))))
 
 (defmacro spotify-when-device-active (body)
   "Evaluate BODY when there is an active device, otherwise shows an error message."
   `(spotify-api-device-list
     (lambda (json)
-      (if-let ((json json)
-               (devices (gethash 'devices json))
+      (if-let ((devices (spotify--json-api-device-list json))
                (active (> (length (seq-filter (lambda (dev) (eq (gethash 'is_active dev) t)) devices)) 0)))
           (progn ,body)
         (message "No active device")))))
