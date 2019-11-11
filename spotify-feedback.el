@@ -1,4 +1,4 @@
-;;; spotify-player-feedback.el --- Spotify action feedback messages -*- lexical-binding: t -*-
+;;; spotify-feedback.el --- Spotify action feedback messages -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 
@@ -18,7 +18,9 @@
 ;;--                             Player Feedback                              --
 ;;------------------------------------------------------------------------------
 
-(require 'spotify-player-status)
+;; §-TODO-§ [2019-11-10]: do I need this? Or others?
+;; (require 'spotify-player-status)
+
 
 ;;------------------------------------------------------------------------------
 ;; Settings
@@ -26,7 +28,7 @@
 
 ;; §-TODO-§ [2019-11-09]: any settings?
 
-;; (defcustom spotify-player-feedback-refresh-interval 5
+;; (defcustom spotify-feedback-refresh-interval 5
 ;;   "The interval, in seconds, that the mode line must be updated. When using the
 ;; 'connect transport, avoid using values smaller than 5 to avoid being rate
 ;; limited. Set to 0 to disable this feature."
@@ -35,11 +37,21 @@
 
 
 ;;------------------------------------------------------------------------------
+;; Static Responses
+;;------------------------------------------------------------------------------
+
+(defun spotify--feedback--no-device ()
+  "Feedback message for no active device. Only useful, really,
+for backends that know whether any device is active. E.g. spotify-connect."
+  (message "No device active."))
+
+
+;;------------------------------------------------------------------------------
 ;; User Action Responses
 ;;------------------------------------------------------------------------------
 
 ;; §-TODO-§ [2019-11-09]: use this in places for things.
-(defun spotify--player-feedback-promise-message (fmt &rest keywords)
+(defun spotify--feedback-promise-message (fmt &rest keywords)
   "Creates a closure to be invoked in the future when async
 operation is finished for feedback to user.
 
@@ -48,28 +60,28 @@ operation is finished for feedback to user.
   (:artist nil))
 
 This will thin be fulfilled by the backend filling in whatever
-fields it knows of via `spotify--player-feedback-fulfill-message'.
+fields it knows of via `spotify--feedback-fulfill-message'.
 
 Finally, it can be delivered to the user via `spotify--invoke-callback'.
 "
   ;; End up with callback on car so it's an easy/known to check/pop...
   (let ((callback (lambda (alist)
-                    (spotify--player-feedback-future-message fmt alist)))
+                    (spotify--feedback-future-message fmt alist)))
         (key-list))
     (dolist (key keywords)
       (push (list key nil) key-list))
     (push (list :callback
                 callback)
           key-list)))
-;; (spotify--player-feedback-promise-message "hi? %d %s" :digit :string)
+;; (spotify--feedback-promise-message "hi? %d %s" :digit :string)
 
 
-(defun spotify--player-feedback-future-message (fmt alist)
+(defun spotify--feedback-future-message (fmt alist)
   "Takes promised message and fulfilled alist values, and
 delivers it to the user - now that it is the future.
 
 Should only really be dealt with as a closure from
-`spotify--player-feedback-promise-message'.
+`spotify--feedback-promise-message'.
 "
   (let ((output fmt))
     (dolist (element alist)
@@ -81,7 +93,7 @@ Should only really be dealt with as a closure from
     (message output)))
 
 
-(defun spotify--player-feedback-fulfill-message (alist key value)
+(defun spotify--feedback-fulfill-message (alist key value)
   "Provides value to fulfill promised message.
 Returns the updated-in-place alist.
 
@@ -89,7 +101,7 @@ Backend can fulfill values it knows of without caring about
 message contents, formatting, etc.
 
 E.g.:
-(spotify--player-feedback-fulfill-message reply :volume 87)
+(spotify--feedback-fulfill-message reply :volume 87)
 "
   ;; Only try setting if it's found.
   (if-let ((cell (assoc key alist)))
@@ -97,8 +109,8 @@ E.g.:
       ;; leave the alist as a list-alist, as opposed to a dotted-pair alist.
       (setf (cdr cell) (cons value nil)))
   alist)
-;; (spotify--player-feedback-fulfill-message '((:callback jeff) (:test nil)) :test 'more-jeff)
-;; (spotify--player-feedback-fulfill-message '((:callback jeff) (:test nil)) :bob 'more-bob)
+;; (spotify--feedback-fulfill-message '((:callback jeff) (:test nil)) :test 'more-jeff)
+;; (spotify--feedback-fulfill-message '((:callback jeff) (:test nil)) :bob 'more-bob)
 
 
 ;; §-TODO-§ [2019-11-09]: probably doesn't belong in here...
@@ -129,13 +141,13 @@ fulfillment alist types.
    (t
     nil)))
 ;; (spotify--invoke-callback 'message "hello %s" "there")
-;; (let* ((promise (spotify--player-feedback-promise-message "hello, :test :jeff" :test :jeff)))
-;;   (spotify--player-feedback-fulfill-message promise :test "there.")
-;;   (spotify--player-feedback-fulfill-message promise :bob "uh...")
+;; (let* ((promise (spotify--feedback-promise-message "hello, :test :jeff" :test :jeff)))
+;;   (spotify--feedback-fulfill-message promise :test "there.")
+;;   (spotify--feedback-fulfill-message promise :bob "uh...")
 ;;   (spotify--invoke-callback promise))
 
 
 ;;------------------------------------------------------------------------------
 ;; The End
 ;;------------------------------------------------------------------------------
-(provide 'spotify-player-feedback)
+(provide 'spotify-feedback)

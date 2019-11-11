@@ -33,6 +33,9 @@
 (require 'oauth2)
 (require 'tabulated-list)
 
+(require 'spotify-json)
+(require 'spotify-feedback)
+
 (require 'spotify-api)
 (require 'spotify-track-search)
 (require 'spotify-playlist-search)
@@ -43,9 +46,9 @@
 (when-darwin    (require 'spotify-apple))
 (when-gnu-linux (require 'spotify-dbus))
 
+(require 'spotify-player-status)
 (require 'spotify-connect)
 
-(require 'spotify-player-status)
 (require 'spotify-hydra)
 
 (defgroup spotify nil

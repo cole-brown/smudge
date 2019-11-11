@@ -8,7 +8,7 @@
 
 (require 'spotify-remote)
 (require 'spotify-player-status)
-(require 'spotify-player-feedback)
+(require 'spotify-feedback)
 
 (add-hook 'spotify--cache-player-status-hook
           #'spotify--controller-status-updated)

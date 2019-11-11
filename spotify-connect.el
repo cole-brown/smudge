@@ -10,6 +10,7 @@
 
 (require 'spotify-api)
 (require 'spotify-json)
+(require 'spotify-feedback)
 
 (defun spotify-connect-player-status ()
   "Get the player status of the currently playing device, if any.
@@ -27,7 +28,7 @@ Returns a JSON string in the `spotify--encode-json-simple' format.
       (if-let ((devices (spotify--json-api-device-list json))
                (active (> (length (seq-filter (lambda (dev) (eq (gethash 'is_active dev) t)) devices)) 0)))
           (progn ,body)
-        (message "No active device")))))
+        (spotify--feedback--no-device)))))
 
 (defun spotify-connect-player-play-track (uri &optional context)
   "Play a track URI via Spotify Connect in an optional CONTEXT."
@@ -50,11 +51,10 @@ Returns a JSON string in the `spotify--encode-json-simple' format.
   "Toggle playing status of current track."
   (spotify-when-device-active
    (spotify-api-get-player-status
-    (lambda (status)
-      (if status
-          (if (not (eq (gethash 'is_playing status) :json-false))
-              (spotify-api-pause)
-            (spotify-api-play)))))))
+    (spotify--if-status-closure status
+      (if (spotify--json-api-status-field status :playing-bool)
+          (spotify-api-pause)
+        (spotify-api-play))))))
 
 (defun spotify-connect-player-next-track ()
   "Skip to the next track."
@@ -70,8 +70,9 @@ Returns a JSON string in the `spotify--encode-json-simple' format.
   "Turn up the volume on the actively playing device."
   (spotify-when-device-active
    (spotify-api-get-player-status
-    (lambda (status)
-      (let ((new-volume (min (+ (spotify-connect-get-volume status) amount) 100)))
+    (spotify--if-status-closure status
+      (let* ((cur-volume (spotify--json-api-status-field status :volume))
+             (new-volume (min (+ cur-volume amount) 100)))
         (spotify-api-set-volume
          (spotify-connect-get-device-id status)
          new-volume
@@ -82,8 +83,9 @@ Returns a JSON string in the `spotify--encode-json-simple' format.
   "Turn down the volume (for what?) on the actively playing device."
   (spotify-when-device-active
    (spotify-api-get-player-status
-    (lambda (status)
-      (let ((new-volume (max (- (spotify-connect-get-volume status) amount) 0)))
+    (spotify--if-status-closure status
+      (let* ((cur-volume (spotify--json-api-status-field status :volume))
+             (new-volume (max (- cur-volume amount) 0)))
         (spotify-api-set-volume
          (spotify-connect-get-device-id status)
          new-volume
@@ -94,46 +96,48 @@ Returns a JSON string in the `spotify--encode-json-simple' format.
   "Mute/unmute the volume on the actively playing device by setting the volume to 0."
   (spotify-when-device-active
    (spotify-api-get-player-status
-    (lambda (status)
-      (let ((volume (spotify-connect-get-volume status)))
+    (spotify--if-status-closure status
+      (let ((volume (spotify--json-api-status-field status :volume))
+            (dev-id (spotify-connect-get-device-id status)))
         (if (eq volume 0)
-            (spotify-api-set-volume (spotify-connect-get-device-id status) unmute-volume
+            (spotify-api-set-volume dev-id unmute-volume
                                     (lambda (_) (message "Volume unmuted to %s." unmute-volume)))
-          (spotify-api-set-volume (spotify-connect-get-device-id status) 0
+          (spotify-api-set-volume dev-id 0
                                   (lambda (_) (message "Volume muted.")))))))))
 
+;; §-TODO-§ [2019-11-10]: do these really have to give strings?
 (defun spotify-connect-toggle-repeat ()
   "Toggle repeat for the current track."
   (spotify-when-device-active
    (spotify-api-get-player-status
-    (lambda (status)
-      (spotify-api-repeat (if (spotify--is-repeating status) "off" "context"))))))
+    (spotify--if-status-closure status
+      (spotify-api-repeat
+       (if (spotify--json-api-status-field status :repeating-bool)
+           "off"
+         "context"))))))
 
+;; §-TODO-§ [2019-11-10]: macro called:
+;; spotify--device-active->status-if
+;; or something for:
+;;  (spotify-when-device-active
+;;   (spotify-api-get-player-status
+;;    (spotify--if-status-closure status
+
+;; §-TODO-§ [2019-11-10]: do these really have to give strings?
 (defun spotify-connect-toggle-shuffle ()
   "Toggle shuffle for the current track."
   (spotify-when-device-active
    (spotify-api-get-player-status
-    (lambda (status)
-      (spotify-api-shuffle (if (spotify--is-shuffling status) "false" "true"))))))
+    (spotify--if-status-closure status
+      (spotify-api-shuffle
+       (if (spotify--json-api-status-field status :repeating-bool)
+           "false"
+         "true"))))))
 
 (defun spotify-connect-get-device-id (player-status)
   "Get the id if from PLAYER-STATUS of the currently playing device, if any."
   (when player-status
     (gethash 'id (gethash 'device player-status))))
-
-(defun spotify-connect-get-volume (player-status)
-  "Get the volume from PLAYER-STATUS of the currently playing device, if any."
-  (when player-status
-    (gethash 'volume_percent (gethash 'device player-status))))
-
-(defun spotify--is-shuffling (player-status)
-  "Business logic for shuffling state of PLAYER-STATUS."
-  (and player-status
-       (not (eq (gethash 'shuffle_state player-status) :json-false))))
-
-(defun spotify--is-repeating (player-status)
-  "Business logic for repeat state of PLAYER-STATUS."
-  (string= (gethash 'repeat_state player-status) "context"))
 
 
 (provide 'spotify-connect)

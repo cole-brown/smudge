@@ -68,6 +68,7 @@ Creates:
               (json-obj (json-new-object)))
          ;; ok - execute body forms
          ,@body)
+
      ;; Error handlers:
      (error ;; 'error' signal:
       ;; demote error to message unless debugging
@@ -76,12 +77,24 @@ Creates:
 ;; (spotify--build-json (error "hi"))
 
 
+;; §-TODO-§ [2019-11-10]: rename to spotify--if-status?
+(defmacro spotify--if-status-closure (status &rest body)
+  "Returns a lambda/closure that does nothing if STATUS is nil, or executes BODY
+if STATUS is non-nil.
+"
+  (declare (indent defun))
+  `(lambda (status)
+     (when status
+       ,@body)))
+;; (spotify--if-status-closure t (message "hi"))
+
+
 ;;------------------------------------------------------------------------------
 ;; General Helpers
 ;;------------------------------------------------------------------------------
 
 (defun spotify--json-bool-encode (value &optional false testfn)
-  "Converts Emacs t and nil (or values of FALSE) to json t/json-false.
+  "Converts Emacs t and nil (or value of FALSE) to json t/json-false.
 
 If TESTFN is non-nil, it will be used as the comparator. Default is `eq'.
 
@@ -112,8 +125,9 @@ If FALSE is non-nil, it will be used as the comparison. Default is :json-false.
 
 
 (defun spotify--json-api--get-field (type json field)
-  "Checks that FIELD is an expected member of the json TYPE, then tries to get
-it from JSON (hash-table).
+  "Checks that FIELD is an expected member of the json TYPE, then
+tries to get it from JSON (hash-table). This will not walk into
+sub-records of JSON; FIELD is expected to be a top-level member.
 
 If not in JSON, this will return nil.
 "
