@@ -218,8 +218,8 @@ top line of the Hydra docstring. The following placeholders are supported:
                 (lambda (fmt ms) (format-seconds fmt (/ ms 1000)))
                 spotify-player-status-duration-format)
 
-    ;; Device Active bool: translate from trilean state
-    (:device-active-bool :device-active-trilean
+    ;; Device Active bool: translate from state
+    (:device-active-bool :device-active-state
                          ;; map both nil/false and undefined to nil/false
                          ((t t) (nil nil) (undefined nil)))
 
@@ -362,8 +362,8 @@ centers string at that length."
 
     (let ((state (spotify-player-status-field :device-active-state)))
       (cond
-       ;; :device-active of true is fine.
-       ;; :device-active of 'unsupported I want to ignore, so also fine.
+       ;; :device-active-state of true is fine.
+       ;; :device-active-state of 'unsupported I want to ignore, so also fine.
        ((or (eq state t)
             (eq state 'unsupported))
         ;; get and return format, centered if we can/want

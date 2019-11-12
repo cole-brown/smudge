@@ -4,6 +4,8 @@
 
 ;;; Code:
 
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
+
 (defvar *spotify-user*         nil "Cached user object")
 (defvar *spotify-oauth2-token* nil "Cached OAuth2 token")
 (defvar *spotify-oauth2-ts*    nil "Unix timestamp in which the OAuth2 token was retrieved. This is used to manually refresh the token when it's about to expire.")

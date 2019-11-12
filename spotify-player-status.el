@@ -236,7 +236,7 @@ NOTE: Probably use these accessors:
     ;;---
     ;; Player Status
     ;;---
-    ;; device-active      ;; §-TODO-§ [2019-11-01]: string of active device's name?
+    :device-active-name  ;; string
     :device-active-bool  ;; boolean: state mapped to t, nil, nil, nil
     :device-active-state ;; symbol: t, nil, undefined, unsupported
     :shuffling      ;; string
@@ -767,8 +767,8 @@ So our current check can be: \"Does it have 'item' as a field?\"
           nil)
          ;; full should have 'item' in status-n
          ((not (null (gethash 'item status-n)))
-          ;; (message "ffg: %S %S" field-true (spotify--json-api-status-field status-n field-true))
-          (spotify--json-api-status-field status-n field-true))
+          ;; (message "ffg: %S %S" field-true (spotify--api-player-status status-n field-true))
+          (spotify--api-player-status status-n field-true))
          ;; else we'll assume simple?
          (t
           (spotify--json-internal-status-field status-n field-true)))))))

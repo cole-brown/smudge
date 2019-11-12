@@ -37,6 +37,7 @@
 (require 'spotify-feedback)
 
 (require 'spotify-api)
+(require 'spotify-api-json)
 (require 'spotify-track-search)
 (require 'spotify-playlist-search)
 (require 'spotify-device-select)
