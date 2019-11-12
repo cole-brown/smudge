@@ -83,7 +83,7 @@ Returns list of devices from the json. These will have
 Returns value of KEYWORD in STATUS (wherever it is - even in
 json sub-objects), or nil. KEYWORD must be one of the 'raw' keywords
 in `spotify-player-status-fields', not an actual keyword in the
-status. See `spotify--keyword->connect-field' for the valid KEYWORDs.
+status. See `spotify--keyword->api-field' for the valid KEYWORDs.
 
 STATUS must be json reply formatted hash-table (by json.el) from
 Spotify Connect API. See:
@@ -92,7 +92,7 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
 If STATUS is nil, nil will be return value.
 "
   (if-let* ((json json)
-            (type (nth 1 (assoc keyword spotify--keyword->connect-field))))
+            (type (nth 1 (assoc keyword spotify--keyword->api-field))))
 
       (cond
        ((eq type 'spotify--api-player-status)
@@ -134,14 +134,14 @@ If STATUS is nil, nil will be return value.
         (error
          "spotify--api-player-status: don't know what to do with keyword: %S %S"
          keyword
-         "(is it in `spotify--keyword->connect-field'?)")))
+         "(is it in `spotify--keyword->api-field'?)")))
 
     ;; else for if-let: something is null.
     (error "spotify--api-player-status: if-let failed: %S %S->%S %S"
            (null json)
            keyword
            type
-           "(is keyword in `spotify--keyword->connect-field'?)")))
+           "(is keyword in `spotify--keyword->api-field'?)")))
 
 
 ;;------------------------------------------------------------------------------
@@ -238,7 +238,7 @@ If not in JSON, this will return nil.
   "§-TODO-§ [2019-11-11]: This
 "
   (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->connect-field)
+                                 (assoc keyword spotify--keyword->api-field)
                                  spotify--api-player-status))
 
 
@@ -246,7 +246,7 @@ If not in JSON, this will return nil.
   "§-TODO-§ [2019-11-11]: This
 "
   (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->connect-field)
+                                 (assoc keyword spotify--keyword->api-field)
                                  spotify--api-track-full))
 
 
@@ -254,7 +254,7 @@ If not in JSON, this will return nil.
   "§-TODO-§ [2019-11-11]: This
 "
   (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->connect-field)
+                                 (assoc keyword spotify--keyword->api-field)
                                  spotify--api-artist-simple))
 
 
@@ -262,7 +262,7 @@ If not in JSON, this will return nil.
   "§-TODO-§ [2019-11-11]: This
 "
   (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->connect-field)
+                                 (assoc keyword spotify--keyword->api-field)
                                  spotify--api-device-full))
 
 
@@ -271,7 +271,7 @@ If not in JSON, this will return nil.
 ;;   "Returns value of KEYWORD in STATUS (wherever it is - even in
 ;; json sub-objects), or nil. KEYWORD must be one of the 'raw' keywords
 ;; in `spotify-player-status-fields', not an actual keyword in the
-;; status. See `spotify--keyword->connect-field' for the valid KEYWORDs.
+;; status. See `spotify--keyword->api-field' for the valid KEYWORDs.
 
 ;; STATUS must be json reply formatted hash-table (by json.el) from
 ;; Spotify Connect API. See:
@@ -292,7 +292,7 @@ If not in JSON, this will return nil.
 ;;                                                   'artists))
 ;;             ;; now figure out some things...
 ;;             ;;
-;;             (field (assoc keyword spotify--keyword->connect-field))
+;;             (field (assoc keyword spotify--keyword->api-field))
 ;;             (field-object (cond ((eq (nth 1 field)
 ;;                                      spotify--api-player-status)
 ;;                                  status)

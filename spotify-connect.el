@@ -38,9 +38,9 @@ The return value of `spotify-api-get-player-status' is bound to
 the variable \"status\" during the execution of the BODY forms.
 "
   (declare (indent defun))
-  (spotify-when-device-active
-   (spotify-api-get-player-status
-    `(lambda (status)
+  `(spotify-when-device-active
+    (spotify-api-get-player-status
+     (lambda (status)
        (when status
          ,@body)))))
 

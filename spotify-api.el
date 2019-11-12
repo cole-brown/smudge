@@ -79,6 +79,10 @@ Spotify API."
 (defun spotify-api-call-async (method uri &optional data callback is-retry)
   "Make a request to the given Spotify service endpoint and calls CALLBACK with
 the parsed JSON response."
+  ;; (error "nope. %S args: %S %S %S %S %S"
+  ;;        spotify-oauth2-client-id
+  ;;        method uri data callback is-retry)
+
   (let ((method method)
         (uri uri)
         (data data)
