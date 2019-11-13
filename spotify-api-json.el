@@ -61,7 +61,7 @@ getting values from the player status.")
 ;;   - https://developer.spotify.com/documentation/web-api/reference/player/
 ;;------------------------------------------------------------------------------
 
-(defun spotify--api-devices (json keyword)
+(defun spotify--api-devices (json)
   "Gets device list from \"/v1/me/player/devices\" endpoint of Spotify Connect API.
 
 JSON must be a json reply formatted hash-table (by json.el) from
