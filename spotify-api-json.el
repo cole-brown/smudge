@@ -165,10 +165,10 @@ sub-objects of JSON; FIELD is expected to be a top-level member.
 
 If not in JSON, this will return nil.
 "
-  (when (not (member field type))
+  (unless (assoc 'device spotify--api-player-status)
     (error (concat "spotify--api-json-has-field: "
-                   "field '%s' unknown for type '%s'. Choose from: %s")
-           field (symbol-name type) type))
+                   "field '%s' unknown for type. Choose from: %S")
+           field type))
   (gethash field json))
 
 
