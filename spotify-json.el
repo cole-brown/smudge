@@ -53,7 +53,7 @@
 ;; Setup/Helper Macro
 ;;------------------------------------------------------------------------------
 
-(defmacro spotify--build-json (&rest body)
+(defmacro spotify--json-setup (&rest body)
   "Macro that sets up json.el's vars in a let-binding, then runs
 BODY forms. `json-obj' is the var ready to take in fields.
 
@@ -80,9 +80,9 @@ Creates:
      ;; Error handlers:
      (error ;; 'error' signal:
       ;; demote error to message unless debugging
-      (message "spotify--build-json: error caught: %S" spotify--error))))
-;; (spotify--build-json (message "hi"))
-;; (spotify--build-json (error "hi"))
+      (message "spotify--json-setup: error caught: %S" spotify--error))))
+;; (spotify--json-setup (message "hi"))
+;; (spotify--json-setup (error "hi"))
 
 
 ;;------------------------------------------------------------------------------
@@ -188,8 +188,8 @@ Correct Example:
         (t
          nil))
 
-  ;; spotify--build-json will set us up, then we can just stuff json-obj full.
-  (spotify--build-json
+  ;; spotify--json-setup will set us up, then we can just stuff json-obj full.
+  (spotify--json-setup
     ;; Build status into new json-obj using json lib functions so the json
     ;; stays properly escaped and e.g. artist "Weird Al" doesn't ruin
     ;; everything for our json.

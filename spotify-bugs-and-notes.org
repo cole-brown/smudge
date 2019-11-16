@@ -5,10 +5,12 @@
 
 [[--now--]]
 
-* Bug:
+* Bug: forget when
 
 <<--now-->>
 
+
+** error singnal: (error "spotify--api-status-object-get: checks failed. nil nil t")
 
 Debugger entered--Lisp error: (error "spotify--api-status-object-get: checks failed. nil nil t")
   signal(error ("spotify--api-status-object-get: checks failed. nil nil t"))
