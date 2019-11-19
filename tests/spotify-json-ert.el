@@ -14,8 +14,6 @@
 
 (require 'spotify-json)
 
-;; §-TODO-§ [2019-11-15]: Put in tests/ folder?
-
 ;; §-TODO-§ [2019-11-15]: Have a main func for requiring all test files so ert
 ;; learns about all the spotify tests only if we want to run them?
 
@@ -110,7 +108,7 @@
 
   ;; Build our four hash-table json structures for testing.
   ;; Two via `spotify--json-encode-internal' and two from test data.
-  (spotify-ert/data/with-json-internal
+  (spotify-ert/util/with-json-internal
 
    ;;---
    ;; Test "Aesop Rock"
@@ -180,7 +178,7 @@
 
   ;; Build four hash-table json structures for testing.
   ;; Two via `spotify--json-encode-internal' and two from test data.
-  (spotify-ert/data/with-json-internal
+  (spotify-ert/util/with-json-internal
 
    ;;---
    ;; Aesop Rock - Shrunk
@@ -297,25 +295,20 @@
 ;; Test Data Helpers
 ;;------------------------------------------------------------------------------
 
-(defun spotify-ert/aggressive-trim (string)
-  "Trims a lot of whitespace. All of it."
-  (replace-regexp-in-string (rx whitespace) "" string))
-
-
-(defmacro spotify-ert/data/with-json-internal (&rest body)
+(defmacro spotify-ert/util/with-json-internal (&rest body)
   "Creates 4 JSON hash table objects - 2 each for the
-player-statuses in `spotify-ert/data-string/json-internal' with a let binding,
-then executes BODY forms in a progn.
+player-statuses in `spotify-json-ert/data-string/json-internal'
+with a let binding, then executes BODY forms in a progn.
 
 JSON variables:
   - Aesop Rock
     - `json-shrunk':
-      - directly from `spotify-ert/data-string/json-internal'
+      - directly from `spotify-json-ert/data-string/json-internal'
     - `json-shrunk-roundtrip':
       - encoded with `spotify--json-encode-internal', then decoded.
   - \"Weird Al\" Yankovic
     - `json-foil':
-      - directly from `spotify-ert/data-string/json-internal'
+      - directly from `spotify-json-ert/data-string/json-internal'
     - `json-foil-roundtrip':
       - encoded with `spotify--json-encode-internal', then decoded.
 "
@@ -338,9 +331,9 @@ JSON variables:
        (setq json-foil-roundtrip (json-read-from-string str-foil))
        ;; test data string to json for these, compare aganist our round trips.
        (setq json-shrunk (json-read-from-string
-                          (nth 0 spotify-ert/data-string/json-internal)))
+                          (nth 0 spotify-json-ert/data-string/json-internal)))
        (setq json-foil (json-read-from-string
-                        (nth 1 spotify-ert/data-string/json-internal))))
+                        (nth 1 spotify-json-ert/data-string/json-internal))))
 
      (progn
        ,@body)))
@@ -350,7 +343,7 @@ JSON variables:
 ;; Test Data
 ;;------------------------------------------------------------------------------
 
-(defconst spotify-ert/data-string/json-internal
+(defconst spotify-json-ert/data-string/json-internal
   '("{
     \"artist\": \"Aesop Rock\",
     \"duration\": 265333,
@@ -377,4 +370,4 @@ structure of Spotify player status.")
 ;;------------------------------------------------------------------------------
 ;; The End.
 ;;------------------------------------------------------------------------------
-(provide 'spotify-json)
+(provide 'spotify-json-ert)
