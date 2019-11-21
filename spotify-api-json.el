@@ -36,22 +36,22 @@
   '(;;---
     ;; Track Status
     ;;---
-    (:artist                spotify--api-artist-simple  name)
-    (:track                 spotify--api-track-full     name)
-    (:track-number          spotify--api-track-full     track_number)
-    (:duration-millisecond  spotify--api-track-full     duration_ms)
+    (:artist                spotify--api/data/artist-simple  name)
+    (:track                 spotify--api/data/track-full     name)
+    (:track-number          spotify--api/data/track-full     track_number)
+    (:duration-millisecond  spotify--api/data/track-full     duration_ms)
 
     ;;---
     ;; Player Status
     ;;---
-    (:device-active-id      spotify--api-device-full    id)
-    (:device-active-name    spotify--api-device-full    name)
-    (:device-active-state   spotify--api-device-full    is_active)
-    (:shuffling-bool        spotify--api-player-status  shuffle_state)
-    (:repeating-bool        spotify--api-player-status  repeate_state)
-    (:playing-bool          spotify--api-player-status  is_playing)
+    (:device-active-id      spotify--api/data/device-full    id)
+    (:device-active-name    spotify--api/data/device-full    name)
+    (:device-active-state   spotify--api/data/device-full    is_active)
+    (:shuffling-bool        spotify--api/data/player-status  shuffle_state)
+    (:repeating-bool        spotify--api/data/player-status  repeat_state)
+    (:playing-bool          spotify--api/data/player-status  is_playing)
 
-    (:volume                spotify--api-device-full    volume_percent))
+    (:volume                spotify--api/data/device-full    volume_percent))
   "Symbols that can be passed into `spotify-player-status' for
 getting values from the player status.")
 
@@ -68,46 +68,10 @@ sub-objects of JSON; FIELD is expected to be a top-level member.
 If not in JSON, this will return nil.
 "
   (unless (assoc field type)
-    (error (concat "spotify--api-json-has-field: "
-                   "field '%s' unknown for type. Choose from: %S")
-           field type))
+    (error (concat "spotify--api-json-get-field: "
+                   "field '%s' unknown for type. Choose from: %S. json: %S")
+           field type json))
   (gethash field json))
-
-
-;;------------------------------------------------------------------------------
-;; Spotify Connect API: Object Getters
-;;------------------------------------------------------------------------------
-
-(defun spotify--api-player-status-field (status keyword)
-  "§-TODO-§ [2019-11-11]: This
-"
-  (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->api-field)
-                                 spotify--api-player-status))
-
-
-(defun spotify--api-track-field (track keyword)
-  "§-TODO-§ [2019-11-11]: This
-"
-  (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->api-field)
-                                 spotify--api-track-full))
-
-
-(defun spotify--api-artist-field (artist keyword)
-  "§-TODO-§ [2019-11-11]: This
-"
-  (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->api-field)
-                                 spotify--api-artist-simple))
-
-
-(defun spotify--api-device-field (device keyword)
-  "§-TODO-§ [2019-11-11]: This
-"
-  (spotify--api-object-get-field status
-                                 (assoc keyword spotify--keyword->api-field)
-                                 spotify--api-device-full))
 
 
 ;;------------------------------------------------------------------------------
@@ -115,27 +79,44 @@ If not in JSON, this will return nil.
 ;;------------------------------------------------------------------------------
 
 (defun spotify--api-object-get-field (object key type)
-  "§-TODO-§ [2019-11-11] this
+  "
+OBJECT is a JSON (hash-table) object from Spotify Connect API endpoint return.
+
+KEY is an alist entry from `spotify--keyword->api-field'.
+
+TYPE is the OBJECT type, as laid out at the bottom of this file. e.g.:
+  - `spotify--api/data/player-status'
+  - `spotify--api/data/track-full'
+  - `spotify--api/data/artist-simple'
+  - etc
+
+Uses KEY to translate from Spotify.el keyword to Spotify Connect API field name,
+checks that KEY is for TYPE.
+
+Then gets value for field from OBJECT, and sanity checks it using data from TYPE.
 "
   ;; null/sanity checks
   (if (or (null object)
           (not (listp key))
-          (not (eq (nth 1 key) type)))
-      (error "spotify--api-status-object-get: checks failed. %S %S %S"
+          (not (eq (eval (nth 1 key)) type)))
+      (error "spotify--api-object-get-field: checks failed. %S %S %S"
              (null object)
              (not (listp key))
-             (not (eq (nth 1 key) type)))
+             (not (eq (eval (nth 1 key)) type)))
 
     (let* ((object-def  (nth 1 key))
            (field       (nth 2 key))
            (value       (gethash field object))
-           (value-check (assoc field type)))
+           ;; assoc gets (field checker-info) from type,
+           ;; then we have to get that 2nd element for the value-check.
+           (value-check (nth 1 (assoc field type))))
+
       ;; even more null checks now that we got some things...
       (if (or (null object-def)
               (null field)
               (null value-check))
           (error
-           "spotify--api-status-object-get: setup failed. %S %S %S (value: %S)"
+           "spotify--api-object-get-field: setup failed. %S %S %S (value: %S)"
            object-def
            field
            value-check
@@ -149,8 +130,15 @@ If not in JSON, this will return nil.
           ;; valid - just return it
           value)
 
-         ;; not implemented -> nil
+         ;; not implemented -> nil (or error?)
          ((eq value-check :spotify--no-impl)
+          (error (concat "spotify--api-object-get-field: "
+                         "key:'%S'->field:'%S' Not Implemented: "
+                         "value: %S, value-check: %S")
+                 key
+                 field
+                 value
+                 value-check)
           nil)
 
          ;; boolean - figure out t/nil
@@ -167,164 +155,104 @@ If not in JSON, this will return nil.
 
          ;; sub-objects: Not putting the smarts for that in here... just
          ;; return nil.
-         ;; Other things: IDK -> nil
+         ;; Other things: IDK -> nil (or error?)
          (t
+          (error (concat
+                  "spotify--api-object-get-field: "
+                  "couldn't validate value... "
+                  "value: %S, value-check: %S. "
+                  "(func?: %S, check?: %S)"
+                  "(no impl?: %S)"
+                  "(bool?: %S, check?: %S)"
+                  )
+                 value
+                 value-check
+
+                 (functionp value-check)
+                 (if (functionp value-check) (funcall value-check value) "NA")
+
+                 (eq value-check :spotify--no-impl)
+
+                 (and (listp value-check)
+                      (eq (nth 0 value-check) :boolean))
+                 (if (and (listp value-check)
+                          (eq (nth 0 value-check) :boolean))
+                     (let ((false (nth 1 value-check))
+                           (comparator (or (nth 2 value-check)
+                                           #'eq)))
+                       (not (funcall comparator value false)))))
           nil))))))
 
 
-;; §-TODO-§ [2019-11-11]: delete
-;; (defun spotify--api-json-status-field (status keyword)
-;;   "Returns value of KEYWORD in STATUS (wherever it is - even in
-;; json sub-objects), or nil. KEYWORD must be one of the 'raw' keywords
-;; in `spotify-player-status-fields', not an actual keyword in the
-;; status. See `spotify--keyword->api-field' for the valid KEYWORDs.
+;;------------------------------------------------------------------------------
+;; Spotify Connect API: Object Getters
+;;------------------------------------------------------------------------------
 
-;; STATUS must be json reply formatted hash-table (by json.el) from
-;; Spotify Connect API. See:
-;; https://developer.spotify.com/documentation/web-api/reference/player/get-information-about-the-users-current-playback/
+(defun spotify--api-device-field (device keyword)
+  "KEYWORD should be a spotify.el keyword, /not/ a Spotify Connect API JSON
+object's/response's field name.
 
-;; If STATUS is nil, nil will be return value.
-;; "
-;;   (if-let* ( ;; null check our important json objects
-;;             (status status)
-;;             (track (spotify--api-json-get-field spotify--api-player-status
-;;                                                 status
-;;                                                 'item))
-;;             (device (spotify--api-json-get-field spotify--api-player-status
-;;                                                  status
-;;                                                  'device))
-;;             (artists (spotify--api-json-get-field spotify--api-track-full
-;;                                                   track
-;;                                                   'artists))
-;;             ;; now figure out some things...
-;;             ;;
-;;             (field (assoc keyword spotify--keyword->api-field))
-;;             (field-object (cond ((eq (nth 1 field)
-;;                                      spotify--api-player-status)
-;;                                  status)
-;;                                 ((eq (nth 1 field)
-;;                                      spotify--api-track-full)
-;;                                  track)
-;;                                 ((eq (nth 1 field)
-;;                                      spotify--api-device-full)
-;;                                  device)
-;;                                 ((eq (nth 1 field)
-;;                                      spotify--api-artist-simple)
-;;                                  (car artists)))))
+DEVICE should be a JSON hash table representation of a device
+object in a return value from Spotify Connect API's player status
+call or devices list call.
 
-;;       ;; if-let* success case
-;;       ;; get the field from its object...
-;;       (let ((value (gethash field field-object)))
+Translates the KEYWORD to a field name, and gets it from the DEVICE.
+
+If an incorrect/non-existant KEYWORD or not in DEVICE, this will return nil.
+"
+  (spotify--api-object-get-field device
+                                 (assoc keyword spotify--keyword->api-field)
+                                 spotify--api/data/device-full))
 
 
-;;       ;; if-let* success case
-;;       ;; get the field from the cache
-;;       (cond
-;;        ;;---
-;;        ;; Track Status
-;;        ;;---
-;;        ((eq field :artist)
-;;         (spotify--api-json-get-field spotify--api-artist-simple
-;;                                      ;; just first artist
-;;                                      (car artists)
-;;                                      'name))
+(defun spotify--api-artist-field (artist keyword)
+  "KEYWORD should be a spotify.el keyword, /not/ a Spotify Connect API JSON
+object's/response's field name.
 
-;;        ((eq field :track)
-;;         (spotify--api-json-get-field spotify--api-track-full
-;;                                      track
-;;                                      'name))
+ARTIST should be a JSON hash table representation of an artist
+object in a return value from Spotify Connect API's player status
+call.
 
-;;        ((eq field :track-number)
-;;         (spotify--api-json-get-field spotify--api-track-full
-;;                                      track
-;;                                      'track_number))
+Translates the KEYWORD to a field name, and gets it from the ARTIST.
 
-;;        ;; raw duration
-;;        ((eq field :duration-millisecond)
-;;         (spotify--api-json-get-field spotify--api-track-full
-;;                                      track
-;;                                      'duration_ms))
+If an incorrect/non-existant KEYWORD or not in ARTIST, this will return nil.
+"
+  (spotify--api-object-get-field artist
+                                 (assoc keyword spotify--keyword->api-field)
+                                 spotify--api/data/artist-simple))
 
-;;        ;;---
-;;        ;; Player Status
-;;        ;;---
 
-;;        ((eq field :shuffling-bool)
-;;         (spotify--json-bool-decode
-;;          ;; convert this field to bool...
-;;          (spotify--api-json-get-field spotify--api-player-status
-;;                                       status
-;;                                       'shuffle_state)
-;;          ;; with :json-false as the false comparator
-;;          :json-false))
+(defun spotify--api-track-field (track keyword)
+  "KEYWORD should be a spotify.el keyword, /not/ a Spotify Connect API JSON
+object's/response's field name.
 
-;;        ((eq field :repeating-bool)
-;;         (spotify--json-bool-decode
-;;          ;; convert this field to bool...
-;;          (spotify--api-json-get-field spotify--api-player-status
-;;                                       status
-;;                                       'repeat_state)
-;;          ;; with "off" and `string=' as the false comparator
-;;          "off" #'string=))
+TRACK should be a JSON hash table representation of a track
+object in a return value from Spotify Connect API's player status
+call.
 
-;;        ((eq field :playing-bool)
-;;         (spotify--json-bool-decode
-;;          ;; convert this field to bool...
-;;          (spotify--api-json-get-field spotify--api-player-status
-;;                                       status
-;;                                       'is_playing)
-;;          ;; with :json-false as the false comparator
-;;          :json-false))
+Translates the KEYWORD to a field name, and gets it from the TRACK.
 
-;;        ((eq field :paused-bool)
-;;         ;; ...if it's not playing, it's paused?
-;;         ;; What about stopped or not started yet? *shrug* Paused I guess.
-;;         (not
-;;          (spotify--json-bool-decode
-;;           ;; convert this field to bool...
-;;           (spotify--api-json-get-field spotify--api-player-status
-;;                                        status
-;;                                        'is_playing)
-;;           ;; with :json-false as the false comparator
-;;           :json-false)))
+If an incorrect/non-existant KEYWORD or not in TRACK, this will return nil.
+"
+  (spotify--api-object-get-field track
+                                 (assoc keyword spotify--keyword->api-field)
+                                 spotify--api/data/track-full))
 
-;;        ((eq field :volume)
-;;         (spotify--api-json-get-field spotify--api-device-full
-;;                                      device
-;;                                      'volume_percent))
 
-;;        ((eq field :muted-bool)
-;;         ;; no special field - just 0 volume
-;;         (= 0
-;;            (spotify--api-json-get-field spotify--api-device-full
-;;                                         device
-;;                                         'volume_percent)))
+(defun spotify--api-player-status-field (status keyword)
+  "KEYWORD should be a spotify.el keyword, /not/ a Spotify Connect API JSON
+object's/response's field name.
 
-;;        ((eq field :device-active-state)
-;;         ;; get field
-;;         (let ((active (spotify--api-json-get-field
-;;                        spotify--api-device-full
-;;                        device
-;;                        'is_active)))
-;;           ;; Convert - active if 'is_active field says so.
-;;           (cond ((eq active t)
-;;                  t)
-;;                 ((eq active :json-false)
-;;                  nil)
-;;                 ;; didn't find device - undefined?
-;;                 (t 'undefined))))
+STATUS should be a JSON hash table representation of a return
+value from Spotify Connect API's player status call.
 
-;;        ;;---
-;;        ;; You should hopefully not get here.
-;;        ;;---
-;;        (t
-;;         (error (concat "spotify--json-status-field: "
-;;                        "field '%s' known but not handled? Sorry.")
-;;                field)))
+Translates the KEYWORD to a field name, and gets it from the STATUS.
 
-;;     ;; And return nil in case you're debugging and have a message
-;;     ;; just above here... >.>
-;;     nil))
+If an incorrect/non-existant KEYWORD or not in STATUS, this will return nil.
+"
+  (spotify--api-object-get-field status
+                                 (assoc keyword spotify--keyword->api-field)
+                                 spotify--api/data/player-status))
 
 
 ;;------------------------------------------------------------------------------
@@ -333,14 +261,15 @@ If not in JSON, this will return nil.
 ;;------------------------------------------------------------------------------
 
 (defun spotify--api-devices (json)
-  "Gets device list from \"/v1/me/player/devices\" endpoint of Spotify Connect API.
+  "Gets device list from \"/v1/me/player/devices\" endpoint of
+Spotify Connect API.
 
 JSON must be a json reply formatted hash-table (by json.el) from
 Spotify Connect API. See:
 https://developer.spotify.com/documentation/web-api/guides/using-connect-web-api/
 
 Returns list of devices from the json. These will have
-`spotify--api-device-full' fields.
+`spotify--api/data/device-full' fields.
 "
   (if-let ((json json)
            (devices (gethash 'devices json)))
@@ -366,36 +295,35 @@ If STATUS is nil, nil will be return value.
             (type (nth 1 (assoc keyword spotify--keyword->api-field))))
 
       (cond
-       ((eq type 'spotify--api-player-status)
+       ((eq type 'spotify--api/data/player-status)
         ;; It's in player-status object and that's what we (expect to) have.
         (spotify--api-player-status-field json keyword))
 
-       ((eq type 'spotify--api-track-full)
+       ((eq type 'spotify--api/data/track-full)
         ;; It's in the track object, so get that from json status for
         ;; passing in.
-        (spotify--api-player-status-field
-         (spotify--api-json-get-field spotify--api-player-status
+        (spotify--api-track-field
+         (spotify--api-json-get-field spotify--api/data/player-status
                                       json
                                       'item)
          keyword))
 
-       ((eq type 'spotify--api-artist-simple)
+       ((eq type 'spotify--api/data/artist-simple)
         ;; It's in the artists object, so:
         ;; json status -> track -> artists -> first artist only.
-        (spotify--api-player-status-field
-         ;; first of: get 'artists from track.
-         (nth 0 (spotify--api-json-get-field
-                 spotify--api-track-full
+        (spotify--api-artist-field
+         ;; first off: get 'artists from track.
+         (nth 0 (spotify--api-json-get-field spotify--api/data/track-full
                  ;; get track from player-status
-                 (spotify--api-json-get-field spotify--api-player-status
+                 (spotify--api-json-get-field spotify--api/data/player-status
                                               json 'item)
                  'artists))
          keyword))
 
-       ((eq type 'spotify--api-device-full)
+       ((eq type 'spotify--api/data/device-full)
         ;; It's in the device object, so get that from  json status.
-        (spotify--api-player-status-field
-         (spotify--api-json-get-field spotify--api-player-status
+        (spotify--api-device-field
+         (spotify--api-json-get-field spotify--api/data/player-status
                                       json
                                       'device)
          keyword))
@@ -422,10 +350,10 @@ If STATUS is nil, nil will be return value.
 ;; Take a lot of room, so down here.
 
 
-(defconst spotify--api-player-status
+(defconst spotify--api/data/player-status
   '(;; Device Object
     ;;   - The device that is currently active
-    (device spotify--api-device-full)
+    (device spotify--api/data/device-full)
 
     ;; string
     ;;   - "off", "track", "context"
@@ -457,7 +385,7 @@ If STATUS is nil, nil will be return value.
     ;; A Full Track Object
     ;;   - The currently playing track. Can be null (e.g. If private session is
     ;;     enabled this will be null).
-    (item spotify--api-track-full)
+    (item spotify--api/data/track-full)
 
     ;; string
     ;;   - The object type of the currently playing item. Can be one of track,
@@ -474,7 +402,7 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
 ")
 
 
-(defconst spotify--api-track-full
+(defconst spotify--api/data/track-full
   '(;; a simplified album object
     ;;   - The album on which the track appears. The album object includes a
     ;;     link in href to full information about the album.
@@ -483,7 +411,7 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
     ;; an array of simplified artist objects
     ;;   - The artists who performed the track. Each artist object includes a
     ;;     link in href to more detailed information about the artist.
-    (artists spotify--api-artist-simple)
+    (artists spotify--api/data/artist-simple)
 
     ;; array of strings
     ;;   - A list of the countries in which the track can be played, identified
@@ -576,7 +504,7 @@ https://developer.spotify.com/documentation/web-api/reference/object-model/#trac
 ")
 
 
-(defconst spotify--api-artist-simple
+(defconst spotify--api/data/artist-simple
   '(;; an external URL object
     ;;   - Known external URLs for this artist.
     (external_urls :spotify--no-impl)
@@ -606,7 +534,7 @@ https://developer.spotify.com/documentation/web-api/reference/object-model/#arti
 ")
 
 
-(defconst spotify--api-device-full
+(defconst spotify--api/data/device-full
   '(;; string
     ;;   - The device ID. This may be null.
     (id stringp)
@@ -625,7 +553,7 @@ https://developer.spotify.com/documentation/web-api/reference/object-model/#arti
 
     ;; string
     ;;   - The name of the device.
-    (name :spotify--no-impl)
+    (name stringp)
 
     ;; string
     ;;   - Device type. Options are:
@@ -644,19 +572,6 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-a-users
 
 ;; Many other objects but we're not using them (that I've seen) yet.
 ;;   https://developer.spotify.com/documentation/web-api/reference/object-model/#track-object-full
-
-
-;;------------------------------------------------------------------------------
-;; §-TODO-§ [2019-11-10]: delete all this, or make real tests...
-;;------------------------------------------------------------------------------
-;; (defun testfoo ()
-;;   (interactive)
-;;   (let* ((json-object-type 'hash-table)
-;;          (json-array-type 'list)
-;;          (json-key-type 'symbol)
-;;          (json-obj (json-new-object))
-;;          (json (json-read-from-string "{  \"artist\": \"Aesop Rock\",  \"name\": \"Shrunk\",  \"duration\": 265333,  \"track_number\": 9,  \"player_state\": \"playing\",  \"player_shuffling\": true,  \"player_repeating\": true }")))
-;;     (message "your json: %S... hash? %S" json (hash-table-p json))))
 
 
 ;;------------------------------------------------------------------------------

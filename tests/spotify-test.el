@@ -15,12 +15,8 @@
 ;;--                          spotify-test.el tests                           --
 ;;------------------------------------------------------------------------------
 
-;; Require all our test files so ERT learns about all the spotify tests now that
-;; this has been required/loaded.
-(require 'spotify-json-ert)
-(require 'spotify-api-json-ert)
-
-;; §-TODO-§ [2019-11-18]: an autoload? That will just autoload the tests?
+;; Not requiring our files as I don't want to push the test dir into the load
+;; path. Use `spotify-ert/load' instead.
 
 
 ;;------------------------------------------------------------------------------
@@ -32,7 +28,7 @@
 in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
 
 
-(defconst spotify-ert/test-selector-regexp "*Spotify.el ERT Results*"
+(defconst spotify-ert/test-buffer-name "*Spotify.el ERT Results*"
   "Name of buffer for ERT test run results to be displayed.")
 
 
@@ -40,7 +36,15 @@ in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
 ;; Test Runners
 ;;------------------------------------------------------------------------------
 
+(defun spotify-ert/load ()
+  "Loads all Spotify.el unit test files."
+  (interactive)
+  (load-file "spotify-ert-helpers.el")
+  (load-file "spotify-json-ert.el")
+  (load-file "spotify-api-json-ert.el"))
+
+
 (defun spotify-ert/run ()
   "Runs all Spotify.el unit tests."
   (interactive)
-  (ert spotify-ert/test-selector-regexp ))
+  (ert spotify-ert/test-selector-regexp spotify-ert/test-buffer-name))
