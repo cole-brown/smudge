@@ -464,7 +464,7 @@ https://developer.spotify.com/documentation/web-api/guides/using-connect-web-api
   "{
     \"timestamp\": 1490252122574,
     \"device\": {
-      \"id\": \"3f228e06c8562e2f439e22932da6c3231715ed53\",
+      \"id\": \"0123456789\",
       \"is_active\": false,
       \"is_restricted\": false,
       \"name\": \"Emacs Phone 3000\",
@@ -566,7 +566,7 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
           \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
         },
         \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-        \"id\" : \"36jlZKG1sNZQA2HbWdYveV\",
+        \"id\" : \"0123456789\",
         \"name\" : \"\\\"Weird Al\\\" Yankovic\",
         \"type\" : \"artist\",
         \"uri\" : \"spotify:artist:1234567890\"
@@ -668,7 +668,7 @@ https://developer.spotify.com/documentation/web-api/reference/object-model/#arti
          \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
        },
        \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-       \"id\" : \"36jlZKG1sNZQA2HbWdYveV\",
+       \"id\" : \"0123456789\",
        \"name\" : \"\\\"Weird Al\\\" Yankovic\",
        \"type\" : \"artist\",
        \"uri\" : \"spotify:artist:1234567890\"

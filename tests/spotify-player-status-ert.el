@@ -1,18 +1,18 @@
-;;; spotify-json-ert.el --- Tests for spotify-json.el. -*- lexical-binding: t -*-
+;;; spotify-player-status-ert.el --- Tests for spotify-player-status.el. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 
 ;;; Commentary:
 
-;; Unit tests for spotify-json.el code using ERT.
+;; Unit tests for spotify-player-status.el code using ERT.
 
 ;;; Code:
 
 ;;-----------------------------Spotify Unit Tests-------------------------------
-;;--                          spotify-json.el tests                           --
+;;--                     spotify-player-status.el tests                       --
 ;;------------------------------------------------------------------------------
 
-(require 'spotify-json)
+(require 'spotify-player-status)
 
 
 ;;------------------------------------------------------------------------------
@@ -21,8 +21,155 @@
 
 
 ;;------------------------------------------------------------------------------
-;; Test: spotify--json-setup
+;; Test: spotify--cache-player-status-enabled-set
 ;;------------------------------------------------------------------------------
+
+;; (defun spotify--cache-player-status-enabled-set (option-name value) ...
+(ert-deftest spotify-ert/spotify--json-setup ()
+  "Test that calling the macro does set the bindings up for json.el."
+  (spotify-ert/util/with-json-internal
+   ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--player-status-caching-callback
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--player-status-caching-callback (callback status)
+;;   "Receive updated player status, cache it, and return to
+;; CALLBACK unmodified."
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--player-status-caching-closure
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--player-status-caching-closure (callback)
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--cache-set-status
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--cache-set-status (status)
+;;   "Sets `spotify--cache-player-status' to STATUS with current
+;; time as timestamp as long as its fresher than the currently held status."
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--cache-get-status-if
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--cache-get-status-if (status)
+;;  "Returns `spotify--cache-player-status' if STATUS is nil."
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--cache-get-timestamp-if
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--cache-get-timestamp-if (status)
+;;  "Returns `spotify--cache-player-status' if STATUS is nil."
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--normalized-status-type
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--normalized-status-type (status)
+;;  "Takes in a few kinds of STATUSes and returns a valid normalized STATUS.
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--player-status-field-raw
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--player-status-field-raw (status-n field-true translators)
+;;   "STATUS-N must be normalized - i.e. STATUS-N should be passed
+;; through `spotify--normalized-status-type' first.
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--player-status-translate
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--player-status-translate (field field-true value dictionary)
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--player-status-field
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--player-status-field (status field dictionary)
+;;  "Returns value of FIELD in STATUS, or nil.
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-player-status-field
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-player-status-field (field &optional dictionary) ...
+;;  "Returns value of FIELD in cached status, or nil.
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--player-status-format-field
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--player-status-format-field (input fmt-spec field
+;;                                                  status dictionary)
+;;  "Returns INPUT string with FMT-SPEC replaced by FIELD's value
+;; from STATUS.
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify--player-status-format
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--player-status-format (fmt-str &optional
+;;                                               status dictionary)
+;;   "Returns a formatted string based on FMT-STR and STATUS.
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-player-status-get
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-player-status-get (status)
+;;  "Returns a formatted string of player status based on STATUS and formatted by
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;; (defmacro spotify--json-setup (&rest body) ...
 (ert-deftest spotify-ert/spotify--json-setup ()
@@ -265,6 +412,14 @@
                                                     :repeating-bool)))
    ))
 
+;;------------------------------------------------------------------------------
+;; Test: spotify--json-api-to-internal
+;;------------------------------------------------------------------------------
+
+;; (defun spotify--json-api-to-internal (player-status) ...
+
+;; §-TODO-§ [2019-11-18]: Impl or skip due to "deprecate-this-plz" TODO?
+
 
 ;;   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -281,79 +436,117 @@
 ;; Test Data Helpers
 ;;------------------------------------------------------------------------------
 
-(defmacro spotify-ert/util/with-json-internal (&rest body)
-  "Creates 4 JSON hash table objects - 2 each for the
-player-statuses in `spotify-json-ert/data-string/json-internal'
-with a let binding, then executes BODY forms in a progn.
-
-JSON variables:
-  - Aesop Rock
-    - `json-shrunk':
-      - directly from `spotify-json-ert/data-string/json-internal'
-    - `json-shrunk-roundtrip':
-      - encoded with `spotify--json-encode-internal', then decoded.
-  - \"Weird Al\" Yankovic
-    - `json-foil':
-      - directly from `spotify-json-ert/data-string/json-internal'
-    - `json-foil-roundtrip':
-      - encoded with `spotify--json-encode-internal', then decoded.
-"
-  `(let ((str-shrunk (spotify--json-encode-internal
-                      "Aesop Rock" "Shrunk"
-                      265333 9 t t nil))
-         (json-shrunk nil)
-         (json-shrunk-roundtrip nil)
-         (str-foil (spotify--json-encode-internal
-                    "\"Weird Al\" Yankovic" "Foil"
-                    11111 99 nil nil t))
-         (json-foil nil)
-         (json-foil-roundtrip nil))
-
-     ;; Convert back to json so we can compare better...
-     ;; JSON doesn't have an ordering, so no guarentee...
-     (spotify--json-setup
-       ;; back to json for these
-       (setq json-shrunk-roundtrip (json-read-from-string str-shrunk))
-       (setq json-foil-roundtrip (json-read-from-string str-foil))
-       ;; test data string to json for these, compare aganist our round trips.
-       (setq json-shrunk (json-read-from-string
-                          (nth 0 spotify-json-ert/data-string/json-internal)))
-       (setq json-foil (json-read-from-string
-                        (nth 1 spotify-json-ert/data-string/json-internal))))
-
-     (progn
-       ,@body)))
-
 
 ;;------------------------------------------------------------------------------
 ;; Test Data
 ;;------------------------------------------------------------------------------
 
-(defconst spotify-json-ert/data-string/json-internal
-  '("{
-    \"artist\": \"Aesop Rock\",
-    \"duration\": 265333,
-    \"track_number\": 9,
-    \"name\":  \"Shrunk\",
-    \"player_state\": \"playing\",
-    \"player_shuffling\": true,
-    \"player_repeating\": false
-    }"
+(defconst spotify-api-json-ert/data/player-status-in-full
+  "{
+    \"device\" : {
+      \"id\" : \"1234567890\",
+      \"is_active\" : true,
+      \"is_private_session\" : false,
+      \"is_restricted\" : false,
+      \"name\" : \"Emacs AR Glasses 5001+ Pro#\",
+      \"type\" : \"Computer\",
+      \"volume_percent\" : 42
+    },
+    \"shuffle_state\" : false,
+    \"repeat_state\" : \"off\",
+    \"timestamp\" : 3,
+    \"context\" : {
+      \"external_urls\" : {
+        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
+      },
+      \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+      \"type\" : \"album\",
+      \"uri\" : \"spotify:album:1234567890\"
+    },
+    \"progress_ms\" : 15611,
+    \"item\" : {
+      \"album\" : {
+        \"album_type\" : \"album\",
+        \"artists\" : [ {
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
+          },
+          \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+          \"id\" : \"1234567890\",
+          \"name\" : \"\\\"Weird Al\\\" Yankovic\",
+          \"type\" : \"artist\",
+          \"uri\" : \"spotify:artist:1234567890\"
+        } ],
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
+        },
+        \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+        \"id\" : \"1234567890\",
+        \"images\" : [ {
+          \"height\" : 640,
+          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+          \"width\" : 640
+        }, {
+          \"height\" : 300,
+          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+          \"width\" : 300
+        }, {
+          \"height\" : 64,
+          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+          \"width\" : 64
+        } ],
+        \"name\" : \"Mandatory Fun\",
+        \"release_date\" : \"2014-07-15\",
+        \"release_date_precision\" : \"day\",
+        \"total_tracks\" : 12,
+        \"type\" : \"album\",
+        \"uri\" : \"spotify:album:1234567890\"
+      },
+      \"artists\" : [ {
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
+        },
+        \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+        \"id\" : \"0123456789\",
+        \"name\" : \"\\\"Weird Al\\\" Yankovic\",
+        \"type\" : \"artist\",
+        \"uri\" : \"spotify:artist:1234567890\"
+      } ],
+      \"disc_number\" : 1,
+      \"duration_ms\" : 142946,
+      \"explicit\" : false,
+      \"external_ids\" : {
+        \"isrc\" : \"USRC11401404\"
+      },
+      \"external_urls\" : {
+        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
+      },
+      \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+      \"id\" : \"1234567890\",
+      \"is_local\" : false,
+      \"is_playable\" : true,
+      \"name\" : \"Foil\",
+      \"popularity\" : 49,
+      \"preview_url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
+      \"track_number\" : 3,
+      \"type\" : \"track\",
+      \"uri\" : \"spotify:track:1234567890\"
+    },
+    \"currently_playing_type\" : \"track\",
+    \"actions\" : {
+      \"disallows\" : {
+        \"resuming\" : true
+      }
+    },
+    \"is_playing\" : true
+   }"
+"A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
+'/v1/me/player' endpoint.
 
-    "{
-    \"artist\": \"\\\"Weird Al\\\" Yankovic\",
-    \"duration\": 11111,
-    \"track_number\": 99,
-    \"name\":  \"Foil\",
-    \"player_state\": \"paused\",
-    \"player_shuffling\": false,
-    \"player_repeating\": true
-    }")
-  "Some strings representing our internal/simplified JSON data
-structure of Spotify player status.")
-
+https://developer.spotify.com/documentation/web-api/reference/player/get-information-about-the-users-current-playback/
+")
 
 ;;------------------------------------------------------------------------------
 ;; The End.
 ;;------------------------------------------------------------------------------
-(provide 'spotify-json-ert)
+(provide 'spotify-player-status-ert)
