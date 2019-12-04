@@ -53,6 +53,7 @@ BODY form, otherwise calls `error' with ERROR-MESSAGE appended to a generic
      ,@body))
 
 
+;; §-TODO-§ [2019-12-03]: move up - hydra and player-status both use.
 (defmacro spotify--eat-errors (error-form &rest body)
   "Executes BODY forms with grace, elegance, and a guard against
 error bubbling through. I.e. wraps body in `condition-case-unless-debug'.

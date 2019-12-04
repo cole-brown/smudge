@@ -789,7 +789,8 @@ time as timestamp as long as its fresher than the currently held status."
 
 
 (defun spotify--cache-get-status-if (status)
-  "Returns `spotify--cache-player-status' if STATUS is nil."
+  "Returns cached status from `spotify--cache-player-status' if STATUS is nil.
+Returns STATUS if STATUS is non-nil."
   (if (null status)
       (nth 1 spotify--cache-player-status)
     status))
@@ -797,10 +798,12 @@ time as timestamp as long as its fresher than the currently held status."
 
 
 (defun spotify--cache-get-timestamp-if (status)
-  "Returns `spotify--cache-player-status' if STATUS is nil."
+  "Returns cached timestamp from `spotify--cache-player-status' if STATUS is
+nil. Returns t if STATUS is non-nil."
   (if (null status)
       (nth 0 spotify--cache-player-status)
-    status))
+    t))
+;; (spotify--cache-get-timestamp-if nil)
 
 
 (defun spotify--player-status-caching-callback (callback status)
