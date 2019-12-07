@@ -285,21 +285,23 @@ getting values from the player status.")
                           (undefined nil) (unsupported nil)))
 
     ;; The Rest: translate from bool to text
-    (:shuffling :shuffling-bool
-                ((t spotify-player-status-shuffling-text)
-                 (nil spotify-player-status-not-shuffling-text)))
-    (:repeating :repeating-bool
-                ((t spotify-player-status-repeating-text)
-                 (nil spotify-player-status-not-repeating-text)))
-    (:playing   :playing-bool
-                ((t spotify-player-status-playing-text)
-                 (nil spotify-player-status-paused-text)))
-    (:paused    :paused-bool
-                ((nil spotify-player-status-paused-text)
-                 (t spotify-player-status-playing-text)))
-    (:muted     :muted-bool
-                ((t spotify-player-status-muted-text)
-                 (nil spotify-player-status-not-muted-text))))
+    (:shuffling  :shuffling-bool
+                 ((t spotify-player-status-shuffling-text)
+                  (nil spotify-player-status-not-shuffling-text)))
+    (:repeating  :repeating-bool
+                 ((t spotify-player-status-repeating-text)
+                  (nil spotify-player-status-not-repeating-text)))
+    (:playing    :playing-bool
+                 ((t spotify-player-status-playing-text)
+                  (nil spotify-player-status-paused-text)))
+    (:paused     :paused-bool
+                 ((nil spotify-player-status-paused-text)
+                  (t spotify-player-status-playing-text)))
+    (:muted-bool :volume
+                 (lambda (fmt vol) (= 0 vol)))
+    (:muted      :muted-bool
+                 ((t spotify-player-status-muted-text)
+                  (nil spotify-player-status-not-muted-text))))
   "`spotify-player-status-fields' that will require translation
 from their raw values returned from status. e.g. from
 milliseconds to formatted string, from t/nil to 'playing'/'',
@@ -595,9 +597,12 @@ STATUS must be hashtable, string, or nil. See `spotify--normalized-status-type'.
   (if-let* ((value (spotify--player-status-field status
                                                  field
                                                  dictionary)))
+
       ;; got value - replace
       (replace-regexp-in-string fmt-spec
-                                value
+                                ;; convert value to str
+                                ;; - doesn't like e.g. numbers
+                                (format "%s" value)
                                 input)
     ;; no/null value - return input unchanged.
     input))

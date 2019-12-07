@@ -370,57 +370,83 @@ dictionaries/translators.
 ;; Test: spotify--player-status-field
 ;;------------------------------------------------------------------------------
 
-    ;; §-TODO-§ [2019-12-03]: YOU ARE HERE
-
 ;;(defun spotify--player-status-field (status field dictionary)
-;;  "Returns value of FIELD in STATUS, or nil.
-(ert-deftest spotify-ert/spotify--cache-player-status ()
-  "Test that status is set correctly when this is called.
+(ert-deftest spotify-ert/spotify--player-status-field ()
+  "Test that reading fields from status works and uses dictionaries/translators.
 "
   (spotify-ert/helper/reset-all)
 
-  ;; no caching - no effect
-  (spotify--cache-player-status 'test-symbol-0)
-  (should-not
-
-
-  ;; player status object
   (spotify-ert/util/with-json spotify-player-status-ert/data/player-status-in-full
 
-    (spotify-ert/helper/reset-cache-enabled)
+    (should (string= "\"Weird Al\" Y..."
+                     (spotify--player-status-field
+                      json-obj
+                      :artist
+                      spotify--player-status-translators)))
 
+    (should (string= "Foil"
+                     (spotify--player-status-field
+                      json-obj
+                      :track
+                      spotify--player-status-translators)))
+    (should (= 3
+               (spotify--player-status-field
+                json-obj
+                :track-number
+                spotify--player-status-translators)))))
 
-    (spotify-ert/helper/enable-cache)
-
-
-    ))
 
 ;;------------------------------------------------------------------------------
 ;; Test: spotify-player-status-field
 ;;------------------------------------------------------------------------------
 
 ;; (defun spotify-player-status-field (field &optional dictionary) ...
-;;  "Returns value of FIELD in cached status, or nil.
-(ert-deftest spotify-ert/spotify--cache-player-status ()
-  "Test that status is set correctly when this is called.
+(ert-deftest spotify-ert/spotify-player-status-field ()
+  "Test that reading fields from /cached/ status works and uses
+dictionaries/translators.
 "
   (spotify-ert/helper/reset-all)
 
-  ;; no caching - no effect
-  (spotify--cache-player-status 'test-symbol-0)
-  (should-not
+  ;; no cached status - no fields
+  (should (string= ""
+                   (spotify-player-status-field
+                    :artist
+                    spotify--player-status-translators)))
+  (should (string= ""
+                   (spotify-player-status-field
+                    :artist)))
+  (should (eq nil
+             (spotify-player-status-field
+              :track-number)))
 
-
-  ;; player status object
+  ;; Cache this status.
   (spotify-ert/util/with-json spotify-player-status-ert/data/player-status-in-full
+    (spotify--cache-set-status json-obj))
 
-    (spotify-ert/helper/reset-cache-enabled)
+  ;; Now we should have fields.
+  (should (string= "\"Weird Al\" Y..."
+                   (spotify-player-status-field
+                    :artist
+                    spotify--player-status-translators)))
+  (should (string= "\"Weird Al\" Y..."
+                   (spotify-player-status-field
+                    :artist)))
 
+  (should (string= "Foil"
+                   (spotify-player-status-field
+                    :track
+                    spotify--player-status-translators)))
+  (should (string= "Foil"
+                   (spotify-player-status-field
+                    :track)))
+  (should (= 3
+             (spotify-player-status-field
+              :track-number
+              spotify--player-status-translators)))
+  (should (= 3
+             (spotify-player-status-field
+              :track-number))))
 
-    (spotify-ert/helper/enable-cache)
-
-
-    ))
 
 ;;------------------------------------------------------------------------------
 ;; Test: spotify--player-status-format-field
@@ -428,28 +454,38 @@ dictionaries/translators.
 
 ;;(defun spotify--player-status-format-field (input fmt-spec field
 ;;                                                  status dictionary)
-;;  "Returns INPUT string with FMT-SPEC replaced by FIELD's value
-;; from STATUS.
-(ert-deftest spotify-ert/spotify--cache-player-status ()
-  "Test that status is set correctly when this is called.
+(ert-deftest spotify-ert/spotify--player-status-format-field ()
+  "Test that a single field is formatted correctly in string based on status.
 "
   (spotify-ert/helper/reset-all)
-
-  ;; no caching - no effect
-  (spotify--cache-player-status 'test-symbol-0)
-  (should-not
-
 
   ;; player status object
   (spotify-ert/util/with-json spotify-player-status-ert/data/player-status-in-full
 
-    (spotify-ert/helper/reset-cache-enabled)
+    (should (string= "\"Weird Al\" Y..."
+                     (spotify--player-status-format-field
+                      "%a"
+                      "%a"
+                      :artist
+                      json-obj
+                      spotify--player-status-translators)))
 
+    (should (string= "Hello, \"Weird Al\" Y..."
+                     (spotify--player-status-format-field
+                      "Hello, %a"
+                      "%a"
+                      :artist
+                      json-obj
+                      spotify--player-status-translators)))
 
-    (spotify-ert/helper/enable-cache)
+    (should (string= "This is track 3."
+                     (spotify--player-status-format-field
+                      "This is track %n."
+                      "%n"
+                      :track-number
+                      json-obj
+                      spotify--player-status-translators)))))
 
-
-    ))
 
 ;;------------------------------------------------------------------------------
 ;; Test: spotify--player-status-format
@@ -457,46 +493,57 @@ dictionaries/translators.
 
 ;;(defun spotify--player-status-format (fmt-str &optional
 ;;                                               status dictionary)
-;;   "Returns a formatted string based on FMT-STR and STATUS.
-(ert-deftest spotify-ert/spotify--cache-player-status ()
-  "Test that status is set correctly when this is called.
+(ert-deftest spotify-ert/spotify--player-status-format ()
+  "Test that whole string is formatted correctly based on status.
 "
   (spotify-ert/helper/reset-all)
 
-  ;; no caching - no effect
-  (spotify--cache-player-status 'test-symbol-0)
-  (should-not
-
-
-  ;; player status object
   (spotify-ert/util/with-json spotify-player-status-ert/data/player-status-in-full
 
-    (spotify-ert/helper/reset-cache-enabled)
+    (should (string= "\"Weird Al\" Y..."
+                     (spotify--player-status-format
+                      "%a"
+                      json-obj
+                      spotify--player-status-translators)))
 
+    ;; not cached yet...
+    (should (string= ""
+                     (spotify--player-status-format
+                      "%a")))
 
-    (spotify-ert/helper/enable-cache)
+    ;; cache and try again
+    (spotify--cache-set-status json-obj)
+    (should (string= "\"Weird Al\" Y..."
+                     (spotify--player-status-format
+                      "%a")))
 
+    (should (string= "\"Weird Al\" Y... - Foil (#3)"
+                     (spotify--player-status-format
+                      "%a - %t (#%n)")))
 
+    (should (string= "-"
+                     (spotify--player-status-format
+                      "%m")))
+    (should (string= "42"
+                     (spotify--player-status-format
+                      "%v")))
     ))
+
 
 ;;------------------------------------------------------------------------------
 ;; Test: spotify-player-status-get
 ;;------------------------------------------------------------------------------
 
-;;(defun spotify-player-status-get (status)
-;;  "Returns a formatted string of player status based on STATUS and formatted by
-(ert-deftest spotify-ert/spotify--cache-player-status ()
-  "Test that status is set correctly when this is called.
+;; (defun spotify-player-status-get (status)
+(ert-deftest spotify-ert/spotify-player-status-get ()
+  "Test that string returned follows `spotify-player-status-format'.
 "
   (spotify-ert/helper/reset-all)
 
-  ;; player status object
   (spotify-ert/util/with-json spotify-player-status-ert/data/player-status-in-full
 
-    (spotify-ert/helper/reset-cache-enabled)
+  ;; §-TODO-§ [2019-12-04]: YOU ARE HERE
 
-
-    (spotify-ert/helper/enable-cache)
 
 
     ))
