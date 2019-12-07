@@ -149,7 +149,9 @@ The following placeholders are supported:
 * %l - Track duration, in minutes (i.e. 01:35)
 * %p - Player status indicator for 'playing', 'paused', and 'stopped' states
 * %s - Player shuffling status indicator
-* %r - Player repeating status indicator"
+* %r - Player repeating status indicator
+* %v - Volume (0-100)
+* %m - Muted status indicator"
   :type 'string
   :group 'spotify)
 
