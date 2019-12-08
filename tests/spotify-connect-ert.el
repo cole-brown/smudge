@@ -1,76 +1,91 @@
-;;; spotify-player-status-ert.el --- Tests for spotify-player-status.el. -*- lexical-binding: t -*-
+;;; spotify-connect-ert.el --- Tests for spotify-connect.el. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 
 ;;; Commentary:
 
-;; Unit tests for spotify-player-status.el code using ERT.
+;; Unit tests for spotify-connect.el code using ERT.
 
 ;;; Code:
 
 ;;-----------------------------Spotify Unit Tests-------------------------------
-;;--                     spotify-player-status.el tests                       --
+;;--                        spotify-connect.el tests                          --
 ;;------------------------------------------------------------------------------
 
-(require 'spotify-player-status)
+(require 'spotify-connect)
 
 
 ;;------------------------------------------------------------------------------
 ;; Settings, Vars, Helpers
 ;;------------------------------------------------------------------------------
 
-(defun spotify-ert/helper/reset-all ()
-  "Resets vars/settings associated with these tests.
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-when-device-active
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-when-device-active (body)
+(ert-deftest spotify-ert/spotify-when-device-active ()
+  "Test that this macro correctly keys off of an active device.
 "
-  (spotify-ert/helper/reset-cache-enabled)
-  (setq spotify-ert/callback/status nil)
-  (setq spotify--cache-player-status nil)
-  (setq spotify-ert/hook/player-status nil)
-  (setq spotify--cache-player-status-hook nil))
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
 
 
-(defun spotify-ert/helper/reset-cache-enabled ()
-  "Sets `spotify-cache-player-status-enabled' and
-`spotify--player-status-redirect' to nil.
-"
-  (setq spotify-cache-player-status-enabled nil)
-  (setq spotify--player-status-redirect nil)
-  (should (null spotify-cache-player-status-enabled))
-  (should (null spotify--player-status-redirect)))
+    ))
 
 
-(defun spotify-ert/helper/enable-cache ()
-  "Sets `spotify-cache-player-status-enabled' and
-`spotify--player-status-redirect' to enabled.
-"
-  (customize-set-variable 'spotify-cache-player-status-enabled t)
-
-  (should-not (null spotify-cache-player-status-enabled))
-  (should-not (null spotify--player-status-redirect))
-  (should (eq spotify--player-status-redirect
-              #'spotify--player-status-caching-closure)))
+(defmacro spotify--when-device->with-status (&rest body)
 
 
-(defvar spotify-ert/callback/status nil
-  "`spotify-ert/helper/callback' will save its status arg here.")
+(defun spotify-connect-player-status ()
+
+(defun spotify-connect-player-play-track (uri &optional context)
+
+(defun spotify-connect-player-pause ()
+
+(defun spotify-connect-player-play ()
+
+(defun spotify-connect-player-toggle-play ()
+
+(defun spotify-connect-player-next-track ()
+
+(defun spotify-connect-player-previous-track ()
+
+(defun spotify-connect-volume-up (amount)
+
+(defun spotify-connect-volume-down (amount)
+
+(defun spotify-connect-volume-mute-unmute (unmute-volume)
+
+(defun spotify-connect-toggle-repeat ()
+
+(defun spotify-connect-toggle-shuffle ()
 
 
-(defun spotify-ert/helper/callback (status)
-  "Callback function for aiding testing."
-  (setq spotify-ert/callback/status status))
 
 
-(defvar spotify-ert/hook/player-status nil
-  "`spotify-ert/helper/player-status-hook' will note a hook call here.")
 
 
-(defun spotify-ert/helper/player-status-hook ()
-  "Do something to mark that a hook call happened.
-"
-  (setq spotify-ert/hook/player-status
-        (if (null spotify-ert/hook/player-status)
-            0
-          (1+ spotify-ert/hook/player-status))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;;------------------------------------------------------------------------------
