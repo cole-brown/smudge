@@ -21,12 +21,408 @@
 
 
 ;;------------------------------------------------------------------------------
+;; spotify-api: setup stubs
+;;------------------------------------------------------------------------------
+
+(defun spotify-ert/mock/spotify-oauth2-token ()
+  "Mock function."
+  ;; returns *spotify-oauth2-token*
+  nil)
+
+
+(defun spotify-ert/mock/spotify-api-call-async (method uri &optional data callback is-retry)
+  "Mock Function."
+  ;; returns value of oauth2-url-retrieve - json object?
+  nil)
+
+
+(defun spotify-ert/mock/spotify-current-user (callback)
+  "Mock Function."
+  ;; ask spotify for use, set *spotify-user*, return user to callback.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-items (json)
+  "Mock Function."
+  ;; Just returns 'items from json...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-search-track-items (json)
+  "Mock Function."
+  ;; Just returns 'tracks from json..
+  ).
+
+
+(defun spotify-ert/mock/spotify-get-search-playlist-items (json)
+  "Mock Function."
+  ;; Just returns 'playlists from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-message (json)
+  "Mock Function."
+  ;; Just returns 'message from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-playlist-tracks (json)
+  "Mock Function."
+  )
+
+
+(defun spotify-ert/mock/spotify-get-search-playlist-items (json)
+  "Mock Function."
+  ;; Just gets 'plalists from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-album (json)
+  "Mock Function."
+  ;; Just gets 'album from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-number (json)
+  "Mock Function."
+  ;; Just gets 'track_number from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-disc-number (json)
+  "Mock Function."
+  ;; Just gets 'disc_number from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-duration (json)
+  "Mock Function."
+  ;; Just gets 'duration_ms from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-duration-formatted (json)
+  "Mock Function."
+  ;; Just gets formatted track duration from json.
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-album-name (json)
+  "Mock Function."
+  ;; Just gets 'name from track...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-artist (json)
+  "Mock Function."
+  ;; Just gets first of track artists from track...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-artist-name (json)
+  "Mock Function."
+  ;; Just gets first of track artists from track...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-track-popularity (json)
+  "Mock Function."
+  ;; Just gets 'popularity from track...
+  )
+
+
+(defun spotify-ert/mock/spotify-is-track-playable (json)
+  "Mock Function."
+  ;; Gets playable flag, converts to emacs bool...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-item-name (json)
+  "Mock Function."
+  ;; Just gets 'name from json...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-item-id (json)
+  "Mock Function."
+  ;; Just gets 'id from json...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-item-uri (json)
+  "Mock Function."
+  ;; Just gets 'uri from json...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-playlist-track-count (json)
+  "Mock Function."
+  ;; Just gets 'total from 'tracks from json...
+  )
+
+
+(defun spotify-ert/mock/spotify-get-playlist-owner-id (json)
+  "Mock Function."
+  ;; Just gets 'owner from 'tracks from json...
+  )
+
+
+(defun spotify-ert/mock/spotify-api-search (type query page callback)
+  "Mock Function."
+  ;; Calls "/search" Spotify Connect API endpoint with a query.
+  )
+
+
+(defun spotify-ert/mock/spotify-api-featured-playlists (page callback)
+  "Mock Function."
+  ;; Calls 'featured-playlist' Spotify Connect API endpoint.
+  )
+
+
+(defun spotify-ert/mock/spotify-api-user-playlists (user-id page callback)
+  "Mock Function."
+  ;; Calls 'users/<user>/playlists' Spotify Connect API endpoint.
+  )
+
+
+(defun spotify-ert/mock/spotify-api-playlist-create (user-id name
+                                                     is-public callback)
+  "Mock Function."
+  ;; Calls 'users/<user>/playlists' Spotify Connect API endpoint to create a
+  ;; playlist.
+  )
+
+
+;; §-TODO-§ [2019-12-11]: you are here, mucking about with stubs...
+(defun spotify-ert/mock/spotify-api-playlist-add-track (user-id playlist-id track-id callback)
+  "Mock Function."
+  (spotify-api-playlist-add-tracks user-id playlist-id (list track-id) callback))
+
+
+(defun spotify-ert/mock/spotify-format-id (type id)
+  "Mock Function."
+   (if (string-match-p "spotify" id) (format "\"%s\"" id) (format "\"spotify:%s:%s\"" type id)))
+
+
+(defun spotify-ert/mock/spotify-api-playlist-add-tracks (user-id playlist-id track-ids callback)
+  "Mock Function."
+  (let ((tracks (format "%s" (mapconcat (lambda (x) (spotify-format-id "track" x)) track-ids ","))))
+    (spotify-api-call-async
+     "POST"
+     (format "/users/%s/playlists/%s/tracks"
+             (url-hexify-string user-id) (url-hexify-string playlist-id))
+     (format "{\"uris\": [ %s ]}" tracks)
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-api-playlist-follow (playlist callback)
+  "Mock Function."
+  (let ((owner (spotify-get-playlist-owner-id playlist))
+        (id (spotify-get-item-id playlist)))
+    (spotify-api-call-async
+     "PUT"
+     (format "/users/%s/playlists/%s/followers"
+             (url-hexify-string owner)
+             (url-hexify-string id))
+     nil
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-api-playlist-unfollow (playlist callback)
+  "Mock Function."
+  (let ((owner (spotify-get-playlist-owner-id playlist))
+        (id (spotify-get-item-id playlist)))
+    (spotify-api-call-async
+     "DELETE"
+     (format "/users/%s/playlists/%s/followers"
+             (url-hexify-string owner)
+             (url-hexify-string id))
+     nil
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-api-playlist-tracks (playlist page callback)
+  "Mock Function."
+  (let ((owner (spotify-get-playlist-owner-id playlist))
+        (id (spotify-get-item-id playlist))
+        (offset (* spotify-api-search-limit (1- page))))
+    (spotify-api-call-async
+     "GET"
+     (concat (format "/users/%s/playlists/%s/tracks?"
+                     (url-hexify-string owner)
+                     (url-hexify-string id))
+             (url-build-query-string `((limit  ,spotify-api-search-limit)
+                                       (offset ,offset)
+                                       (market from_token))
+                                     nil t))
+     nil
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-api-album-tracks (album page callback)
+  "Mock Function."
+  (let ((album-id (spotify-get-item-id album))
+        (offset (* spotify-api-search-limit (1- page))))
+    (spotify-api-call-async
+     "GET"
+     (concat (format "/albums/%s/tracks?"
+                     (url-hexify-string album-id))
+             (url-build-query-string `((limit ,spotify-api-search-limit)
+                                       (offset ,offset)
+                                       (market from_token))
+                                     nil t))
+     nil
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-popularity-bar (popularity)
+  "Mock Function."
+  (let ((num-bars (truncate (/ popularity 10))))
+    (concat (make-string num-bars ?X)
+            (make-string (- 10 num-bars) ?-))))
+
+
+(defun spotify-ert/mock/spotify-api-recently-played (page callback)
+  "Mock Function."
+  (let ((offset (* spotify-api-search-limit (1- page))))
+    (spotify-api-call-async
+     "GET"
+     (concat "/me/player/recently-played?"
+             (url-build-query-string `((limit  ,spotify-api-search-limit)
+                                       (offset ,offset))
+                                     nil t))
+     nil
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-api-device-list (callback)
+  "Mock Function."
+  (let ((callback callback))
+    (spotify-api-call-async
+     "GET"
+     "/me/player/devices"
+     nil
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-api-transfer-player (device-id &optional callback)
+  "Mock Function."
+  (spotify-api-call-async
+   "PUT"
+   "/me/player"
+   (format "{\"device_ids\":[\"%s\"]}" device-id)
+   callback))
+
+
+(defun spotify-ert/mock/spotify-api-set-volume (device-id percentage &optional callback)
+  "Mock Function."
+  (spotify-api-call-async
+   "PUT"
+   (concat "/me/player/volume?"
+           (url-build-query-string `((volume_percent ,percentage)
+                                     (device_id      ,device-id))
+                                   nil t))
+   nil
+   callback))
+
+
+(defun spotify-ert/mock/spotify-api-get-player-status (callback)
+  "Mock Function."
+  (let ((callback (if (functionp spotify--player-status-redirect)
+                      (funcall spotify--player-status-redirect callback)
+                    callback)))
+    (spotify-api-call-async
+     "GET"
+     "/me/player"
+     nil
+     callback)))
+
+
+(defun spotify-ert/mock/spotify-api-play (&optional callback uri context)
+  "Mock Function."
+  (spotify-api-call-async
+   "PUT"
+   "/me/player/play"
+   (concat " { "
+           (cond ((and uri context) (format "\"context_uri\": \"%s\", \"offset\": {\"uri\": \"%s\"}" context uri))
+                 (context           (format "\"context_uri\": \"%s\"" context))
+                 (uri               (format "\"uris\": [ \"%s\" ]" uri))
+                 (t                  ""))
+           " } ")
+   callback))
+
+
+(defun spotify-ert/mock/spotify-api-pause (&optional callback)
+  "Mock Function."
+  (spotify-api-call-async
+   "PUT"
+   "/me/player/pause"
+   nil
+   callback))
+
+
+(defun spotify-ert/mock/spotify-api-next (&optional callback)
+  "Mock Function."
+  (spotify-api-call-async
+   "POST"
+   "/me/player/next"
+   nil
+   callback))
+
+
+(defun spotify-ert/mock/spotify-api-previous (&optional callback)
+  "Mock Function."
+  (spotify-api-call-async
+   "POST"
+   "/me/player/previous"
+   nil
+   callback))
+
+
+(defun spotify-ert/mock/spotify-api-repeat (state &optional callback)
+  "Mock Function."
+  (spotify-api-call-async
+   "PUT"
+   (concat "/me/player/repeat?"
+           (url-build-query-string `((state ,state))
+                                   nil t))
+   nil
+   callback))
+
+
+(defun spotify-ert/mock/spotify-api-shuffle (state &optional callback)
+  "Mock Function."
+  (spotify-api-call-async
+   "PUT"
+   (concat "/me/player/shuffle?"
+           (url-build-query-string `((state ,state))
+                                   nil t))
+   nil
+   callback))
+
+;;---
+;; §-TODO-§ [2019-12-11]: Setup for mocs?
+;;---
+
+(defun spotify-ert/json-api-setup ()
+  "Sets up these tests to not actually call Spotify Connect
+API... Just calls fake handlers and then we can inspect status
+and return what we want.
+p
+Could do a different, system-level test or something if full
+emacs to spotify api test is desired.
+"
+  ;; Think we need to stub out... all of spotify-api.el?
+  )
+
+
+;;------------------------------------------------------------------------------
 ;; Test: spotify-when-device-active
 ;;------------------------------------------------------------------------------
 
 ;;(defun spotify-when-device-active (body)
 (ert-deftest spotify-ert/spotify-when-device-active ()
-  "Test that this macro correctly keys off of an active device.
+  "Test that this macro only executes body when there is an active device.
 "
   ;; <maybe tests here>
 
@@ -38,39 +434,238 @@
     ))
 
 
-(defmacro spotify--when-device->with-status (&rest body)
+;;------------------------------------------------------------------------------
+;; Test: spotify--when-device->with-status
+;;------------------------------------------------------------------------------
+
+;;(defun spotify--when-device->with-status (&rest body)
+(ert-deftest spotify-ert/spotify--when-device->with-status ()
+  "Test that macro only executes body when device is active and provides status
+obj.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
 
 
-(defun spotify-connect-player-status ()
+    ))
 
-(defun spotify-connect-player-play-track (uri &optional context)
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-player-status
+;;------------------------------------------------------------------------------
 
-(defun spotify-connect-player-pause ()
+;;(defun spotify-connect-player-status ()
+(ert-deftest spotify-ert/spotify-connect-player-status ()
+  "Test that this gets player status from Spotify Connect API.
+"
+  ;; <maybe tests here>
 
-(defun spotify-connect-player-play ()
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
 
-(defun spotify-connect-player-toggle-play ()
-
-(defun spotify-connect-player-next-track ()
-
-(defun spotify-connect-player-previous-track ()
-
-(defun spotify-connect-volume-up (amount)
-
-(defun spotify-connect-volume-down (amount)
-
-(defun spotify-connect-volume-mute-unmute (unmute-volume)
-
-(defun spotify-connect-toggle-repeat ()
-
-(defun spotify-connect-toggle-shuffle ()
+    ;; <tests here>
 
 
+    ))
 
 
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-player-play-track
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-player-play-track (uri &optional context)
+(ert-deftest spotify-ert/spotify-connect-player-play-track ()
+  "Test that this requests a track be played to Spotify Connect API.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
 
 
+    ))
 
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-player-pause
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-player-pause ()
+(ert-deftest spotify-ert/spotify-connect-player-pause ()
+  "Test that this requests device pauses play.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-player-play
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-player-play ()
+(ert-deftest spotify-ert/spotify-connect-player-play ()
+  "Test that this requests device plays.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-player-toggle-play
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-player-toggle-play ()
+(ert-deftest spotify-ert/spotify-connect-player-toggle-play ()
+  "Test that this request play/pause status toggle.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-player-next-track
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-player-next-track ()
+(ert-deftest spotify-ert/spotify-connect-player-next-track ()
+  "Test that this requests skip to next track.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-player-previous-track
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-player-previous-track ()
+(ert-deftest spotify-ert/spotify-connect-player-previous-track ()
+  "Test that this requests skip to previous track.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-volume-up
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-volume-up (amount)
+(ert-deftest spotify-ert/spotify-connect-volume-up ()
+  "Test that this request a volume increase of a certain amount.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-volume-down
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-volume-down (amount)
+(ert-deftest spotify-ert/spotify-connect-volume-down ()
+  "Test that this request a volume decrease of a certain amount.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-volume-mute-unmute
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-volume-mute-unmute (unmute-volume)
+(ert-deftest spotify-ert/spotify-connect-volume-mute-unmute ()
+  "Test that this requests mute to 0 volume, or unmute to unmute-volume.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-toggle-repeat
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-toggle-repeat ()
+(ert-deftest spotify-ert/spotify-connect-toggle-repeat ()
+  "Test that this requests repeat flag toggle.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-connect-toggle-shuffle
+;;------------------------------------------------------------------------------
+
+;;(defun spotify-connect-toggle-shuffle ()
+(ert-deftest spotify-ert/spotify-connect-toggle-shuffle ()
+  "Test that this requests shuffle flag toggle.
+"
+  ;; <maybe tests here>
+
+  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
+
+    ;; <tests here>
+
+
+    ))
 
 
 
