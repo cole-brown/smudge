@@ -30,7 +30,8 @@
   nil)
 
 
-(defun spotify-ert/mock/spotify-api-call-async (method uri &optional data callback is-retry)
+(defun spotify-ert/mock/spotify-api-call-async
+    (method uri &optional data callback is-retry)
   "Mock Function."
   ;; returns value of oauth2-url-retrieve - json object?
   nil)
@@ -193,215 +194,129 @@
   )
 
 
-;; §-TODO-§ [2019-12-11]: you are here, mucking about with stubs...
-(defun spotify-ert/mock/spotify-api-playlist-add-track (user-id playlist-id track-id callback)
+(defun spotify-ert/mock/spotify-api-playlist-add-track
+    (user-id playlist-id track-id callback)
   "Mock Function."
-  (spotify-api-playlist-add-tracks user-id playlist-id (list track-id) callback))
+  ;; Calls spotify-api-playlist-add-tracks for this one track.
+  )
 
 
 (defun spotify-ert/mock/spotify-format-id (type id)
   "Mock Function."
-   (if (string-match-p "spotify" id) (format "\"%s\"" id) (format "\"spotify:%s:%s\"" type id)))
+  ;; turns args into a... 'spotify id'?
+  )
 
 
-(defun spotify-ert/mock/spotify-api-playlist-add-tracks (user-id playlist-id track-ids callback)
+(defun spotify-ert/mock/spotify-api-playlist-add-tracks
+    (user-id playlist-id track-ids callback)
   "Mock Function."
-  (let ((tracks (format "%s" (mapconcat (lambda (x) (spotify-format-id "track" x)) track-ids ","))))
-    (spotify-api-call-async
-     "POST"
-     (format "/users/%s/playlists/%s/tracks"
-             (url-hexify-string user-id) (url-hexify-string playlist-id))
-     (format "{\"uris\": [ %s ]}" tracks)
-     callback)))
+  ;; Calls 'users/<user>/playlists/<playlist>/tracks" Spotify Connect API
+  ;; endpoint to add the list of track ids to the playlist.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-playlist-follow (playlist callback)
   "Mock Function."
-  (let ((owner (spotify-get-playlist-owner-id playlist))
-        (id (spotify-get-item-id playlist)))
-    (spotify-api-call-async
-     "PUT"
-     (format "/users/%s/playlists/%s/followers"
-             (url-hexify-string owner)
-             (url-hexify-string id))
-     nil
-     callback)))
+  ;; Calls '/users/<user>/playlists/<playlist>/followers' Spotify Connect API
+  ;; endpoint. To... follow playlist?
+  )
 
 
 (defun spotify-ert/mock/spotify-api-playlist-unfollow (playlist callback)
   "Mock Function."
-  (let ((owner (spotify-get-playlist-owner-id playlist))
-        (id (spotify-get-item-id playlist)))
-    (spotify-api-call-async
-     "DELETE"
-     (format "/users/%s/playlists/%s/followers"
-             (url-hexify-string owner)
-             (url-hexify-string id))
-     nil
-     callback)))
+  ;; Calls '/users/<user>/playlists/<playlist>/followers' Spotify Connect API
+  ;; endpoint. To... unfollow playlist?
+  )
 
 
 (defun spotify-ert/mock/spotify-api-playlist-tracks (playlist page callback)
   "Mock Function."
-  (let ((owner (spotify-get-playlist-owner-id playlist))
-        (id (spotify-get-item-id playlist))
-        (offset (* spotify-api-search-limit (1- page))))
-    (spotify-api-call-async
-     "GET"
-     (concat (format "/users/%s/playlists/%s/tracks?"
-                     (url-hexify-string owner)
-                     (url-hexify-string id))
-             (url-build-query-string `((limit  ,spotify-api-search-limit)
-                                       (offset ,offset)
-                                       (market from_token))
-                                     nil t))
-     nil
-     callback)))
+  ;; Calls '/users/<user>/playlists/<playlist>/followers' Spotify Connect API
+  ;; endpoint. To... unfollow playlist?
+  )
 
 
 (defun spotify-ert/mock/spotify-api-album-tracks (album page callback)
   "Mock Function."
-  (let ((album-id (spotify-get-item-id album))
-        (offset (* spotify-api-search-limit (1- page))))
-    (spotify-api-call-async
-     "GET"
-     (concat (format "/albums/%s/tracks?"
-                     (url-hexify-string album-id))
-             (url-build-query-string `((limit ,spotify-api-search-limit)
-                                       (offset ,offset)
-                                       (market from_token))
-                                     nil t))
-     nil
-     callback)))
+  ;; Calls '/albums/%s/tracks' Spotify Connect API
+  ;; endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-popularity-bar (popularity)
   "Mock Function."
-  (let ((num-bars (truncate (/ popularity 10))))
-    (concat (make-string num-bars ?X)
-            (make-string (- 10 num-bars) ?-))))
+  ;; Converts popularity int into... progress bar kinda thing.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-recently-played (page callback)
   "Mock Function."
-  (let ((offset (* spotify-api-search-limit (1- page))))
-    (spotify-api-call-async
-     "GET"
-     (concat "/me/player/recently-played?"
-             (url-build-query-string `((limit  ,spotify-api-search-limit)
-                                       (offset ,offset))
-                                     nil t))
-     nil
-     callback)))
+  ;; Calls '/me/player/recently-played' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-device-list (callback)
   "Mock Function."
-  (let ((callback callback))
-    (spotify-api-call-async
-     "GET"
-     "/me/player/devices"
-     nil
-     callback)))
+  ;; Calls '/me/player/devices' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-transfer-player (device-id &optional callback)
   "Mock Function."
-  (spotify-api-call-async
-   "PUT"
-   "/me/player"
-   (format "{\"device_ids\":[\"%s\"]}" device-id)
-   callback))
+  ;; Calls '/me/player' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-set-volume (device-id percentage &optional callback)
   "Mock Function."
-  (spotify-api-call-async
-   "PUT"
-   (concat "/me/player/volume?"
-           (url-build-query-string `((volume_percent ,percentage)
-                                     (device_id      ,device-id))
-                                   nil t))
-   nil
-   callback))
+  ;; Calls '/me/player/volume' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-get-player-status (callback)
   "Mock Function."
-  (let ((callback (if (functionp spotify--player-status-redirect)
-                      (funcall spotify--player-status-redirect callback)
-                    callback)))
-    (spotify-api-call-async
-     "GET"
-     "/me/player"
-     nil
-     callback)))
+  ;; Calls '/me/player' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-play (&optional callback uri context)
   "Mock Function."
-  (spotify-api-call-async
-   "PUT"
-   "/me/player/play"
-   (concat " { "
-           (cond ((and uri context) (format "\"context_uri\": \"%s\", \"offset\": {\"uri\": \"%s\"}" context uri))
-                 (context           (format "\"context_uri\": \"%s\"" context))
-                 (uri               (format "\"uris\": [ \"%s\" ]" uri))
-                 (t                  ""))
-           " } ")
-   callback))
+  ;; Calls '/me/player/play' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-pause (&optional callback)
   "Mock Function."
-  (spotify-api-call-async
-   "PUT"
-   "/me/player/pause"
-   nil
-   callback))
+  ;; Calls '/me/player/pause' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-next (&optional callback)
   "Mock Function."
-  (spotify-api-call-async
-   "POST"
-   "/me/player/next"
-   nil
-   callback))
+  ;; Calls '/me/player/next' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-previous (&optional callback)
   "Mock Function."
-  (spotify-api-call-async
-   "POST"
-   "/me/player/previous"
-   nil
-   callback))
+  ;; Calls '/me/player/previous' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-repeat (state &optional callback)
   "Mock Function."
-  (spotify-api-call-async
-   "PUT"
-   (concat "/me/player/repeat?"
-           (url-build-query-string `((state ,state))
-                                   nil t))
-   nil
-   callback))
+  ;; Calls '/me/player/repeat' Spotify Connect API endpoint.
+  )
 
 
 (defun spotify-ert/mock/spotify-api-shuffle (state &optional callback)
   "Mock Function."
-  (spotify-api-call-async
-   "PUT"
-   (concat "/me/player/shuffle?"
-           (url-build-query-string `((state ,state))
-                                   nil t))
-   nil
-   callback))
+  ;; Calls '/me/player/shuffle' Spotify Connect API endpoint.
+  )
+
 
 ;;---
-;; §-TODO-§ [2019-12-11]: Setup for mocs?
+;; §-TODO-§ [2019-12-11]: Setup for mocks?
 ;;---
 
 (defun spotify-ert/json-api-setup ()
@@ -420,10 +335,29 @@ emacs to spotify api test is desired.
 ;; Test: spotify-when-device-active
 ;;------------------------------------------------------------------------------
 
+(defvar spotify-ert/spotify-when-device-active/active t
+  "Non-nil for letting spotify-when-device-active execute, nil for blocking.")
+
 ;;(defun spotify-when-device-active (body)
 (ert-deftest spotify-ert/spotify-when-device-active ()
   "Test that this macro only executes body when there is an active device.
 "
+  (let ((entered-body nil))
+    (setq spotify-ert/spotify-when-device-active/active t)
+    (spotify-when-device-active
+     (should (eq t t))
+     (setq entered-body 'test-symbol-0))
+    (should (eq entered-body 'test-symbol-0))
+
+  (let ((entered-body nil))
+    (setq spotify-ert/spotify-when-device-active/active nil)
+    (spotify-when-device-active
+     (should (eq nil t))
+     (setq entered-body 'test-symbol-0))
+    (should (eq entered-body nil))
+
+;; §-TODO-§ [2019-12-11]: you are here, about to start this...
+
   ;; <maybe tests here>
 
   (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
