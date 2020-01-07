@@ -22,7 +22,7 @@
   "Reads/decodes JSON-STR to JSON-OBJ (in a let binding), then runs BODY forms
 in the same scope.
 "
-  (declare (indent defun))
+  (declare (indent 1))
   `(spotify--json-setup
      (let ((json-obj (json-read-from-string ,json-str)))
        ,@body)))

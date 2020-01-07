@@ -18,13 +18,19 @@
 ;; Helpers & Macros
 ;;------------------------------------------------------------------------------
 
-(defmacro spotify-when-device-active (body)
-  "Evaluate BODY when there is an active device, otherwise shows an error message."
+(defmacro spotify-when-device-active (&rest body)
+  "Evaluate BODY when there is an active device, otherwise shows
+an error message."
   `(spotify-api-device-list
     (lambda (json)
       (if-let ((devices (spotify--api-devices json))
-               (active (> (length (seq-filter (lambda (dev) (eq (gethash 'is_active dev) t)) devices)) 0)))
-          (progn ,body)
+               (active (> (length (seq-filter
+                                   (lambda (dev)
+                                     ;; §-TODO-§ [2020-01-07]: spotify func
+                                     ;; instead of get hash.
+                                     (eq (gethash 'is_active dev) t)) devices))
+                          0)))
+          (progn ,@body)
         (spotify--feedback--no-device)))))
 
 
