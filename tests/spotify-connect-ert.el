@@ -20,6 +20,17 @@
 ;; Settings, Vars, Helpers
 ;;------------------------------------------------------------------------------
 
+;; §-TODO-§ [2020-01-08]: move to a common place?
+(defvar spotify-ert/mock/called nil
+  "List of symbols or nil.")
+
+
+(defvar spotify-ert/mock/spotify-api-device-list/is-active t
+  "Non-nil for letting spotify-when-device-active execute, nil for blocking.")
+
+
+;; §-TODO-§ [2020-01-08]: move other vars here
+
 
 ;;------------------------------------------------------------------------------
 ;; spotify-api: setup stubs
@@ -256,9 +267,6 @@
   )
 
 
-(defvar spotify-ert/mock/spotify-api-device-list/is-active t
-  "Non-nil for letting spotify-when-device-active execute, nil for blocking.")
-
 (defun spotify-ert/mock/spotify-api-device-list (callback)
   "Mock Function."
   ;; Calls '/me/player/devices' Spotify Connect API endpoint.
@@ -293,7 +301,6 @@
   ;; Get our full status data...
   (spotify-ert/util/with-json
       spotify-player-status-ert/data/player-status-in-full
-
     ;; ...and just give it to the callback.
     (when callback (funcall callback json-obj))))
 
@@ -301,37 +308,37 @@
 (defun spotify-ert/mock/spotify-api-play (&optional callback uri context)
   "Mock Function."
   ;; Calls '/me/player/play' Spotify Connect API endpoint.
-  )
+  (push 'spotify-api-play spotify-ert/mock/called))
 
 
 (defun spotify-ert/mock/spotify-api-pause (&optional callback)
   "Mock Function."
   ;; Calls '/me/player/pause' Spotify Connect API endpoint.
-  )
+  (push 'spotify-api-pause spotify-ert/mock/called))
 
 
 (defun spotify-ert/mock/spotify-api-next (&optional callback)
   "Mock Function."
   ;; Calls '/me/player/next' Spotify Connect API endpoint.
-  )
+  (push 'spotify-api-next spotify-ert/mock/called))
 
 
 (defun spotify-ert/mock/spotify-api-previous (&optional callback)
   "Mock Function."
   ;; Calls '/me/player/previous' Spotify Connect API endpoint.
-  )
+  (push 'spotify-api-previous spotify-ert/mock/called))
 
 
 (defun spotify-ert/mock/spotify-api-repeat (state &optional callback)
   "Mock Function."
   ;; Calls '/me/player/repeat' Spotify Connect API endpoint.
-  )
+  (push 'spotify-api-repeat spotify-ert/mock/called))
 
 
 (defun spotify-ert/mock/spotify-api-shuffle (state &optional callback)
   "Mock Function."
   ;; Calls '/me/player/shuffle' Spotify Connect API endpoint.
-  )
+  (push 'spotify-api-shuffle spotify-ert/mock/called))
 
 
 ;;---
@@ -341,7 +348,9 @@
 
 (defun spotify-ert/spotify-connect/setup ()
   "Per-test setup/reset."
-  (setq spotify-ert/mock/spotify-api-device-list/is-active t))
+  (setq spotify-ert/mock/called nil)
+  (setq spotify-ert/mock/spotify-api-device-list/is-active t)
+  (setq spotify-player-status nil))
 
 
 ;; With a bit of help from:
@@ -446,19 +455,15 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
 
-  ;; §-TODO-§ [2020-01-07]: <--now-->
+  (spotify-ert/mock 'spotify-api-get-player-status nil
+    (should (string= "[Playing: \"Weird Al\" Y... - Foil ◷ 2:22 --]"
+                     (spotify-connect-player-status)))
 
-
-  ;; <maybe tests here>
-
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
-    ))
+    (setq spotify-player-status nil)
+    (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+    (should (eq nil
+                (spotify-connect-player-status)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -471,16 +476,10 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
-
-  ;; <maybe tests here>
-
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
-    ))
+  (spotify-ert/mock 'spotify-api-play nil
+    ;; This function does nothing. Just a passthrough to spotify-api.el.
+    ;; So we can't really test anything.
+    (should (eq t t))))
 
 
 ;;------------------------------------------------------------------------------
@@ -493,16 +492,10 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
-
-  ;; <maybe tests here>
-
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
-    ))
+  (spotify-ert/mock 'spotify-api-pause nil
+    ;; This function does nothing. Just a passthrough to spotify-api.el.
+    ;; So we can't really test anything.
+    (should (eq t t))))
 
 
 ;;------------------------------------------------------------------------------
@@ -515,16 +508,10 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
-
-  ;; <maybe tests here>
-
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
-    ))
+  (spotify-ert/mock 'spotify-api-play nil
+    ;; This function does nothing. Just a passthrough to spotify-api.el.
+    ;; So we can't really test anything.
+    (should (eq t t))))
 
 
 ;;------------------------------------------------------------------------------
@@ -537,16 +524,14 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-play nil
+    (spotify-ert/mock 'spotify-api-pause nil
+      ;; This function doesn't do much, but we can at least make sure it calls
+      ;; play or pause as appropriate.
 
-  ;; <maybe tests here>
+      ;; §-TODO-§ [2020-01-07]: <--now-->
 
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
-    ))
+      (should (eq t t)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -559,7 +544,9 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (ignore)
+    )
 
   ;; <maybe tests here>
 
@@ -581,7 +568,9 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (ignore)
+    )
 
   ;; <maybe tests here>
 
@@ -603,7 +592,9 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (ignore)
+    )
 
   ;; <maybe tests here>
 
@@ -625,7 +616,9 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (ignore)
+    )
 
   ;; <maybe tests here>
 
@@ -647,7 +640,9 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (ignore)
+    )
 
   ;; <maybe tests here>
 
@@ -669,7 +664,9 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (ignore)
+    )
 
   ;; <maybe tests here>
 
@@ -691,7 +688,9 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-device-list nil (ignore))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (ignore)
+    )
 
   ;; <maybe tests here>
 
