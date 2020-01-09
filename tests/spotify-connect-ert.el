@@ -21,6 +21,7 @@
 ;;------------------------------------------------------------------------------
 
 ;; §-TODO-§ [2020-01-08]: move to a common place?
+;; §-TODO-§ [2020-01-09]: A macro for making mocks that just push to here.
 (defvar spotify-ert/mock/called nil
   "List of symbols or nil.")
 
@@ -39,14 +40,14 @@
 (defun spotify-ert/mock/spotify-oauth2-token ()
   "Mock function."
   ;; returns *spotify-oauth2-token*
-  nil)
+  (error "(mock) spotify-oauth2-token: You went too far."))
 
 
 (defun spotify-ert/mock/spotify-api-call-async
     (method uri &optional data callback is-retry)
   "Mock Function."
   ;; returns value of oauth2-url-retrieve - json object?
-  nil)
+  (error "(mock) spotify-api-call-async: You went too far."))
 
 
 (defun spotify-ert/mock/spotify-current-user (callback)
@@ -350,7 +351,8 @@
   "Per-test setup/reset."
   (setq spotify-ert/mock/called nil)
   (setq spotify-ert/mock/spotify-api-device-list/is-active t)
-  (setq spotify-player-status nil))
+  (setq spotify-player-status nil)
+  (setq spotify-ert/util/with-json/munger nil))
 
 
 ;; With a bit of help from:
@@ -524,14 +526,40 @@ obj.
 "
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
-  (spotify-ert/mock 'spotify-api-play nil
-    (spotify-ert/mock 'spotify-api-pause nil
-      ;; This function doesn't do much, but we can at least make sure it calls
-      ;; play or pause as appropriate.
 
-      ;; §-TODO-§ [2020-01-07]: <--now-->
+  ;; spotify--when-device->with-status
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (spotify-ert/mock 'spotify-api-get-player-status nil
+      ;; spotify-connect-player-toggle-play
+      (spotify-ert/mock 'spotify-api-play nil
+        (spotify-ert/mock 'spotify-api-pause nil
+          ;; This function doesn't do much, but we can at least make sure it
+          ;; calls play or pause as appropriate.
 
-      (should (eq t t)))))
+          ;; data has is_playing as true, so test that it calls pause first
+          (should (null spotify-ert/mock/called))
+          (spotify-connect-player-toggle-play)
+          (should-not (null spotify-ert/mock/called))
+          (should     (memq 'spotify-api-pause spotify-ert/mock/called))
+          (should-not (memq 'spotify-api-play  spotify-ert/mock/called))
+
+          ;; reset for second half
+          (setq spotify-ert/mock/called nil)
+          (should (null spotify-ert/mock/called))
+
+          ;; Massage data with spotify-ert/util/with-json/munger to change
+          ;; is_playing to false.
+          (setq spotify-ert/util/with-json/munger
+                (lambda (json-obj)
+                  (puthash 'is_playing :json-false json-obj)
+                  (push 'munger spotify-ert/mock/called)
+                  json-obj))
+          (spotify-connect-player-toggle-play)
+          (should-not (null spotify-ert/mock/called))
+          (should     (memq 'munger            spotify-ert/mock/called))
+          (should     (memq 'spotify-api-play  spotify-ert/mock/called))
+          (should-not (memq 'spotify-api-pause spotify-ert/mock/called))
+          )))))
 
 
 ;;------------------------------------------------------------------------------
@@ -545,16 +573,8 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
-    (ignore)
-    )
 
-  ;; <maybe tests here>
-
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
+          ;; §-TODO-§ [2020-01-07]: <--now-->
     ))
 
 

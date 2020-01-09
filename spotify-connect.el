@@ -85,9 +85,9 @@ Returns a JSON string in the `spotify--encode-json-simple' format.
 (defun spotify-connect-player-toggle-play ()
   "Toggle playing status of current track."
   (spotify--when-device->with-status
-   (if (spotify--api-player-status status :playing-bool)
-       (spotify-api-pause)
-     (spotify-api-play))))
+    (if (spotify--api-player-status status :playing-bool)
+        (spotify-api-pause)
+      (spotify-api-play))))
 
 (defun spotify-connect-player-next-track ()
   "Skip to the next track."
