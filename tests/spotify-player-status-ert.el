@@ -12,6 +12,16 @@
 ;;--                     spotify-player-status.el tests                       --
 ;;------------------------------------------------------------------------------
 
+
+;; Test Helpers
+(require 'spotify-ert-data-functions)
+(require 'spotify-ert-mock-stub)
+(require 'spotify-ert-setup)
+
+;; Test Data
+;; (require 'spotify-ert-data-connect-api)
+
+;; Spotify.el Requirements
 (require 'spotify-player-status)
 
 

@@ -1,4 +1,4 @@
-;;; spotify-ert-helpers.el --- Helpers for tests for spotify.el. -*- lexical-binding: t -*-
+;;; spotify-ert-data-functions.el --- Helpers for tests for spotify.el. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 
@@ -9,7 +9,7 @@
 ;;; Code:
 
 ;;-----------------------------Spotify Unit Tests-------------------------------
-;;--                      spotify-ert-helpers.el tests                        --
+;;--                      Helpers for Unit Test Data.                         --
 ;;------------------------------------------------------------------------------
 
 (require 'spotify-json)
@@ -32,8 +32,6 @@ Munger must take and return JSON-OBJ hash table.")
 ;; String JSON -> Hash Table JSON
 ;;------------------------------------------------------------------------------
 
-;; §-TODO-§ [2020-01-10]: Move to data?
-;;   Or rename this file to be about data helpers?
 (defmacro spotify-ert/util/with-json (json-str &rest body)
   "Reads/decodes JSON-STR to JSON-OBJ (in a let binding), then runs BODY forms
 in the same scope.
@@ -55,4 +53,4 @@ in the same scope.
 ;;------------------------------------------------------------------------------
 ;; The End.
 ;;------------------------------------------------------------------------------
-(provide 'spotify-ert-helpers)
+(provide 'spotify-ert-data-functions)

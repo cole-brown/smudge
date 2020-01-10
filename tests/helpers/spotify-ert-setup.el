@@ -1,4 +1,4 @@
-;;; spotify-ert-functions.el --- Helpers for spotify.el unit tests. -*- lexical-binding: t -*-
+;;; spotify-ert-setup.el --- Helpers for spotify.el unit tests. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Cole Brown
 
@@ -15,87 +15,14 @@
 ;;------------------------------------------------------------------------------
 
 (require 'cl) ;; cl-flet*
-(require 'spotify-ert-helpers)
+(require 'spotify-ert-mock-stub)
 
 ;;------------------------------------------------------------------------------
 ;; Settings, Vars, Helpers
 ;;------------------------------------------------------------------------------
 
-(defvar spotify-ert/stub/called nil
-  "List of symbols or nil.")
-
-
-(defvar spotify-ert/mock/spotify-api-device-list/is-active t
-  "Non-nil for letting spotify-when-device-active execute, nil for blocking.")
-
-
 (defvar spotify-ert/setup/error-out-functions/orig nil
   "Data saved about original function definitons.")
-
-
-;;------------------------------------------------------------------------------
-;; Mock / Stub Macros
-;;------------------------------------------------------------------------------
-
-;; With a bit of help from:
-;; https://endlessparentheses.com/understanding-letf-and-how-it-replaces-flet.html
-(defmacro spotify-ert/mock (func &optional mock &rest body)
-  "Replaces FUNC with MOCK for duration of BODY (`cl-letf' binding).
-
-If MOCK is nil, FUNC will be replaced with a function with symbol name:
-  `spotify-ert/mock/FUNC'.
-
-Sets up BODY to not actually call Spotify Connect
-API... Just calls fake handlers and then we can inspect status
-and return what we want.
-
-FUNC should be the function symbol to be replaced (e.g. message).
-MOCK should be the function symbol to replace it (e.g. my-message-tester).
-
-Executes BODY forms if successful setting up mock functions.
-"
-  (declare (indent defun))
-  `(let* ((func-sym ,func)
-          (mock-sym (or ,mock
-                        (intern (concat "spotify-ert/mock/"
-                                        (symbol-name func-sym))))))
-     (cl-letf (((symbol-function func-sym) mock-sym))
-       ,@body)))
-;; (defun xx (fmt &rest args) (message "xx: %S" (format fmt args)))
-;; (defun yy (fmt &rest args) (message "yy: %S" (format fmt args)))
-;; (defun spotify-ert/mock/xx (f &rest a) (message "zz: %S" (format f a)))
-;; (macroexpand '(spotify-ert/mock 'xx 'yy (xx "hello?")))
-;; (spotify-ert/mock 'xx 'yy (xx "hello?"))
-;; (spotify-ert/mock 'xx nil (xx "hello?"))
-
-
-(defmacro spotify-ert/stub (func &rest body)
-  "Replaces FUNC with a stub for duration of BODY (`cl-letf' binding).
-
-The stub will just push the FUNC symbol onto the
-`spotify-ert/stub/called' list, so be sure to clear that out as
-needed.
-
-Sets up BODY to not actually call Spotify Connect
-API... Just calls fake handlers and then we can inspect status
-and return what we want.
-
-FUNC should be the function symbol to be replaced (e.g. message).
-
-Executes BODY forms if successful setting up mock functions.
-"
-  (declare (indent defun))
-  `(let* ((func-sym ,func))
-     ;; Set FUNC to be a lambda that just pushes FUNC symbol to called list.
-     (cl-letf (((symbol-function func-sym)
-                (lambda (&rest ignored)
-                  (push func-sym spotify-ert/stub/called))))
-       ,@body)))
-;; (defun xx (fmt &rest args) (message "xx: %S" (format fmt args)))
-;; (macroexpand '(spotify-ert/stub 'xx (xx "hello?")))
-;; spotify-ert/stub/called
-;; (spotify-ert/stub 'xx (xx "hello?"))
-;; spotify-ert/stub/called
 
 
 ;;------------------------------------------------------------------------------
@@ -108,8 +35,6 @@ Executes BODY forms if successful setting up mock functions.
   ;;---
   ;; Reset Spotify.el
   ;;---
-  (spotify-ert/teardown/error-out-functions)
-
   (setq spotify-player-status-format "[%p: %a - %t ◷ %l %r%s]")
   (setq spotify-player-status   nil)
 
@@ -450,4 +375,4 @@ this error throwing one. Will save the old function definition for reverting to.
 ;;------------------------------------------------------------------------------
 ;; The End.
 ;;------------------------------------------------------------------------------
-(provide 'spotify-ert-functions)
+(provide 'spotify-ert-setup)

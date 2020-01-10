@@ -52,8 +52,9 @@ in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
   ;;---
   ;; Helpers
   ;;---
-  (load-file "spotify-ert-helpers.el")
-  (load-file "spotify-ert-functions.el")
+  (load-file "helpers/spotify-ert-setup.el")
+  (load-file "helpers/spotify-ert-mock-stub.el")
+  (load-file "helpers/spotify-ert-data-functions.el")
 
   ;;---
   ;; Tests (in implementation order)
@@ -61,7 +62,12 @@ in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
   (load-file "spotify-json-ert.el")
   (load-file "spotify-api-json-ert.el")
   (load-file "spotify-player-status-ert.el")
-  (load-file "spotify-connect-ert.el"))
+  (load-file "spotify-connect-ert.el")
+
+  ;;---
+  ;; Done
+  ;;---
+  (message "spotify-ert/load: Done."))
 
 
 (defun spotify-ert/run ()

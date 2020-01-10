@@ -12,6 +12,8 @@
 ;;--                        spotify-api-json.el tests                         --
 ;;------------------------------------------------------------------------------
 
+(require 'spotify-ert-data-functions)
+
 (require 'spotify-api-json)
 
 

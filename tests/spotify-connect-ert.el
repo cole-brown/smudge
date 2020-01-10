@@ -12,11 +12,18 @@
 ;;--                        spotify-connect.el tests                          --
 ;;------------------------------------------------------------------------------
 
-(require 'spotify-ert-data-connect-api)
-(require 'spotify-ert-functions)
+;; Test Helpers
+(require 'spotify-ert-data-functions)
+(require 'spotify-ert-mock-stub)
+(require 'spotify-ert-setup)
 
+;; Test Data
+(require 'spotify-ert-data-connect-api)
+
+;; Spotify.el Requirements
 (require 'spotify-connect)
 (require 'spotify-controller)
+
 
 ;;------------------------------------------------------------------------------
 ;; Settings, Vars, Helpers
