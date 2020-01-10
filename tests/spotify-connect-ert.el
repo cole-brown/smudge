@@ -22,18 +22,21 @@
 
 ;; §-TODO-§ [2020-01-08]: move to a common place?
 ;; §-TODO-§ [2020-01-09]: A macro for making mocks that just push to here.
-(defvar spotify-ert/mock/called nil
+(defvar spotify-ert/stub/called nil
   "List of symbols or nil.")
 
 
 (defvar spotify-ert/mock/spotify-api-device-list/is-active t
   "Non-nil for letting spotify-when-device-active execute, nil for blocking.")
 
+
 (defvar spotify-ert/mock/volume-amount nil
   "Volume amount given to a volume mocking function.")
 
+
 (defvar spotify-ert/mock/volume-device-id  nil
   "Device ID given to a volume mocking function.")
+
 
 ;; §-TODO-§ [2020-01-08]: move other vars here
 
@@ -299,7 +302,7 @@
   (setq spotify-ert/mock/volume-amount    percentage)
   (setq spotify-ert/mock/volume-device-id device-id)
 
-  (push 'spotify-api-set-volume spotify-ert/mock/called))
+  (push 'spotify-api-set-volume spotify-ert/stub/called))
 
 
 (defun spotify-ert/mock/spotify-api-get-player-status (callback)
@@ -317,37 +320,37 @@
 (defun spotify-ert/mock/spotify-api-play (&optional callback uri context)
   "Mock Function."
   ;; Calls '/me/player/play' Spotify Connect API endpoint.
-  (push 'spotify-api-play spotify-ert/mock/called))
+  (push 'spotify-api-play spotify-ert/stub/called))
 
 
 (defun spotify-ert/mock/spotify-api-pause (&optional callback)
   "Mock Function."
   ;; Calls '/me/player/pause' Spotify Connect API endpoint.
-  (push 'spotify-api-pause spotify-ert/mock/called))
+  (push 'spotify-api-pause spotify-ert/stub/called))
 
 
 (defun spotify-ert/mock/spotify-api-next (&optional callback)
   "Mock Function."
   ;; Calls '/me/player/next' Spotify Connect API endpoint.
-  (push 'spotify-api-next spotify-ert/mock/called))
+  (push 'spotify-api-next spotify-ert/stub/called))
 
 
 (defun spotify-ert/mock/spotify-api-previous (&optional callback)
   "Mock Function."
   ;; Calls '/me/player/previous' Spotify Connect API endpoint.
-  (push 'spotify-api-previous spotify-ert/mock/called))
+  (push 'spotify-api-previous spotify-ert/stub/called))
 
 
 (defun spotify-ert/mock/spotify-api-repeat (state &optional callback)
   "Mock Function."
   ;; Calls '/me/player/repeat' Spotify Connect API endpoint.
-  (push 'spotify-api-repeat spotify-ert/mock/called))
+  (push 'spotify-api-repeat spotify-ert/stub/called))
 
 
 (defun spotify-ert/mock/spotify-api-shuffle (state &optional callback)
   "Mock Function."
   ;; Calls '/me/player/shuffle' Spotify Connect API endpoint.
-  (push 'spotify-api-shuffle spotify-ert/mock/called))
+  (push 'spotify-api-shuffle spotify-ert/stub/called))
 
 
 ;;---
@@ -363,7 +366,7 @@
   ;; Spotify test vars
   (setq spotify-ert/mock/spotify-api-device-list/is-active t)
 
-  (setq spotify-ert/mock/called           nil)
+  (setq spotify-ert/stub/called           nil)
   (setq spotify-ert/util/with-json/munger nil)
   (setq spotify-ert/mock/volume-amount    nil)
   (setq spotify-ert/mock/volume-device-id nil))
@@ -371,16 +374,18 @@
 
 ;; With a bit of help from:
 ;; https://endlessparentheses.com/understanding-letf-and-how-it-replaces-flet.html
-(defmacro spotify-ert/mock/function (func &optional mock &rest body)
-  "Sets up these tests to not actually call Spotify Connect
+(defmacro spotify-ert/mock (func &optional mock &rest body)
+  "Replaces FUNC with MOCK for duration of BODY (`cl-letf' binding).
+
+If MOCK is nil, FUNC will be replaced with a function with symbol name:
+  `spotify-ert/mock/FUNC'.
+
+Sets up BODY to not actually call Spotify Connect
 API... Just calls fake handlers and then we can inspect status
 and return what we want.
 
-Could do a different, system-level test or something if full
-emacs to spotify api test is desired.
-
 FUNC should be the function symbol to be replaced (e.g. message).
-MOCK should be the function symbol to replace it.
+MOCK should be the function symbol to replace it (e.g. my-message-tester).
 
 Executes BODY forms if successful setting up mock functions.
 "
@@ -397,6 +402,35 @@ Executes BODY forms if successful setting up mock functions.
 ;; (macroexpand '(spotify-ert/mock 'xx 'yy (xx "hello?")))
 ;; (spotify-ert/mock 'xx 'yy (xx "hello?"))
 ;; (spotify-ert/mock 'xx nil (xx "hello?"))
+
+
+(defmacro spotify-ert/stub (func &rest body)
+  "Replaces FUNC with a stub for duration of BODY (`cl-letf' binding).
+
+The stub will just push the FUNC symbol onto the
+`spotify-ert/stub/called' list, so be sure to clear that out as
+needed.
+
+Sets up BODY to not actually call Spotify Connect
+API... Just calls fake handlers and then we can inspect status
+and return what we want.
+
+FUNC should be the function symbol to be replaced (e.g. message).
+
+Executes BODY forms if successful setting up mock functions.
+"
+  (declare (indent defun))
+  `(let* ((func-sym ,func))
+     ;; Set FUNC to be a lambda that just pushes FUNC symbol to called list.
+     (cl-letf (((symbol-function func-sym)
+                (lambda (&rest ignored)
+                  (push func-sym spotify-ert/stub/called))))
+       ,@body)))
+;; (defun xx (fmt &rest args) (message "xx: %S" (format fmt args)))
+;; (macroexpand '(spotify-ert/stub 'xx (xx "hello?")))
+;; spotify-ert/stub/called
+;; (spotify-ert/stub 'xx (xx "hello?"))
+;; spotify-ert/stub/called
 
 
 ;;------------------------------------------------------------------------------
@@ -492,12 +526,12 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/reset)
   (spotify-ert/mock 'spotify-api-device-list nil
-    (spotify-ert/mock 'spotify-api-play nil
+    (spotify-ert/stub 'spotify-api-play
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-play-track nil)
-      (should-not (null spotify-ert/mock/called))
-      (should     (memq 'spotify-api-play spotify-ert/mock/called)))))
+      (should-not (null spotify-ert/stub/called))
+      (should     (memq 'spotify-api-play spotify-ert/stub/called)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -511,12 +545,12 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/reset)
   (spotify-ert/mock 'spotify-api-device-list nil
-    (spotify-ert/mock 'spotify-api-pause nil
+    (spotify-ert/stub 'spotify-api-pause nil
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-pause)
-      (should-not (null spotify-ert/mock/called))
-      (should     (memq 'spotify-api-pause spotify-ert/mock/called)))))
+      (should-not (null spotify-ert/stub/called))
+      (should     (memq 'spotify-api-pause spotify-ert/stub/called)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -530,12 +564,12 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/reset)
   (spotify-ert/mock 'spotify-api-device-list nil
-    (spotify-ert/mock 'spotify-api-play nil
+    (spotify-ert/stub 'spotify-api-play
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-play)
-      (should-not (null spotify-ert/mock/called))
-      (should     (memq 'spotify-api-play spotify-ert/mock/called)))))
+      (should-not (null spotify-ert/stub/called))
+      (should     (memq 'spotify-api-play spotify-ert/stub/called)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -553,34 +587,34 @@ obj.
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/mock 'spotify-api-get-player-status nil
       ;; spotify-connect-player-toggle-play
-      (spotify-ert/mock 'spotify-api-play nil
-        (spotify-ert/mock 'spotify-api-pause nil
+      (spotify-ert/stub 'spotify-api-play
+        (spotify-ert/stub 'spotify-api-pause
           ;; This function doesn't do much, but we can at least make sure it
           ;; calls play or pause as appropriate.
 
           ;; data has is_playing as true, so test that it calls pause first
-          (should (null spotify-ert/mock/called))
+          (should (null spotify-ert/stub/called))
           (spotify-connect-player-toggle-play)
-          (should-not (null spotify-ert/mock/called))
-          (should     (memq 'spotify-api-pause spotify-ert/mock/called))
-          (should-not (memq 'spotify-api-play  spotify-ert/mock/called))
+          (should-not (null spotify-ert/stub/called))
+          (should     (memq 'spotify-api-pause spotify-ert/stub/called))
+          (should-not (memq 'spotify-api-play  spotify-ert/stub/called))
 
           ;; reset for second half
-          (setq spotify-ert/mock/called nil)
-          (should (null spotify-ert/mock/called))
+          (setq spotify-ert/stub/called nil)
+          (should (null spotify-ert/stub/called))
 
           ;; Massage data with spotify-ert/util/with-json/munger to change
           ;; is_playing to false.
           (setq spotify-ert/util/with-json/munger
                 (lambda (json-obj)
                   (puthash 'is_playing :json-false json-obj)
-                  (push 'munger spotify-ert/mock/called)
+                  (push 'munger spotify-ert/stub/called)
                   json-obj))
           (spotify-connect-player-toggle-play)
-          (should-not (null spotify-ert/mock/called))
-          (should     (memq 'munger            spotify-ert/mock/called))
-          (should     (memq 'spotify-api-play  spotify-ert/mock/called))
-          (should-not (memq 'spotify-api-pause spotify-ert/mock/called))
+          (should-not (null spotify-ert/stub/called))
+          (should     (memq 'munger            spotify-ert/stub/called))
+          (should     (memq 'spotify-api-play  spotify-ert/stub/called))
+          (should-not (memq 'spotify-api-pause spotify-ert/stub/called))
           )))))
 
 
@@ -595,12 +629,12 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/reset)
   (spotify-ert/mock 'spotify-api-device-list nil
-    (spotify-ert/mock 'spotify-api-next nil
+    (spotify-ert/stub 'spotify-api-next
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
-      (spotify-connect-player-next)
-      (should-not (null spotify-ert/mock/called))
-      (should     (memq 'spotify-api-next spotify-ert/mock/called)))))
+      (spotify-connect-player-next-track)
+      (should-not (null spotify-ert/stub/called))
+      (should     (memq 'spotify-api-next spotify-ert/stub/called)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -614,12 +648,12 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/reset)
   (spotify-ert/mock 'spotify-api-device-list nil
-    (spotify-ert/mock 'spotify-api-previous nil
+    (spotify-ert/stub 'spotify-api-previous
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-previous-track)
-      (should-not (null spotify-ert/mock/called))
-      (should     (memq 'spotify-api-previous spotify-ert/mock/called)))))
+      (should-not (null spotify-ert/stub/called))
+      (should     (memq 'spotify-api-previous spotify-ert/stub/called)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -643,11 +677,11 @@ obj.
           ;; up it
           (spotify-connect-volume-up vol-change)
 
-          (should-not (null spotify-ert/mock/called))
+          (should-not (null spotify-ert/stub/called))
           (should-not (null spotify-ert/mock/volume-amount))
           (should-not (null spotify-ert/mock/volume-device-id))
 
-          (should     (memq 'spotify-api-set-volume spotify-ert/mock/called))
+          (should     (memq 'spotify-api-set-volume spotify-ert/stub/called))
           (should     (= spotify-ert/mock/volume-amount
                          (+ vol-orig vol-change)))
           (should     (string= spotify-ert/mock/volume-device-id
@@ -675,11 +709,11 @@ obj.
           ;; down it
           (spotify-connect-volume-down vol-change)
 
-          (should-not (null spotify-ert/mock/called))
+          (should-not (null spotify-ert/stub/called))
           (should-not (null spotify-ert/mock/volume-amount))
           (should-not (null spotify-ert/mock/volume-device-id))
 
-          (should     (memq 'spotify-api-set-volume spotify-ert/mock/called))
+          (should     (memq 'spotify-api-set-volume spotify-ert/stub/called))
           (should     (= spotify-ert/mock/volume-amount
                          (- vol-orig vol-change)))
           (should     (string= spotify-ert/mock/volume-device-id
@@ -708,15 +742,15 @@ obj.
           ;; Test that it will currently mute.
           (spotify-connect-volume-mute-unmute vol-orig)
 
-          (should-not (null spotify-ert/mock/called))
+          (should-not (null spotify-ert/stub/called))
           (should-not (null spotify-ert/mock/volume-amount))
           (should-not (null spotify-ert/mock/volume-device-id))
 
-          (should     (memq 'spotify-api-set-volume spotify-ert/mock/called))
+          (should     (memq 'spotify-api-set-volume spotify-ert/stub/called))
           (should     (= spotify-ert/mock/volume-amount vol-muted))
           (should     (string= spotify-ert/mock/volume-device-id
                                "test-device-id"))
-          (should-not (memq 'munger spotify-ert/mock/called))
+          (should-not (memq 'munger spotify-ert/stub/called))
 
           ;; get ready for another go
           (spotify-ert/spotify-connect/reset)
@@ -726,7 +760,7 @@ obj.
           ;; Make munger to 0 volume/muted state.
           (setq spotify-ert/util/with-json/munger
                 (lambda (json-obj)
-                  (push 'munger spotify-ert/mock/called)
+                  (push 'munger spotify-ert/stub/called)
                   (let ((devices (gethash 'devices json-obj)))
                     (if (null devices)
                         ;; player status json
@@ -739,15 +773,15 @@ obj.
 
           ;; Test that it will now unmute.
           (spotify-connect-volume-mute-unmute vol-unmuted)
-          (should-not (null spotify-ert/mock/called))
+          (should-not (null spotify-ert/stub/called))
           (should-not (null spotify-ert/mock/volume-amount))
           (should-not (null spotify-ert/mock/volume-device-id))
 
-          (should     (memq 'spotify-api-set-volume spotify-ert/mock/called))
+          (should     (memq 'spotify-api-set-volume spotify-ert/stub/called))
           (should     (= spotify-ert/mock/volume-amount vol-unmuted))
           (should     (string= spotify-ert/mock/volume-device-id
                                "test-device-id"))
-          (should     (memq 'munger spotify-ert/mock/called)))))))
+          (should     (memq 'munger spotify-ert/stub/called)))))))
 
 
 ;;------------------------------------------------------------------------------
@@ -761,19 +795,14 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/reset)
   (spotify-ert/mock 'spotify-api-device-list nil
-    ;; §-TODO-§ [2020-01-07]: <--now-->
+    (spotify-ert/mock 'spotify-api-get-player-status nil
+      (spotify-ert/stub 'spotify-api-repeat
 
-    (ignore)
-    )
-
-  ;; <maybe tests here>
-
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
-    ))
+        ;; This function does nothing. Just a passthrough to spotify-api.el.
+        ;; So we can't really test anything.
+        (spotify-connect-toggle-repeat)
+        (should-not (null spotify-ert/stub/called))
+        (should     (memq 'spotify-api-repeat spotify-ert/stub/called))))))
 
 
 ;;------------------------------------------------------------------------------
@@ -787,17 +816,14 @@ obj.
   ;; setup mocks
   (spotify-ert/spotify-connect/reset)
   (spotify-ert/mock 'spotify-api-device-list nil
-    (ignore)
-    )
+    (spotify-ert/mock 'spotify-api-get-player-status nil
+      (spotify-ert/stub 'spotify-api-shuffle
 
-  ;; <maybe tests here>
-
-  (spotify-ert/util/with-json spotify-connect-ert/data/player-status-in-full
-
-    ;; <tests here>
-
-
-    ))
+        ;; This function does nothing. Just a passthrough to spotify-api.el.
+        ;; So we can't really test anything.
+        (spotify-connect-toggle-shuffle)
+        (should-not (null spotify-ert/stub/called))
+        (should     (memq 'spotify-api-shuffle spotify-ert/stub/called))))))
 
 
 ;;   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
