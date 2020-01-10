@@ -21,7 +21,7 @@
 
 
 ;;------------------------------------------------------------------------------
-;; Test Data
+;; Player Status
 ;;------------------------------------------------------------------------------
 
 (defconst spotify-ert/data/connect-api/player-status
@@ -130,6 +130,10 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
 ")
 
 
+;;------------------------------------------------------------------------------
+;; Device List with One Active
+;;------------------------------------------------------------------------------
+
 (defconst spotify-ert/data/connect-api/devices-list/active
   "{
       \"devices\": [
@@ -168,6 +172,10 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
 https://developer.spotify.com/documentation/web-api/guides/using-connect-web-api/
 ")
 
+
+;;------------------------------------------------------------------------------
+;; Device List with Zero Active
+;;------------------------------------------------------------------------------
 
 (defconst spotify-ert/data/connect-api/devices-list/inactive
   "{
