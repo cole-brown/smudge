@@ -39,9 +39,29 @@ in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
 (defun spotify-ert/load ()
   "Loads all Spotify.el unit test files."
   (interactive)
+
+  ;; §-TODO-§ [2020-01-10]: Move spotify--eat-errors to somewhere better and
+  ;; remove this.
+  (require 'spotify-hydra)
+
+  ;;---
+  ;; Data
+  ;;---
+  (load-file "data/spotify-ert-data-connect-api.el")
+
+  ;;---
+  ;; Helpers
+  ;;---
   (load-file "spotify-ert-helpers.el")
+  (load-file "spotify-ert-functions.el")
+
+  ;;---
+  ;; Tests (in implementation order)
+  ;;---
   (load-file "spotify-json-ert.el")
-  (load-file "spotify-api-json-ert.el"))
+  (load-file "spotify-api-json-ert.el")
+  (load-file "spotify-player-status-ert.el")
+  (load-file "spotify-connect-ert.el"))
 
 
 (defun spotify-ert/run ()

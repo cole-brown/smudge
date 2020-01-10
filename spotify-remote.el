@@ -160,7 +160,13 @@ See commands \\[spotify-toggle-repeating] and
 (defun spotify-update-player-status (str)
   "Set the given STR to the player status, prefixed with the mode identifier."
   (when (not (string= str spotify-player-status))
-    (setq spotify-player-status str)))
+    (setq spotify-player-status str))
+  ;; Return spotify-player-status string always - this has tripped me up in
+  ;; debugging when I try to message and then do for real, but the for real then
+  ;; just is always nil because the string is set...
+  ;;
+  ;; So yeah, just return it.
+  spotify-player-status)
 
 (defun spotify-player-status-text ()
   "Return the propertized text to be displayed as the lighter."

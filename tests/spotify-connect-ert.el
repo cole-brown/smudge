@@ -12,23 +12,15 @@
 ;;--                        spotify-connect.el tests                          --
 ;;------------------------------------------------------------------------------
 
-(require 'cl) ;; cl-flet*
-(require 'spotify-connect)
+(require 'spotify-ert-data-connect-api)
+(require 'spotify-ert-functions)
 
+(require 'spotify-connect)
+(require 'spotify-controller)
 
 ;;------------------------------------------------------------------------------
 ;; Settings, Vars, Helpers
 ;;------------------------------------------------------------------------------
-
-;; §-TODO-§ [2020-01-08]: move to a common place?
-;; §-TODO-§ [2020-01-09]: A macro for making mocks that just push to here.
-(defvar spotify-ert/stub/called nil
-  "List of symbols or nil.")
-
-
-(defvar spotify-ert/mock/spotify-api-device-list/is-active t
-  "Non-nil for letting spotify-when-device-active execute, nil for blocking.")
-
 
 (defvar spotify-ert/mock/volume-amount nil
   "Volume amount given to a volume mocking function.")
@@ -38,262 +30,21 @@
   "Device ID given to a volume mocking function.")
 
 
-;; §-TODO-§ [2020-01-08]: move other vars here
-
-
 ;;------------------------------------------------------------------------------
-;; spotify-api: setup stubs
+;; Spotify-API.el: Mocks & Stubs
 ;;------------------------------------------------------------------------------
-
-(defun spotify-ert/mock/spotify-oauth2-token ()
-  "Mock function."
-  ;; returns *spotify-oauth2-token*
-  (error "(mock) spotify-oauth2-token: You went too far."))
-
-
-(defun spotify-ert/mock/spotify-api-call-async
-    (method uri &optional data callback is-retry)
-  "Mock Function."
-  ;; returns value of oauth2-url-retrieve - json object?
-  (error "(mock) spotify-api-call-async: You went too far."))
-
-
-(defun spotify-ert/mock/spotify-current-user (callback)
-  "Mock Function."
-  ;; ask spotify for use, set *spotify-user*, return user to callback.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-items (json)
-  "Mock Function."
-  ;; Just returns 'items from json...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-search-track-items (json)
-  "Mock Function."
-  ;; Just returns 'tracks from json..
-  )
-
-
-(defun spotify-ert/mock/spotify-get-search-playlist-items (json)
-  "Mock Function."
-  ;; Just returns 'playlists from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-message (json)
-  "Mock Function."
-  ;; Just returns 'message from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-playlist-tracks (json)
-  "Mock Function."
-  )
-
-
-(defun spotify-ert/mock/spotify-get-search-playlist-items (json)
-  "Mock Function."
-  ;; Just gets 'plalists from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-album (json)
-  "Mock Function."
-  ;; Just gets 'album from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-number (json)
-  "Mock Function."
-  ;; Just gets 'track_number from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-disc-number (json)
-  "Mock Function."
-  ;; Just gets 'disc_number from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-duration (json)
-  "Mock Function."
-  ;; Just gets 'duration_ms from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-duration-formatted (json)
-  "Mock Function."
-  ;; Just gets formatted track duration from json.
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-album-name (json)
-  "Mock Function."
-  ;; Just gets 'name from track...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-artist (json)
-  "Mock Function."
-  ;; Just gets first of track artists from track...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-artist-name (json)
-  "Mock Function."
-  ;; Just gets first of track artists from track...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-track-popularity (json)
-  "Mock Function."
-  ;; Just gets 'popularity from track...
-  )
-
-
-(defun spotify-ert/mock/spotify-is-track-playable (json)
-  "Mock Function."
-  ;; Gets playable flag, converts to emacs bool...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-item-name (json)
-  "Mock Function."
-  ;; Just gets 'name from json...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-item-id (json)
-  "Mock Function."
-  ;; Just gets 'id from json...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-item-uri (json)
-  "Mock Function."
-  ;; Just gets 'uri from json...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-playlist-track-count (json)
-  "Mock Function."
-  ;; Just gets 'total from 'tracks from json...
-  )
-
-
-(defun spotify-ert/mock/spotify-get-playlist-owner-id (json)
-  "Mock Function."
-  ;; Just gets 'owner from 'tracks from json...
-  )
-
-
-(defun spotify-ert/mock/spotify-api-search (type query page callback)
-  "Mock Function."
-  ;; Calls "/search" Spotify Connect API endpoint with a query.
-  )
-
-
-(defun spotify-ert/mock/spotify-api-featured-playlists (page callback)
-  "Mock Function."
-  ;; Calls 'featured-playlist' Spotify Connect API endpoint.
-  )
-
-
-(defun spotify-ert/mock/spotify-api-user-playlists (user-id page callback)
-  "Mock Function."
-  ;; Calls 'users/<user>/playlists' Spotify Connect API endpoint.
-  )
-
-
-(defun spotify-ert/mock/spotify-api-playlist-create (user-id name
-                                                     is-public callback)
-  "Mock Function."
-  ;; Calls 'users/<user>/playlists' Spotify Connect API endpoint to create a
-  ;; playlist.
-  )
-
-
-(defun spotify-ert/mock/spotify-api-playlist-add-track
-    (user-id playlist-id track-id callback)
-  "Mock Function."
-  ;; Calls spotify-api-playlist-add-tracks for this one track.
-  )
-
-
-(defun spotify-ert/mock/spotify-format-id (type id)
-  "Mock Function."
-  ;; turns args into a... 'spotify id'?
-  )
-
-
-(defun spotify-ert/mock/spotify-api-playlist-add-tracks
-    (user-id playlist-id track-ids callback)
-  "Mock Function."
-  ;; Calls 'users/<user>/playlists/<playlist>/tracks" Spotify Connect API
-  ;; endpoint to add the list of track ids to the playlist.
-  )
-
-
-(defun spotify-ert/mock/spotify-api-playlist-follow (playlist callback)
-  "Mock Function."
-  ;; Calls '/users/<user>/playlists/<playlist>/followers' Spotify Connect API
-  ;; endpoint. To... follow playlist?
-  )
-
-
-(defun spotify-ert/mock/spotify-api-playlist-unfollow (playlist callback)
-  "Mock Function."
-  ;; Calls '/users/<user>/playlists/<playlist>/followers' Spotify Connect API
-  ;; endpoint. To... unfollow playlist?
-  )
-
-
-(defun spotify-ert/mock/spotify-api-playlist-tracks (playlist page callback)
-  "Mock Function."
-  ;; Calls '/users/<user>/playlists/<playlist>/followers' Spotify Connect API
-  ;; endpoint. To... unfollow playlist?
-  )
-
-
-(defun spotify-ert/mock/spotify-api-album-tracks (album page callback)
-  "Mock Function."
-  ;; Calls '/albums/%s/tracks' Spotify Connect API
-  ;; endpoint.
-  )
-
-
-(defun spotify-ert/mock/spotify-popularity-bar (popularity)
-  "Mock Function."
-  ;; Converts popularity int into... progress bar kinda thing.
-  )
-
-
-(defun spotify-ert/mock/spotify-api-recently-played (page callback)
-  "Mock Function."
-  ;; Calls '/me/player/recently-played' Spotify Connect API endpoint.
-  )
-
 
 (defun spotify-ert/mock/spotify-api-device-list (callback)
   "Mock Function."
   ;; Calls '/me/player/devices' Spotify Connect API endpoint.
-
   (spotify-ert/util/with-json
       ;; Choose device list with active device, or no active device, depending
       ;; on setup.
       (if spotify-ert/mock/spotify-api-device-list/is-active
-          spotify-connect-ert/data/devices-list/active
-        spotify-connect-ert/data/devices-list/inactive)
+          spotify-ert/data/connect-api/devices-list/active
+        spotify-ert/data/connect-api/devices-list/inactive)
     ;; And just give back device list data to async callback.
     (when callback (funcall callback json-obj))))
-
-
-(defun spotify-ert/mock/spotify-api-transfer-player (device-id &optional callback)
-  "Mock Function."
-  ;; Calls '/me/player' Spotify Connect API endpoint.
-  )
 
 
 (defun spotify-ert/mock/spotify-api-set-volume (device-id percentage &optional callback)
@@ -305,132 +56,49 @@
   (push 'spotify-api-set-volume spotify-ert/stub/called))
 
 
+
 (defun spotify-ert/mock/spotify-api-get-player-status (callback)
   "Mock Function."
   ;; Calls '/me/player' Spotify Connect API endpoint.
 
-
   ;; Get our full status data...
   (spotify-ert/util/with-json
-      spotify-player-status-ert/data/player-status-in-full
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/player-status
+        nil)
     ;; ...and just give it to the callback.
     (when callback (funcall callback json-obj))))
-
-
-(defun spotify-ert/mock/spotify-api-play (&optional callback uri context)
-  "Mock Function."
-  ;; Calls '/me/player/play' Spotify Connect API endpoint.
-  (push 'spotify-api-play spotify-ert/stub/called))
-
-
-(defun spotify-ert/mock/spotify-api-pause (&optional callback)
-  "Mock Function."
-  ;; Calls '/me/player/pause' Spotify Connect API endpoint.
-  (push 'spotify-api-pause spotify-ert/stub/called))
-
-
-(defun spotify-ert/mock/spotify-api-next (&optional callback)
-  "Mock Function."
-  ;; Calls '/me/player/next' Spotify Connect API endpoint.
-  (push 'spotify-api-next spotify-ert/stub/called))
-
-
-(defun spotify-ert/mock/spotify-api-previous (&optional callback)
-  "Mock Function."
-  ;; Calls '/me/player/previous' Spotify Connect API endpoint.
-  (push 'spotify-api-previous spotify-ert/stub/called))
-
-
-(defun spotify-ert/mock/spotify-api-repeat (state &optional callback)
-  "Mock Function."
-  ;; Calls '/me/player/repeat' Spotify Connect API endpoint.
-  (push 'spotify-api-repeat spotify-ert/stub/called))
-
-
-(defun spotify-ert/mock/spotify-api-shuffle (state &optional callback)
-  "Mock Function."
-  ;; Calls '/me/player/shuffle' Spotify Connect API endpoint.
-  (push 'spotify-api-shuffle spotify-ert/stub/called))
 
 
 ;;---
 ;; Setup Functions
 ;;---
 
-
 (defun spotify-ert/spotify-connect/reset ()
   "Per-test setup/reset."
-  ;; Spotify.el proper.
-  (setq spotify-player-status   nil)
 
-  ;; Spotify test vars
-  (setq spotify-ert/mock/spotify-api-device-list/is-active t)
+  ;; General reset
+  (spotify-ert/setup/reset)
 
-  (setq spotify-ert/stub/called           nil)
-  (setq spotify-ert/util/with-json/munger nil)
+  ;; Our vars
   (setq spotify-ert/mock/volume-amount    nil)
   (setq spotify-ert/mock/volume-device-id nil))
 
 
-;; With a bit of help from:
-;; https://endlessparentheses.com/understanding-letf-and-how-it-replaces-flet.html
-(defmacro spotify-ert/mock (func &optional mock &rest body)
-  "Replaces FUNC with MOCK for duration of BODY (`cl-letf' binding).
+(defun spotify-ert/spotify-connect/setup ()
+  "Per-test teardown."
 
-If MOCK is nil, FUNC will be replaced with a function with symbol name:
-  `spotify-ert/mock/FUNC'.
-
-Sets up BODY to not actually call Spotify Connect
-API... Just calls fake handlers and then we can inspect status
-and return what we want.
-
-FUNC should be the function symbol to be replaced (e.g. message).
-MOCK should be the function symbol to replace it (e.g. my-message-tester).
-
-Executes BODY forms if successful setting up mock functions.
-"
-  (declare (indent defun))
-  `(let* ((func-sym ,func)
-          (mock-sym (or ,mock
-                        (intern (concat "spotify-ert/mock/"
-                                        (symbol-name func-sym))))))
-     (cl-letf (((symbol-function func-sym) mock-sym))
-       ,@body)))
-;; (defun xx (fmt &rest args) (message "xx: %S" (format fmt args)))
-;; (defun yy (fmt &rest args) (message "yy: %S" (format fmt args)))
-;; (defun spotify-ert/mock/xx (f &rest a) (message "zz: %S" (format f a)))
-;; (macroexpand '(spotify-ert/mock 'xx 'yy (xx "hello?")))
-;; (spotify-ert/mock 'xx 'yy (xx "hello?"))
-;; (spotify-ert/mock 'xx nil (xx "hello?"))
+  ;; General
+  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/setup/setup))
 
 
-(defmacro spotify-ert/stub (func &rest body)
-  "Replaces FUNC with a stub for duration of BODY (`cl-letf' binding).
+(defun spotify-ert/spotify-connect/teardown ()
+  "Per-test teardown."
 
-The stub will just push the FUNC symbol onto the
-`spotify-ert/stub/called' list, so be sure to clear that out as
-needed.
-
-Sets up BODY to not actually call Spotify Connect
-API... Just calls fake handlers and then we can inspect status
-and return what we want.
-
-FUNC should be the function symbol to be replaced (e.g. message).
-
-Executes BODY forms if successful setting up mock functions.
-"
-  (declare (indent defun))
-  `(let* ((func-sym ,func))
-     ;; Set FUNC to be a lambda that just pushes FUNC symbol to called list.
-     (cl-letf (((symbol-function func-sym)
-                (lambda (&rest ignored)
-                  (push func-sym spotify-ert/stub/called))))
-       ,@body)))
-;; (defun xx (fmt &rest args) (message "xx: %S" (format fmt args)))
-;; (macroexpand '(spotify-ert/stub 'xx (xx "hello?")))
-;; spotify-ert/stub/called
-;; (spotify-ert/stub 'xx (xx "hello?"))
-;; spotify-ert/stub/called
+  ;; General
+  (spotify-ert/setup/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -438,11 +106,12 @@ Executes BODY forms if successful setting up mock functions.
 ;;------------------------------------------------------------------------------
 
 ;;(defun spotify-when-device-active (body)
+
 (ert-deftest spotify-ert/spotify-when-device-active ()
   "Test that this macro only executes body when there is an active device.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
 
     ;; run tests
@@ -458,7 +127,9 @@ Executes BODY forms if successful setting up mock functions.
       (spotify-when-device-active
        (should (eq nil t))
        (setq entered-body 'test-symbol-0))
-      (should (eq entered-body nil)))))
+      (should (eq entered-body nil))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -471,7 +142,7 @@ Executes BODY forms if successful setting up mock functions.
 obj.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/mock 'spotify-api-get-player-status nil
 
@@ -491,7 +162,9 @@ obj.
       (spotify--when-device->with-status
         (should (eq nil t))
         (setq entered-body 'test-symbol-0))
-      (should (eq entered-body nil))))))
+      (should (eq entered-body nil)))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -503,16 +176,20 @@ obj.
   "Test that this gets player status from Spotify Connect API.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
 
-  (spotify-ert/mock 'spotify-api-get-player-status nil
-    (should (string= "[Playing: \"Weird Al\" Y... - Foil ◷ 2:22 --]"
-                     (spotify-connect-player-status)))
+  (spotify-ert/mock 'spotify-api-device-list nil
+    (spotify-ert/mock 'spotify-api-get-player-status nil
+      (should (string= "[Playing: \"Weird Al\" Y... - Foil ◷ 2:22 --]"
+                       (spotify-connect-player-status)))
 
-    (setq spotify-player-status nil)
-    (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
-    (should (eq nil
-                (spotify-connect-player-status)))))
+      (setq spotify-player-status nil)
+      (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+
+      (should (string= ""
+                  (spotify-connect-player-status)))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -524,14 +201,16 @@ obj.
   "Test that this requests a track be played to Spotify Connect API.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/stub 'spotify-api-play
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-play-track nil)
       (should-not (null spotify-ert/stub/called))
-      (should     (memq 'spotify-api-play spotify-ert/stub/called)))))
+      (should     (memq 'spotify-api-play spotify-ert/stub/called))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -543,14 +222,16 @@ obj.
   "Test that this requests device pauses play.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/stub 'spotify-api-pause nil
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-pause)
       (should-not (null spotify-ert/stub/called))
-      (should     (memq 'spotify-api-pause spotify-ert/stub/called)))))
+      (should     (memq 'spotify-api-pause spotify-ert/stub/called))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -562,14 +243,16 @@ obj.
   "Test that this requests device plays.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/stub 'spotify-api-play
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-play)
       (should-not (null spotify-ert/stub/called))
-      (should     (memq 'spotify-api-play spotify-ert/stub/called)))))
+      (should     (memq 'spotify-api-play spotify-ert/stub/called))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -581,7 +264,7 @@ obj.
   "Test that this request play/pause status toggle.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
 
   ;; spotify--when-device->with-status
   (spotify-ert/mock 'spotify-api-device-list nil
@@ -615,7 +298,9 @@ obj.
           (should     (memq 'munger            spotify-ert/stub/called))
           (should     (memq 'spotify-api-play  spotify-ert/stub/called))
           (should-not (memq 'spotify-api-pause spotify-ert/stub/called))
-          )))))
+          ))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -627,14 +312,16 @@ obj.
   "Test that this requests skip to next track.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/stub 'spotify-api-next
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-next-track)
       (should-not (null spotify-ert/stub/called))
-      (should     (memq 'spotify-api-next spotify-ert/stub/called)))))
+      (should     (memq 'spotify-api-next spotify-ert/stub/called))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -646,14 +333,16 @@ obj.
   "Test that this requests skip to previous track.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/stub 'spotify-api-previous
       ;; This function does nothing. Just a passthrough to spotify-api.el.
       ;; So we can't really test anything.
       (spotify-connect-player-previous-track)
       (should-not (null spotify-ert/stub/called))
-      (should     (memq 'spotify-api-previous spotify-ert/stub/called)))))
+      (should     (memq 'spotify-api-previous spotify-ert/stub/called))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -665,7 +354,7 @@ obj.
   "Test that this request a volume increase of a certain amount.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/mock 'spotify-api-get-player-status nil
       (spotify-ert/mock 'spotify-api-set-volume nil
@@ -685,7 +374,9 @@ obj.
           (should     (= spotify-ert/mock/volume-amount
                          (+ vol-orig vol-change)))
           (should     (string= spotify-ert/mock/volume-device-id
-                               "test-device-id")))))))
+                               "test-device-id"))))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -697,7 +388,7 @@ obj.
   "Test that this request a volume decrease of a certain amount.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/mock 'spotify-api-get-player-status nil
       (spotify-ert/mock 'spotify-api-set-volume nil
@@ -717,7 +408,9 @@ obj.
           (should     (= spotify-ert/mock/volume-amount
                          (- vol-orig vol-change)))
           (should     (string= spotify-ert/mock/volume-device-id
-                               "test-device-id")))))))
+                               "test-device-id"))))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -729,7 +422,7 @@ obj.
   "Test that this requests mute to 0 volume, or unmute to unmute-volume.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/mock 'spotify-api-get-player-status nil
       (spotify-ert/mock 'spotify-api-set-volume nil
@@ -781,7 +474,9 @@ obj.
           (should     (= spotify-ert/mock/volume-amount vol-unmuted))
           (should     (string= spotify-ert/mock/volume-device-id
                                "test-device-id"))
-          (should     (memq 'munger spotify-ert/stub/called)))))))
+          (should     (memq 'munger spotify-ert/stub/called))))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -793,7 +488,7 @@ obj.
   "Test that this requests repeat flag toggle.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/mock 'spotify-api-get-player-status nil
       (spotify-ert/stub 'spotify-api-repeat
@@ -802,7 +497,9 @@ obj.
         ;; So we can't really test anything.
         (spotify-connect-toggle-repeat)
         (should-not (null spotify-ert/stub/called))
-        (should     (memq 'spotify-api-repeat spotify-ert/stub/called))))))
+        (should     (memq 'spotify-api-repeat spotify-ert/stub/called)))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -814,7 +511,7 @@ obj.
   "Test that this requests shuffle flag toggle.
 "
   ;; setup mocks
-  (spotify-ert/spotify-connect/reset)
+  (spotify-ert/spotify-connect/setup)
   (spotify-ert/mock 'spotify-api-device-list nil
     (spotify-ert/mock 'spotify-api-get-player-status nil
       (spotify-ert/stub 'spotify-api-shuffle
@@ -823,7 +520,9 @@ obj.
         ;; So we can't really test anything.
         (spotify-connect-toggle-shuffle)
         (should-not (null spotify-ert/stub/called))
-        (should     (memq 'spotify-api-shuffle spotify-ert/stub/called))))))
+        (should     (memq 'spotify-api-shuffle spotify-ert/stub/called)))))
+
+  (spotify-ert/spotify-connect/teardown))
 
 
 ;;   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -845,193 +544,6 @@ obj.
 ;;------------------------------------------------------------------------------
 ;; Test Data
 ;;------------------------------------------------------------------------------
-
-;; §-TODO-§ [2019-12-03]: move this to a central location, let all tests use it
-;; from there.
-(defconst spotify-player-status-ert/data/player-status-in-full
-  "{
-    \"device\" : {
-      \"id\" : \"test-device-id\",
-      \"is_active\" : true,
-      \"is_private_session\" : false,
-      \"is_restricted\" : false,
-      \"name\" : \"Emacs AR Glasses 5001+ Pro#\",
-      \"type\" : \"Computer\",
-      \"volume_percent\" : 42
-    },
-    \"shuffle_state\" : false,
-    \"repeat_state\" : \"off\",
-    \"timestamp\" : 3,
-    \"context\" : {
-      \"external_urls\" : {
-        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-      },
-      \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-      \"type\" : \"album\",
-      \"uri\" : \"spotify:album:1234567890\"
-    },
-    \"progress_ms\" : 15611,
-    \"item\" : {
-      \"album\" : {
-        \"album_type\" : \"album\",
-        \"artists\" : [ {
-          \"external_urls\" : {
-            \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-          },
-          \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"id\" : \"1234567890\",
-          \"name\" : \"\\\"Weird Al\\\" Yankovic\",
-          \"type\" : \"artist\",
-          \"uri\" : \"spotify:artist:1234567890\"
-        } ],
-        \"external_urls\" : {
-          \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-        },
-        \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-        \"id\" : \"1234567890\",
-        \"images\" : [ {
-          \"height\" : 640,
-          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"width\" : 640
-        }, {
-          \"height\" : 300,
-          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"width\" : 300
-        }, {
-          \"height\" : 64,
-          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"width\" : 64
-        } ],
-        \"name\" : \"Mandatory Fun\",
-        \"release_date\" : \"2014-07-15\",
-        \"release_date_precision\" : \"day\",
-        \"total_tracks\" : 12,
-        \"type\" : \"album\",
-        \"uri\" : \"spotify:album:1234567890\"
-      },
-      \"artists\" : [ {
-        \"external_urls\" : {
-          \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-        },
-        \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-        \"id\" : \"0123456789\",
-        \"name\" : \"\\\"Weird Al\\\" Yankovic\",
-        \"type\" : \"artist\",
-        \"uri\" : \"spotify:artist:1234567890\"
-      } ],
-      \"disc_number\" : 1,
-      \"duration_ms\" : 142946,
-      \"explicit\" : false,
-      \"external_ids\" : {
-        \"isrc\" : \"USRC11401404\"
-      },
-      \"external_urls\" : {
-        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-      },
-      \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-      \"id\" : \"1234567890\",
-      \"is_local\" : false,
-      \"is_playable\" : true,
-      \"name\" : \"Foil\",
-      \"popularity\" : 49,
-      \"preview_url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-      \"track_number\" : 3,
-      \"type\" : \"track\",
-      \"uri\" : \"spotify:track:1234567890\"
-    },
-    \"currently_playing_type\" : \"track\",
-    \"actions\" : {
-      \"disallows\" : {
-        \"resuming\" : true
-      }
-    },
-    \"is_playing\" : true
-   }"
-  "A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
-'/v1/me/player' endpoint.
-
-https://developer.spotify.com/documentation/web-api/reference/player/get-information-about-the-users-current-playback/
-")
-
-
-;; §-TODO-§ [2019-12-03]: move this to a central location, let all tests use it
-;; from there.
-(defconst spotify-connect-ert/data/devices-list/active
-  "{
-      \"devices\": [
-         {
-            \"id\": \"test-device-id-0\",
-            \"is_active\": true,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Your MacBook\",
-            \"type\": \"Computer\",
-            \"volume_percent\": 70
-         },
-         {
-            \"id\": \"test-device-id-1\",
-            \"is_active\": false,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Living Room\",
-            \"type\": \"TV\",
-            \"volume_percent\": 25
-         },
-         {
-            \"id\": \"test-device-id-2\",
-            \"is_active\": false,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Office Speaker\",
-            \"type\": \"Unknown\",
-            \"volume_percent\": 82
-         }
-      ]
-   }"
-  "A sample return value from Spotify Connect API
-'/v1/me/player/devices' endpoint.
-
-https://developer.spotify.com/documentation/web-api/guides/using-connect-web-api/
-")
-
-
-(defconst spotify-connect-ert/data/devices-list/inactive
-  "{
-      \"devices\": [
-         {
-            \"id\": \"test-device-id-0\",
-            \"is_active\": false,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Your MacBook\",
-            \"type\": \"Computer\",
-            \"volume_percent\": 70
-         },
-         {
-            \"id\": \"test-device-id-1\",
-            \"is_active\": false,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Living Room\",
-            \"type\": \"TV\",
-            \"volume_percent\": 25
-         },
-         {
-            \"id\": \"test-device-id-2\",
-            \"is_active\": false,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Office Speaker\",
-            \"type\": \"Unknown\",
-            \"volume_percent\": 82
-         }
-      ]
-   }"
-  "A sample return value from Spotify Connect API
-'/v1/me/player/devices' endpoint.
-
-https://developer.spotify.com/documentation/web-api/guides/using-connect-web-api/
-")
 
 
 ;;------------------------------------------------------------------------------

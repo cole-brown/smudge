@@ -18,18 +18,24 @@
 ;; String JSON -> Hash Table JSON
 ;;------------------------------------------------------------------------------
 
+;; §-TODO-§ [2020-01-10]: Move to data?
+;;   Or rename this file to be about data helpers?
 (defmacro spotify-ert/util/with-json (json-str &rest body)
   "Reads/decodes JSON-STR to JSON-OBJ (in a let binding), then runs BODY forms
 in the same scope.
 "
   (declare (indent 1))
   `(spotify--json-setup
-     (let* ((json-obj (json-read-from-string ,json-str))
+     (let* ((json-input ,json-str)
+            (json-obj (if (null json-input)
+                          nil
+                        (json-read-from-string json-input)))
             (json-obj (if (not (functionp spotify-ert/util/with-json/munger))
                           json-obj
                         (funcall spotify-ert/util/with-json/munger json-obj))))
        ,@body)))
 ;; (macroexpand '(spotify-ert/util/with-json "{\"hi\":3}" (message "%S" json-obj)))
+;; (spotify-ert/util/with-json "{\"hi\":3}" (message "%S" json-obj))
 
 
 (defvar spotify-ert/util/with-json/munger nil
