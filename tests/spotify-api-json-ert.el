@@ -12,14 +12,16 @@
 ;;--                        spotify-api-json.el tests                         --
 ;;------------------------------------------------------------------------------
 
+;; Test Helpers
 (require 'spotify-ert-data-functions)
+(require 'spotify-ert-mock-stub)
+(require 'spotify-ert-setup)
 
+;; Test Data
+;; (require 'spotify-ert-data-connect-api)
+
+;; Spotify.el Requirements
 (require 'spotify-api-json)
-
-
-;;------------------------------------------------------------------------------
-;; Settings
-;;------------------------------------------------------------------------------
 
 
 ;;------------------------------------------------------------------------------
@@ -31,7 +33,7 @@
   "Test that `spotify--api-json-get-field' can verify a field
 belongs to a Spotify Connect API JSON object type, and can get
 the field from the JSON object."
-  (spotify-ert/util/with-json spotify-api-json-ert/data/player-status-truncated
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/player-status/truncated
     (should (spotify--api-json-get-field spotify--api/data/player-status
                                          json-obj
                                          'device))
@@ -109,7 +111,7 @@ the field from the JSON object."
 object.
 "
   ;; player status object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/player-status-in-full
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/player-status
 
     (should (eq nil
                 (spotify--api-object-get-field
@@ -135,7 +137,7 @@ object.
 object.
 "
   ;; artist object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/artist
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/artist
 
     (should (string= "\"Weird Al\" Yankovic"
                      (spotify--api-object-get-field
@@ -149,7 +151,7 @@ object.
 object.
 "
   ;; track object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/track
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/track
 
     (should (string= "Foil"
                      (spotify--api-object-get-field
@@ -175,9 +177,9 @@ object.
 object.
 "
   ;; device object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/device
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/device
 
-    (should (string= "1234567890"
+    (should (string= "test-device-id-only"
                      (spotify--api-object-get-field
                       json-obj
                       (assoc :device-active-id spotify--keyword->api-field)
@@ -211,9 +213,9 @@ object.
   "Test whether `spotify--api-device-field' returns expected values
 for keywords."
   ;; device object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/device
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/device
 
-    (should (string= "1234567890"
+    (should (string= "test-device-id-only"
                      (spotify--api-device-field
                       json-obj
                       :device-active-id)))
@@ -243,7 +245,7 @@ for keywords."
   "Test whether `spotify--api-artist-field' returns expected values
 for keywords."
   ;; artist object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/artist
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/artist
 
     (should (string= "\"Weird Al\" Yankovic"
                      (spotify--api-artist-field
@@ -260,7 +262,7 @@ for keywords."
   "Test whether `spotify--api-track-field' returns expected values
 for keywords."
   ;; track object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/track
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/track
 
     (should (string= "Foil"
                      (spotify--api-track-field
@@ -288,7 +290,7 @@ for keywords."
 for keywords."
 
   ;; player status object
-  (spotify-ert/util/with-json spotify-api-json-ert/data/player-status-in-full
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/player-status
 
     (should (eq nil
                 (spotify--api-player-status-field
@@ -313,7 +315,7 @@ for keywords."
 ;; (defun spotify--api-devices (json) ...
 (ert-deftest spotify-ert/spotify--api-devices ()
   "Pretty simple test right now... Grabs devices list from API return."
-  (spotify-ert/util/with-json spotify-api-json-ert/data/devices-list
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/devices-list/active
     (let ((devices (spotify--api-devices json-obj))
           (bools '(t :json-false)))
       ;; We got something vaguely right, right?
@@ -345,7 +347,7 @@ player-status return from \"/v1/me/player\" endpoint of Spotify Connect API.
 
 https://developer.spotify.com/documentation/web-api/reference/player/get-information-about-the-users-current-playback/
 "
-  (spotify-ert/util/with-json spotify-api-json-ert/data/player-status-in-full
+  (spotify-ert/util/with-json spotify-ert/data/connect-api/player-status
     (setq debug-on-error t)
     (should (eq nil
                 (spotify--api-player-status
@@ -381,7 +383,7 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
                 json-obj
                 :duration-millisecond)))
 
-    (should (string= "1234567890"
+    (should (string= "test-device-id"
                      (spotify--api-player-status
                       json-obj
                       :device-active-id)))
@@ -400,323 +402,6 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-informa
                (spotify--api-player-status
                 json-obj
                 :volume)))))
-
-
-;;   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-;;  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-;;------------------------------------------------------------------------------
-;;                             END OF UNIT TESTS!
-;;------------------------------------------------------------------------------
-;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-;;  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-;;   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-;;------------------------------------------------------------------------------
-;; Test Data Helpers
-;;------------------------------------------------------------------------------
-
-
-
-;;------------------------------------------------------------------------------
-;; Test Data
-;;------------------------------------------------------------------------------
-
-(defconst spotify-api-json-ert/data/devices-list
-  "{
-      \"devices\": [
-         {
-            \"id\": \"b46689a4cd5\",
-            \"is_active\": true,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Your MacBook\",
-            \"type\": \"Computer\",
-            \"volume_percent\": 70
-         },
-         {
-            \"id\": \"0d184899bc8\",
-            \"is_active\": false,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Living Room\",
-            \"type\": \"TV\",
-            \"volume_percent\": 25
-         },
-         {
-            \"id\": \"2f3c360198ede6\",
-            \"is_active\": false,
-            \"is_private_session\": false,
-            \"is_restricted\": false,
-            \"name\": \"Office Speaker\",
-            \"type\": \"Unknown\",
-            \"volume_percent\": 82
-         }
-      ]
-   }"
-  "A sample return value from Spotify Connect API
-'/v1/me/player/devices' endpoint.
-
-https://developer.spotify.com/documentation/web-api/guides/using-connect-web-api/
-")
-
-
-(defconst spotify-api-json-ert/data/player-status-truncated
-  "{
-    \"timestamp\": 1490252122574,
-    \"device\": {
-      \"id\": \"0123456789\",
-      \"is_active\": false,
-      \"is_restricted\": false,
-      \"name\": \"Emacs Phone 3000\",
-      \"type\": \"Smartphone\",
-      \"volume_percent\": 54
-    },
-    \"progress_ms\": \"44272\",
-    \"is_playing\": true,
-    \"currently_playing_type\": \"track\",
-    \"actions\": {
-      \"disallows\": {
-        \"resuming\": true
-      }
-    },
-    \"item\": {},
-    \"shuffle_state\": false,
-    \"repeat_state\": \"off\",
-    \"context\": {
-      \"external_urls\" : {
-        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/49znshcYJROspEqBoHg3Sv\"
-      },
-      \"href\" : \"https://api.spotify.com/v1/users/spotify/playlists/49znshcYJROspEqBoHg3Sv\",
-      \"type\" : \"playlist\",
-      \"uri\" : \"spotify:user:spotify:playlist:49znshcYJROspEqBoHg3Sv\"
-    }
-  }"
-  "A sample return value from Spotify Connect API '/v1/me/player'
-endpoint. Sample is very minimal; see
-`spotify-api-json-ert/data/player-status-in-full' for much
-longer, fuller one.
-
-https://developer.spotify.com/documentation/web-api/reference/player/get-information-about-the-users-current-playback/
-")
-
-
-(defconst spotify-api-json-ert/data/player-status-in-full
-  "{
-    \"device\" : {
-      \"id\" : \"1234567890\",
-      \"is_active\" : true,
-      \"is_private_session\" : false,
-      \"is_restricted\" : false,
-      \"name\" : \"Emacs AR Glasses 5001+ Pro#\",
-      \"type\" : \"Computer\",
-      \"volume_percent\" : 42
-    },
-    \"shuffle_state\" : false,
-    \"repeat_state\" : \"off\",
-    \"timestamp\" : 3,
-    \"context\" : {
-      \"external_urls\" : {
-        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-      },
-      \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-      \"type\" : \"album\",
-      \"uri\" : \"spotify:album:1234567890\"
-    },
-    \"progress_ms\" : 15611,
-    \"item\" : {
-      \"album\" : {
-        \"album_type\" : \"album\",
-        \"artists\" : [ {
-          \"external_urls\" : {
-            \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-          },
-          \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"id\" : \"1234567890\",
-          \"name\" : \"\\\"Weird Al\\\" Yankovic\",
-          \"type\" : \"artist\",
-          \"uri\" : \"spotify:artist:1234567890\"
-        } ],
-        \"external_urls\" : {
-          \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-        },
-        \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-        \"id\" : \"1234567890\",
-        \"images\" : [ {
-          \"height\" : 640,
-          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"width\" : 640
-        }, {
-          \"height\" : 300,
-          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"width\" : 300
-        }, {
-          \"height\" : 64,
-          \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-          \"width\" : 64
-        } ],
-        \"name\" : \"Mandatory Fun\",
-        \"release_date\" : \"2014-07-15\",
-        \"release_date_precision\" : \"day\",
-        \"total_tracks\" : 12,
-        \"type\" : \"album\",
-        \"uri\" : \"spotify:album:1234567890\"
-      },
-      \"artists\" : [ {
-        \"external_urls\" : {
-          \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-        },
-        \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-        \"id\" : \"0123456789\",
-        \"name\" : \"\\\"Weird Al\\\" Yankovic\",
-        \"type\" : \"artist\",
-        \"uri\" : \"spotify:artist:1234567890\"
-      } ],
-      \"disc_number\" : 1,
-      \"duration_ms\" : 142946,
-      \"explicit\" : false,
-      \"external_ids\" : {
-        \"isrc\" : \"USRC11401404\"
-      },
-      \"external_urls\" : {
-        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-      },
-      \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-      \"id\" : \"1234567890\",
-      \"is_local\" : false,
-      \"is_playable\" : true,
-      \"name\" : \"Foil\",
-      \"popularity\" : 49,
-      \"preview_url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-      \"track_number\" : 3,
-      \"type\" : \"track\",
-      \"uri\" : \"spotify:track:1234567890\"
-    },
-    \"currently_playing_type\" : \"track\",
-    \"actions\" : {
-      \"disallows\" : {
-        \"resuming\" : true
-      }
-    },
-    \"is_playing\" : true
-   }"
-"A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
-'/v1/me/player' endpoint.
-
-https://developer.spotify.com/documentation/web-api/reference/player/get-information-about-the-users-current-playback/
-")
-
-
-(defconst spotify-api-json-ert/data/artist
-  "{
-     \"external_urls\" : {
-       \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-     },
-     \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-     \"id\" : \"1234567890\",
-     \"name\" : \"\\\"Weird Al\\\" Yankovic\",
-     \"type\" : \"artist\",
-     \"uri\" : \"spotify:artist:1234567890\"
-   }"
-"A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
-'/v1/me/player' endpoint, cut down to just an artist object.
-
-https://developer.spotify.com/documentation/web-api/reference/object-model/#artist-object-simplified
-")
-
-
-(defconst spotify-api-json-ert/data/track
-  "{
-     \"album\" : {
-       \"album_type\" : \"album\",
-       \"artists\" : [ {
-         \"external_urls\" : {
-           \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-         },
-         \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-         \"id\" : \"1234567890\",
-         \"name\" : \"\\\"Weird Al\\\" Yankovic\",
-         \"type\" : \"artist\",
-         \"uri\" : \"spotify:artist:1234567890\"
-       } ],
-       \"external_urls\" : {
-         \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-       },
-       \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-       \"id\" : \"1234567890\",
-       \"images\" : [ {
-         \"height\" : 640,
-         \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-         \"width\" : 640
-       }, {
-         \"height\" : 300,
-         \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-         \"width\" : 300
-       }, {
-         \"height\" : 64,
-         \"url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-         \"width\" : 64
-       } ],
-       \"name\" : \"Mandatory Fun\",
-       \"release_date\" : \"2014-07-15\",
-       \"release_date_precision\" : \"day\",
-       \"total_tracks\" : 12,
-       \"type\" : \"album\",
-       \"uri\" : \"spotify:album:1234567890\"
-     },
-     \"artists\" : [ {
-       \"external_urls\" : {
-         \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-       },
-       \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-       \"id\" : \"0123456789\",
-       \"name\" : \"\\\"Weird Al\\\" Yankovic\",
-       \"type\" : \"artist\",
-       \"uri\" : \"spotify:artist:1234567890\"
-     } ],
-     \"disc_number\" : 1,
-     \"duration_ms\" : 142946,
-     \"explicit\" : false,
-     \"external_ids\" : {
-       \"isrc\" : \"USRC11401404\"
-     },
-     \"external_urls\" : {
-       \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
-     },
-     \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-     \"id\" : \"1234567890\",
-     \"is_local\" : false,
-     \"is_playable\" : true,
-     \"name\" : \"Foil\",
-     \"popularity\" : 49,
-     \"preview_url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-     \"track_number\" : 3,
-     \"type\" : \"track\",
-     \"uri\" : \"spotify:track:1234567890\"
-   }"
-"A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
-'/v1/me/player' endpoint, cut down to just a track object.
-
-https://developer.spotify.com/documentation/web-api/reference/object-model/#track-object-full
-")
-
-
-(defconst spotify-api-json-ert/data/device
-  "{
-     \"id\" : \"1234567890\",
-     \"is_active\" : true,
-     \"is_private_session\" : false,
-     \"is_restricted\" : false,
-     \"name\" : \"Emacs AR Glasses 5001+ Pro#\",
-     \"type\" : \"Computer\",
-     \"volume_percent\" : 42
-   }"
-"A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
-'/v1/me/player' endpoint, cut down to just a device object.
-
-https://developer.spotify.com/documentation/web-api/reference/player/get-a-users-available-devices/
-")
 
 
 ;;------------------------------------------------------------------------------

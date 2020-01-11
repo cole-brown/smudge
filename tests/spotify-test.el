@@ -52,9 +52,9 @@ in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
   ;;---
   ;; Helpers
   ;;---
-  (load-file "helpers/spotify-ert-setup.el")
   (load-file "helpers/spotify-ert-mock-stub.el")
   (load-file "helpers/spotify-ert-data-functions.el")
+  (load-file "helpers/spotify-ert-setup.el")
 
   ;;---
   ;; Tests (in implementation order)
