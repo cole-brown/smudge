@@ -54,7 +54,9 @@ in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
   ;;---
   (load-file "helpers/spotify-ert-mock-stub.el")
   (load-file "helpers/spotify-ert-data-functions.el")
-  (load-file "helpers/spotify-ert-setup.el")
+  (load-file "helpers/spotify-ert-cache.el")
+  ;; ...
+  (load-file "helpers/spotify-ert-setup.el") ;; Can depending on all the other helpers.
 
   ;;---
   ;; Tests (in implementation order)
