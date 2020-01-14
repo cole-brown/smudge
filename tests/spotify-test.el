@@ -65,6 +65,7 @@ in the standard 'spotify-' \"namespace\" and then under 'ert/'.")
   (load-file "spotify-api-json-ert.el")
   (load-file "spotify-player-status-ert.el")
   (load-file "spotify-connect-ert.el")
+  (load-file "spotify-api-ert.el")
 
   ;;---
   ;; Done

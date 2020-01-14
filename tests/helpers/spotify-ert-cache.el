@@ -84,3 +84,9 @@
 
 (defvar spotify-ert/cache/hook/player-status nil
   "`spotify-ert/helper/player-status-hook' will note a hook call here.")
+
+
+;;------------------------------------------------------------------------------
+;; The End.
+;;------------------------------------------------------------------------------
+(provide 'spotify-ert-cache)
