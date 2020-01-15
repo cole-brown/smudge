@@ -223,16 +223,22 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  ;; §-TODO-§ [2020-01-15]: This should probably not die.
+  ;; (should (eq (spotify-get-items nil) nil))
+
   (spotify-ert/util/with-json
       ;; Choose either valid data or nil, depending on setup.
       (if spotify-ert/mock/spotify-api-device-list/is-active
-          spotify-ert/data/connect-api/player-status
+          spotify-ert/data/connect-api/search
         nil)
 
-    ;; §-TODO-§ [2020-01-15]: --now--
     ;; Get spotify-api using spotify-api-json?
-
-    )
+    (let* ((artists (gethash 'artists json-obj))
+           (items (spotify-get-items artists)))
+      ;; We have 'items' in our json-obj, and we have the right number...
+      ;; so ok whatever.
+      (should-not (null items))
+      (should (= (length items) 5))))
 
   (spotify-ert/spotify-connect/teardown))
 
@@ -249,6 +255,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+    ;; §-TODO-§ [2020-01-15]: --now--
 
 
   (spotify-ert/spotify-connect/teardown))

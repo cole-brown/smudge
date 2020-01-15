@@ -384,6 +384,174 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-a-users
 
 
 ;;------------------------------------------------------------------------------
+;; Paginated Search Result
+;;------------------------------------------------------------------------------
+
+(defconst spotify-ert/data/connect-api/search
+  "{
+    \"artists\" : {
+      \"href\" : \"https://api.spotify.com/v1/search?query=shine&type=artist&offset=0&limit=5\",
+      \"items\" : [ {
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/artist/1234567890\"
+        },
+        \"followers\" : {
+          \"href\" : null,
+          \"total\" : 7308
+        },
+        \"genres\" : [ \"heartland rock\", \"red dirt\", \"texas country\" ],
+        \"href\" : \"https://api.spotify.com/v1/artists/1234567890\",
+        \"id\" : \"test-artist-id-0\",
+        \"images\" : [ {
+          \"height\" : 1000,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 1000
+        }, {
+          \"height\" : 640,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 640
+        }, {
+          \"height\" : 200,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 200
+        }, {
+          \"height\" : 64,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 64
+        } ],
+        \"name\" : \"Dolly Shine\",
+        \"popularity\" : 41,
+        \"type\" : \"artist\",
+        \"uri\" : \"spotify:artist:1111111\"
+      }, {
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/artist/1234567890\"
+        },
+        \"followers\" : {
+          \"href\" : null,
+          \"total\" : 11699
+        },
+        \"genres\" : [ \"country rap\", \"redneck\" ],
+        \"href\" : \"https://api.spotify.com/v1/artists/1234567890\",
+        \"id\" : \"test-artist-id-1\",
+        \"images\" : [ {
+          \"height\" : 640,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 640
+        }, {
+          \"height\" : 300,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 300
+        }, {
+          \"height\" : 64,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 64
+        } ],
+        \"name\" : \"Tennessee Shine\",
+        \"popularity\" : 39,
+        \"type\" : \"artist\",
+        \"uri\" : \"spotify:artist:1111111\"
+      }, {
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/artist/1234567890\"
+        },
+        \"followers\" : {
+          \"href\" : null,
+          \"total\" : 308
+        },
+        \"genres\" : [ ],
+        \"href\" : \"https://api.spotify.com/v1/artists/1234567890\",
+        \"id\" : \"test-artist-id-2\",
+        \"images\" : [ {
+          \"height\" : 640,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 640
+        }, {
+          \"height\" : 320,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 320
+        }, {
+          \"height\" : 160,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 160
+        } ],
+        \"name\" : \"Rain or Shine\",
+        \"popularity\" : 37,
+        \"type\" : \"artist\",
+        \"uri\" : \"spotify:artist:1111111\"
+      }, {
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/artist/1234567890\"
+        },
+        \"followers\" : {
+          \"href\" : null,
+          \"total\" : 7123
+        },
+        \"genres\" : [ \"dirty south rap\", \"gangster rap\", \"pop rap\", \"rap\", \"southern hip hop\", \"trap\" ],
+        \"href\" : \"https://api.spotify.com/v1/artists/1234567890\",
+        \"id\" : \"test-artist-id-3\",
+        \"images\" : [ {
+          \"height\" : 640,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 640
+        }, {
+          \"height\" : 320,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 320
+        }, {
+          \"height\" : 160,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 160
+        } ],
+        \"name\" : \"Kia Shine\",
+        \"popularity\" : 28,
+        \"type\" : \"artist\",
+        \"uri\" : \"spotify:artist:1111111\"
+      }, {
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/artist/1234567890\"
+        },
+        \"followers\" : {
+          \"href\" : null,
+          \"total\" : 869
+        },
+        \"genres\" : [ \"battle rap\" ],
+        \"href\" : \"https://api.spotify.com/v1/artists/1234567890\",
+        \"id\" : \"test-artist-id-4\",
+        \"images\" : [ {
+          \"height\" : 640,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 640
+        }, {
+          \"height\" : 300,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 300
+        }, {
+          \"height\" : 64,
+          \"url\" : \"https://i.scdn.co/image/1234567890\",
+          \"width\" : 64
+        } ],
+        \"name\" : \"K-Shine\",
+        \"popularity\" : 26,
+        \"type\" : \"artist\",
+        \"uri\" : \"spotify:artist:1111111\"
+      } ],
+      \"limit\" : 5,
+      \"next\" : \"https://api.spotify.com/v1/search?query=shine&type=artist&offset=5&limit=5\",
+      \"offset\" : 0,
+      \"previous\" : null,
+      \"total\" : 681
+    }
+  }"
+
+"A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
+'/v1/me/player' endpoint, cut down to just a device object.
+
+https://developer.spotify.com/documentation/web-api/reference/player/get-a-users-available-devices/
+")
+
+
+;;------------------------------------------------------------------------------
 ;; The End.
 ;;------------------------------------------------------------------------------
 (provide 'spotify-ert-data-connect-api)
