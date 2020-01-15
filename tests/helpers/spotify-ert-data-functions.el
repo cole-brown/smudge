@@ -32,6 +32,8 @@ Munger must take and return JSON-OBJ hash table.")
 ;; String JSON -> Hash Table JSON
 ;;------------------------------------------------------------------------------
 
+;; §-TODO-§ [2020-01-15]: rename? spotify-ert/data/with-json?
+;; spotify-ert/json/with?
 (defmacro spotify-ert/util/with-json (json-str &rest body)
   "Reads/decodes JSON-STR to JSON-OBJ (in a let binding), then runs BODY forms
 in the same scope.

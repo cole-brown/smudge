@@ -4,7 +4,12 @@
 
 ;;; Code:
 
-;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
+(require 'spotify-api-json)
+
+
+;;------------------------------------------------------------------------------
+;; Consts & Vars
+;;------------------------------------------------------------------------------
 
 (defvar *spotify-user*         nil "Cached user object")
 (defvar *spotify-oauth2-token* nil "Cached OAuth2 token")
@@ -49,6 +54,11 @@ globally relevant."
   "If set to a function, send `spotify-api-get-player-status' there w/ callback
   as arg instead of sending directly callback.")
 
+
+;;------------------------------------------------------------------------------
+;; Spotify Connect API Code
+;;------------------------------------------------------------------------------
+
 ;; Do not rely on the auto-refresh logic from oauth2.el, which seems broken for async requests
 (defun spotify-oauth2-token ()
   "Retrieve the Oauth2 access token that must be used to interact with the
@@ -75,6 +85,7 @@ Spotify API."
                 (user-error "Could not refresh OAuth2 token")
               token))
         *spotify-oauth2-token*))))
+
 
 (defun spotify-api-call-async (method uri &optional data callback is-retry)
   "Make a request to the given Spotify service endpoint and calls CALLBACK with
@@ -120,8 +131,14 @@ the parsed JSON response."
      (or data "")
      '(("Content-Type" . "application/json")))))
 
+
+;;------------------------------------------------------------------------------
+;; Getters
+;;------------------------------------------------------------------------------
+
 (defun spotify-current-user (callback)
-  ""
+  "Returns saved `*spotify-user*' or gets from Spotify Connect
+API and saves to `*spotify-user*', then returns it."
   (if *spotify-user*
       (funcall callback *spotify-user*)
     (let ((callback callback))
@@ -133,92 +150,138 @@ the parsed JSON response."
          (setq *spotify-user* user)
          (funcall callback user))))))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-items (json)
   "Return the list of items from the given JSON object."
   (gethash 'items json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-search-track-items (json)
   "Return track items from the given search results JSON object."
   (spotify-get-items (gethash 'tracks json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-search-playlist-items (json)
   "Return playlist items from the given search results JSON object."
   (spotify-get-items (gethash 'playlists json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-message (json)
   "Return the message from the featured playlists JSON object."
   (gethash 'message json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-playlist-tracks (json)
   "Return the list of tracks from the given playlist JSON object."
   (mapcar #'(lambda (item)
               (gethash 'track item))
           (spotify-get-items json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-search-playlist-items (json)
   "Return the playlist items from the given search results JSON object."
   (spotify-get-items (gethash 'playlists json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-album (json)
   "Return the simplified album object from the given track JSON object."
   (gethash 'album json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-number (json)
   "Return the track number from the given track JSON object."
   (gethash 'track_number json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-disc-number (json)
   "Return the disc number from the given track JSON object."
   (gethash 'disc_number json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-duration (json)
   "Return the track duration, in milliseconds, from the given track JSON object."
   (gethash 'duration_ms json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-duration-formatted (json)
   "Return the formatted track duration from the given track JSON object."
   (format-seconds "%m:%02s" (/ (spotify-get-track-duration json) 1000)))
+
 
 (defun spotify-get-track-album-name (json)
   "Return the album name from the given track JSON object."
   (spotify-get-item-name (spotify-get-track-album json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-artist (json)
   "Return the first simplified artist object from the given track JSON object."
   (first (gethash 'artists json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-artist-name (json)
   "Return the first artist name from the given track JSON object."
   (spotify-get-item-name (spotify-get-track-artist json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-popularity (json)
   "Return the popularity from the given track/album/artist JSON object."
   (gethash 'popularity json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-is-track-playable (json)
   "Return whether the given track JSON object represents a playable track by
 the current user."
   (not (eq :json-false (gethash 'is_playable json))))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-item-name (json)
   "Return the name from the given track/album/artist JSON object."
   (gethash 'name json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-item-id (json)
   "Return the id from the given JSON object."
   (gethash 'id json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-item-uri (json)
   "Return the uri from the given track/album/artist JSON object."
   (gethash 'uri json))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-playlist-track-count (json)
   "Return the number of tracks of the given playlist JSON object."
   (gethash 'total (gethash 'tracks json)))
 
+
+;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-playlist-owner-id (json)
   "Return the owner id of the given playlist JSON object."
   (spotify-get-item-id (gethash 'owner json)))
+
+
+;;------------------------------------------------------------------------------
+;; Spotify Connect API endpoint calls
+;;------------------------------------------------------------------------------
 
 (defun spotify-api-search (type query page callback)
   "Search artists, albums, tracks or playlists that match a keyword string,
@@ -236,6 +299,7 @@ depending on the `type' argument."
      nil
      callback)))
 
+
 (defun spotify-api-featured-playlists (page callback)
   "Return the given page of Spotify's featured playlists."
   (let ((offset (* spotify-api-search-limit (1- page))))
@@ -250,6 +314,7 @@ depending on the `type' argument."
      nil
      callback)))
 
+
 (defun spotify-api-user-playlists (user-id page callback)
   "Return the playlists for the given user."
   (let ((offset (* spotify-api-search-limit (1- page))))
@@ -262,6 +327,7 @@ depending on the `type' argument."
      nil
      callback)))
 
+
 (defun spotify-api-playlist-create (user-id name is-public callback)
   "Create a new playlist with the given name for the given user."
   (spotify-api-call-async
@@ -270,13 +336,16 @@ depending on the `type' argument."
    (format "{\"name\":\"%s\",\"public\":\"%s\"}" name (if is-public "true" "false"))
    callback))
 
+
 (defun spotify-api-playlist-add-track (user-id playlist-id track-id callback)
   "Add single track to playlist."
   (spotify-api-playlist-add-tracks user-id playlist-id (list track-id) callback))
 
+
 (defun spotify-format-id (type id)
   "Wrap raw id to type if necessary."
    (if (string-match-p "spotify" id) (format "\"%s\"" id) (format "\"spotify:%s:%s\"" type id)))
+
 
 (defun spotify-api-playlist-add-tracks (user-id playlist-id track-ids callback)
   "Add tracks in list track-ids in playlist."
@@ -287,6 +356,7 @@ depending on the `type' argument."
              (url-hexify-string user-id) (url-hexify-string playlist-id))
      (format "{\"uris\": [ %s ]}" tracks)
      callback)))
+
 
 (defun spotify-api-playlist-follow (playlist callback)
   "Add the current user as a follower of a playlist."
@@ -300,6 +370,7 @@ depending on the `type' argument."
      nil
      callback)))
 
+
 (defun spotify-api-playlist-unfollow (playlist callback)
   "Remove the current user as a follower of a playlist."
   (let ((owner (spotify-get-playlist-owner-id playlist))
@@ -311,6 +382,7 @@ depending on the `type' argument."
              (url-hexify-string id))
      nil
      callback)))
+
 
 (defun spotify-api-playlist-tracks (playlist page callback)
   "Return the tracks of the given user's playlist."
@@ -329,6 +401,7 @@ depending on the `type' argument."
      nil
      callback)))
 
+
 (defun spotify-api-album-tracks (album page callback)
   "Return the tracks for the given album."
   (let ((album-id (spotify-get-item-id album))
@@ -344,12 +417,14 @@ depending on the `type' argument."
      nil
      callback)))
 
+
 (defun spotify-popularity-bar (popularity)
   "Return the popularity indicator bar proportional to the given parameter,
 which must be a number between 0 and 100."
   (let ((num-bars (truncate (/ popularity 10))))
     (concat (make-string num-bars ?X)
             (make-string (- 10 num-bars) ?-))))
+
 
 (defun spotify-api-recently-played (page callback)
   "Retrieve the list of recently played tracks."
@@ -363,6 +438,7 @@ which must be a number between 0 and 100."
      nil
      callback)))
 
+
 (defun spotify-api-device-list (callback)
   "Call CALLBACK with the list of devices available for use with Spotify Connect."
   (let ((callback callback))
@@ -372,6 +448,7 @@ which must be a number between 0 and 100."
      nil
      callback)))
 
+
 (defun spotify-api-transfer-player (device-id &optional callback)
   "Transfer playback to DEVICE-ID and determine if it should start playing."
   (spotify-api-call-async
@@ -379,6 +456,7 @@ which must be a number between 0 and 100."
    "/me/player"
    (format "{\"device_ids\":[\"%s\"]}" device-id)
    callback))
+
 
 (defun spotify-api-set-volume (device-id percentage &optional callback)
   "Set the volume level to PERCENTAGE of max for DEVICE-ID."
@@ -391,6 +469,7 @@ which must be a number between 0 and 100."
    nil
    callback))
 
+
 (defun spotify-api-get-player-status (callback)
   "Get the Spotify Connect status of the currently active player."
   (let ((callback (if (functionp spotify--player-status-redirect)
@@ -401,6 +480,7 @@ which must be a number between 0 and 100."
      "/me/player"
      nil
      callback)))
+
 
 (defun spotify-api-play (&optional callback uri context)
   "Play a track. If no args, resume playing current track. Otherwise, play URI in CONTEXT."
@@ -415,6 +495,7 @@ which must be a number between 0 and 100."
            " } ")
    callback))
 
+
 (defun spotify-api-pause (&optional callback)
   "Pause the currently playing track."
   (spotify-api-call-async
@@ -422,6 +503,7 @@ which must be a number between 0 and 100."
    "/me/player/pause"
    nil
    callback))
+
 
 (defun spotify-api-next (&optional callback)
   "Skip to the next track."
@@ -431,6 +513,7 @@ which must be a number between 0 and 100."
    nil
    callback))
 
+
 (defun spotify-api-previous (&optional callback)
   "Skip to the previous track."
   (spotify-api-call-async
@@ -438,6 +521,7 @@ which must be a number between 0 and 100."
    "/me/player/previous"
    nil
    callback))
+
 
 (defun spotify-api-repeat (state &optional callback)
   "Set repeat of current track to STATE."
@@ -448,6 +532,7 @@ which must be a number between 0 and 100."
                                    nil t))
    nil
    callback))
+
 
 (defun spotify-api-shuffle (state &optional callback)
   "Set repeat of current track to STATE."

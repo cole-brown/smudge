@@ -223,7 +223,16 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/player-status
+        nil)
 
+    ;; §-TODO-§ [2020-01-15]: --now--
+    ;; Get spotify-api using spotify-api-json?
+
+    )
 
   (spotify-ert/spotify-connect/teardown))
 

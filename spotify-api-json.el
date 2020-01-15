@@ -570,6 +570,42 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-a-users
 ")
 
 
+(defconst spotify--api/data/paging
+  '(;; string
+    ;; A link to the Web API endpoint returning the full result of the request.
+    (href stringp)
+
+    ;; an array of objects
+    ;; The requested data. Can't specify a sanity check, really, as what it is
+    ;; depends on request.
+    (items ignore)
+
+    ;; integer
+    ;; The maximum number of items in the response (as set in the query or by
+    ;; default).
+    (limit integerp)
+
+    ;; string
+    ;; URL to the next page of items. ( null if none)
+    (next stringp)
+
+    ;; integer
+    ;; The offset of the items returned (as set in the query or by default).
+    (offset integerp)
+
+    ;; string
+    ;; URL to the previous page of items. ( null if none)
+    (previous stringp)
+
+    ;; integer
+    ;; The maximum number of items available to return.
+    (total integerp))
+  "Paging object from Spotify Connect API.
+
+https://developer.spotify.com/documentation/web-api/reference/object-model/#paging-object
+")
+
+
 ;; Many other objects but we're not using them (that I've seen) yet.
 ;;   https://developer.spotify.com/documentation/web-api/reference/object-model/#track-object-full
 
