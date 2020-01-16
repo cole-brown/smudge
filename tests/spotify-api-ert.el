@@ -129,7 +129,7 @@ clear up for next item on test agenda."
 ;;     ;; Test that a new oauth2 token is gotten when old is expired?
 ;;     ;; TODO?
 ;;
-;;     (spotify-ert/spotify-connect/teardown)
+;;     (spotify-ert/spotify-api/teardown)
 ;;     ))
 
 
@@ -156,7 +156,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   ;; raises `error'.
   (should-error (spotify-oauth2-token))
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   ;; raises error.
   (should-error (spotify-api-call-async "GET" "/does-not-exist"))
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   (spotify-current-user #'spotify-ert/callback/args-1)
   (should (memq 'test-user spotify-ert/callback/caller-args))
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   (spotify-ert/util/with-json
       ;; Choose either valid data or nil, depending on setup.
       (if spotify-ert/mock/spotify-api-device-list/is-active
-          spotify-ert/data/connect-api/search
+          spotify-ert/data/connect-api/search-artists
         nil)
 
     ;; Get spotify-api using spotify-api-json?
@@ -240,7 +240,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
       (should-not (null items))
       (should (= (length items) 5))))
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -255,10 +255,23 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
-    ;; §-TODO-§ [2020-01-15]: --now--
+  ;; §-TODO-§ [2020-01-15]: This should probably not die.
+  ;; (should (eq (spotify-get-search-track-items nil) nil))
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/search-tracks
+        nil)
 
-  (spotify-ert/spotify-connect/teardown))
+    ;; Get spotify-api using spotify-api-json?
+    (let* ((tracks (spotify-get-search-track-items json-obj)))
+      ;; We have 'tracks' in our json-obj, and we have the right number...
+      ;; so ok whatever.
+      (should-not (null tracks))
+      (should (= (length tracks) 5))))
+
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -273,9 +286,20 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/search-playlist
+        nil)
 
+    ;; Get spotify-api using spotify-api-json?
+    (let* ((playlists (spotify-get-search-playlist-items json-obj)))
+      ;; We have 'playlists' in our json-obj, and we have the right number...
+      ;; so ok whatever.
+      (should-not (null playlists))
+      (should (= (length playlists) 5))))
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -290,9 +314,10 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+    ;; §-TODO-§ [2020-01-15]: --now--
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -309,7 +334,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -326,7 +351,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -343,7 +368,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -360,7 +385,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -377,7 +402,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -394,7 +419,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -411,7 +436,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -428,7 +453,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -445,7 +470,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -462,7 +487,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -479,7 +504,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -497,7 +522,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -514,7 +539,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -531,7 +556,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -548,7 +573,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -565,7 +590,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -582,7 +607,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -600,7 +625,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -617,7 +642,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -634,7 +659,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -651,7 +676,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -668,7 +693,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -685,7 +710,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -702,7 +727,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -719,7 +744,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -736,7 +761,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -753,7 +778,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -770,7 +795,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -788,7 +813,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -805,7 +830,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -822,7 +847,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -839,7 +864,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -856,7 +881,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -873,7 +898,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -890,7 +915,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -907,7 +932,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -924,7 +949,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -941,7 +966,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -958,7 +983,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -975,7 +1000,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 
 
 
-  (spotify-ert/spotify-connect/teardown))
+  (spotify-ert/spotify-api/teardown))
 
 
 

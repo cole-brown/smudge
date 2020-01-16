@@ -387,7 +387,7 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-a-users
 ;; Paginated Search Result
 ;;------------------------------------------------------------------------------
 
-(defconst spotify-ert/data/connect-api/search
+(defconst spotify-ert/data/connect-api/search-artists
   "{
     \"artists\" : {
       \"href\" : \"https://api.spotify.com/v1/search?query=shine&type=artist&offset=0&limit=5\",
@@ -545,9 +545,575 @@ https://developer.spotify.com/documentation/web-api/reference/player/get-a-users
   }"
 
 "A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
-'/v1/me/player' endpoint, cut down to just a device object.
+'/v1/search' endpoint.
 
-https://developer.spotify.com/documentation/web-api/reference/player/get-a-users-available-devices/
+https://developer.spotify.com/documentation/web-api/reference/search/search/#response-format
+
+Obtained via:  curl -X GET 'https://api.spotify.com/v1/search?q=shine&type=track' -H 'Authorization: Bearer <insert *spotify-oauth2-token* here>' > search-artists.txt
+")
+
+
+(defconst spotify-ert/data/connect-api/search-tracks
+  "{
+    \"tracks\" : {
+      \"href\" : \"https://api.spotify.com/v1/search?query=shinedown&type=track&offset=0&limit=5\",
+      \"items\" : [ {
+        \"album\" : {
+          \"album_type\" : \"album\",
+          \"artists\" : [ {
+            \"external_urls\" : {
+              \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+            },
+            \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+            \"id\" : \"test-id-0\",
+            \"name\" : \"Shinedown\",
+            \"type\" : \"artist\",
+            \"uri\" : \"spotify:artist:6665577666\"
+          } ],
+          \"available_markets\" : [ \"AD\", \"AE\", \"AR\", \"AT\", \"BE\", \"BG\", \"BH\", \"BO\", \"BR\", \"CA\", \"CH\", \"CL\", \"CO\", \"CR\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DO\", \"DZ\", \"EC\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"GT\", \"HN\", \"HU\", \"IE\", \"IL\", \"IS\", \"IT\", \"JO\", \"KW\", \"LB\", \"LI\", \"LT\", \"LU\", \"LV\", \"MA\", \"MC\", \"MT\", \"MX\", \"NI\", \"NL\", \"NO\", \"OM\", \"PA\", \"PE\", \"PL\", \"PT\", \"PY\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"SV\", \"TN\", \"TR\", \"US\", \"UY\", \"ZA\" ],
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/album/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/albums/0123456789\",
+          \"id\" : \"test-id-1\",
+          \"images\" : [ {
+            \"height\" : 640,
+            \"url\" : \"https://i.scdn.co/image/test-url-0\",
+            \"width\" : 640
+          }, {
+            \"height\" : 300,
+            \"url\" : \"https://i.scdn.co/image/test-url-1\",
+            \"width\" : 300
+          }, {
+            \"height\" : 64,
+            \"url\" : \"https://i.scdn.co/image/test-url-2\",
+            \"width\" : 64
+          } ],
+          \"name\" : \"Leave a Whisper (Deluxe Edition)\",
+          \"release_date\" : \"2003-05-27\",
+          \"release_date_precision\" : \"day\",
+          \"total_tracks\" : 25,
+          \"type\" : \"album\",
+          \"uri\" : \"spotify:album:6665577666\"
+        },
+        \"artists\" : [ {
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+          \"id\" : \"test-id-2\",
+          \"name\" : \"Shinedown\",
+          \"type\" : \"artist\",
+          \"uri\" : \"spotify:artist:6665577666\"
+        } ],
+        \"available_markets\" : [ \"AD\", \"AE\", \"AR\", \"AT\", \"BE\", \"BG\", \"BH\", \"BO\", \"BR\", \"CA\", \"CH\", \"CL\", \"CO\", \"CR\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DO\", \"DZ\", \"EC\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"GT\", \"HN\", \"HU\", \"IE\", \"IL\", \"IS\", \"IT\", \"JO\", \"KW\", \"LB\", \"LI\", \"LT\", \"LU\", \"LV\", \"MA\", \"MC\", \"MT\", \"MX\", \"NI\", \"NL\", \"NO\", \"OM\", \"PA\", \"PE\", \"PL\", \"PT\", \"PY\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"SV\", \"TN\", \"TR\", \"US\", \"UY\", \"ZA\" ],
+        \"disc_number\" : 1,
+        \"duration_ms\" : 250093,
+        \"explicit\" : false,
+        \"external_ids\" : {
+          \"isrc\" : \"test-isrc-0\"
+        },
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/track/11112345\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/tracks/0123456789\",
+        \"id\" : \"test-id-3\",
+        \"is_local\" : false,
+        \"name\" : \"45\",
+        \"popularity\" : 66,
+        \"preview_url\" : \"https://p.scdn.co/mp3-preview/test-preview-0?cid=test-cid-0\",
+        \"track_number\" : 12,
+        \"type\" : \"track\",
+        \"uri\" : \"spotify:track:6665577666\"
+      }, {
+        \"album\" : {
+          \"album_type\" : \"album\",
+          \"artists\" : [ {
+            \"external_urls\" : {
+              \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+            },
+            \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+            \"id\" : \"test-id-4\",
+            \"name\" : \"Shinedown\",
+            \"type\" : \"artist\",
+            \"uri\" : \"spotify:artist:6665577666\"
+          } ],
+          \"available_markets\" : [ \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"CA\", \"CH\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DZ\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"HK\", \"HU\", \"ID\", \"IE\", \"test-id-5\", \"IT\", \"JO\", \"JP\", \"KW\", \"LB\", \"LT\", \"LU\", \"LV\", \"MA\", \"MT\", \"MY\", \"NL\", \"NO\", \"NZ\", \"OM\", \"PH\", \"PL\", \"PT\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"VN\", \"ZA\" ],
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/album/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/albums/0123456789\",
+          \"id\" : \"test-id-6\",
+          \"images\" : [ {
+            \"height\" : 640,
+            \"url\" : \"https://i.scdn.co/image/test-url-3\",
+            \"width\" : 640
+          }, {
+            \"height\" : 300,
+            \"url\" : \"https://i.scdn.co/image/test-url-4\",
+            \"width\" : 300
+          }, {
+            \"height\" : 64,
+            \"url\" : \"https://i.scdn.co/image/test-url-5\",
+            \"width\" : 64
+          } ],
+          \"name\" : \"Threat to Survival\",
+          \"release_date\" : \"2015-09-18\",
+          \"release_date_precision\" : \"day\",
+          \"total_tracks\" : 11,
+          \"type\" : \"album\",
+          \"uri\" : \"spotify:album:6665577666\"
+        },
+        \"artists\" : [ {
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+          \"id\" : \"test-id-7\",
+          \"name\" : \"Shinedown\",
+          \"type\" : \"artist\",
+          \"uri\" : \"spotify:artist:6665577666\"
+        } ],
+        \"available_markets\" : [ \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"CA\", \"CH\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DZ\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"HK\", \"HU\", \"ID\", \"IE\", \"test-id-8\", \"IT\", \"JO\", \"JP\", \"KW\", \"LB\", \"LT\", \"LU\", \"LV\", \"MA\", \"MT\", \"MY\", \"NL\", \"NO\", \"NZ\", \"OM\", \"PH\", \"PL\", \"PT\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"VN\", \"ZA\" ],
+        \"disc_number\" : 1,
+        \"duration_ms\" : 224596,
+        \"explicit\" : false,
+        \"external_ids\" : {
+          \"isrc\" : \"test-isrc-1\"
+        },
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/track/11112345\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/tracks/0123456789\",
+        \"id\" : \"test-id-9\",
+        \"is_local\" : false,
+        \"name\" : \"Cut the Cord\",
+        \"popularity\" : 67,
+        \"preview_url\" : \"https://p.scdn.co/mp3-preview/test-preview-1?cid=test-cid-1\",
+        \"track_number\" : 2,
+        \"type\" : \"track\",
+        \"uri\" : \"spotify:track:6665577666\"
+      }, {
+        \"album\" : {
+          \"album_type\" : \"album\",
+          \"artists\" : [ {
+            \"external_urls\" : {
+              \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+            },
+            \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+            \"id\" : \"test-id-10\",
+            \"name\" : \"Shinedown\",
+            \"type\" : \"artist\",
+            \"uri\" : \"spotify:artist:6665577666\"
+          } ],
+          \"available_markets\" : [ \"AD\", \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"BO\", \"BR\", \"CA\", \"CH\", \"CL\", \"CO\", \"CR\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DO\", \"DZ\", \"EC\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"GT\", \"HK\", \"HN\", \"HU\", \"ID\", \"IE\", \"IL\", \"IS\", \"IT\", \"JO\", \"JP\", \"test-id-11\", \"LB\", \"LI\", \"LT\", \"LU\", \"LV\", \"MA\", \"MC\", \"MT\", \"MX\", \"MY\", \"NI\", \"NL\", \"NO\", \"NZ\", \"OM\", \"PA\", \"PE\", \"PH\", \"PL\", \"PS\", \"PT\", \"PY\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"SV\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"UY\", \"VN\", \"ZA\" ],
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/album/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/albums/0123456789\",
+          \"id\" : \"test-id-12\",
+          \"images\" : [ {
+            \"height\" : 640,
+            \"url\" : \"https://i.scdn.co/image/test-url-6\",
+            \"width\" : 640
+          }, {
+            \"height\" : 300,
+            \"url\" : \"https://i.scdn.co/image/test-url-7\",
+            \"width\" : 300
+          }, {
+            \"height\" : 64,
+            \"url\" : \"https://i.scdn.co/image/test-url-8\",
+            \"width\" : 64
+          } ],
+          \"name\" : \"ATTENTION ATTENTION\",
+          \"release_date\" : \"2018-05-04\",
+          \"release_date_precision\" : \"day\",
+          \"total_tracks\" : 14,
+          \"type\" : \"album\",
+          \"uri\" : \"spotify:album:6665577666\"
+        },
+        \"artists\" : [ {
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+          \"id\" : \"test-id-13\",
+          \"name\" : \"Shinedown\",
+          \"type\" : \"artist\",
+          \"uri\" : \"spotify:artist:6665577666\"
+        } ],
+        \"available_markets\" : [ \"AD\", \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"BO\", \"BR\", \"CA\", \"CH\", \"CL\", \"CO\", \"CR\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DO\", \"DZ\", \"EC\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"GT\", \"HK\", \"HN\", \"HU\", \"ID\", \"IE\", \"IL\", \"IS\", \"IT\", \"JO\", \"JP\", \"test-id-14\", \"LB\", \"LI\", \"LT\", \"LU\", \"LV\", \"MA\", \"MC\", \"MT\", \"MX\", \"MY\", \"NI\", \"NL\", \"NO\", \"NZ\", \"OM\", \"PA\", \"PE\", \"PH\", \"PL\", \"PS\", \"PT\", \"PY\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"SV\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"UY\", \"VN\", \"ZA\" ],
+        \"disc_number\" : 1,
+        \"duration_ms\" : 207986,
+        \"explicit\" : false,
+        \"external_ids\" : {
+          \"isrc\" : \"test-isrc-2\"
+        },
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/track/11112345\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/tracks/0123456789\",
+        \"id\" : \"test-id-15\",
+        \"is_local\" : false,
+        \"name\" : \"DEVIL\",
+        \"popularity\" : 68,
+        \"preview_url\" : \"https://p.scdn.co/mp3-preview/test-preview-2?cid=test-cid-2\",
+        \"track_number\" : 2,
+        \"type\" : \"track\",
+        \"uri\" : \"spotify:track:6665577666\"
+      }, {
+        \"album\" : {
+          \"album_type\" : \"album\",
+          \"artists\" : [ {
+            \"external_urls\" : {
+              \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+            },
+            \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+            \"id\" : \"test-id-16\",
+            \"name\" : \"Shinedown\",
+            \"type\" : \"artist\",
+            \"uri\" : \"spotify:artist:6665577666\"
+          } ],
+          \"available_markets\" : [ \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"CA\", \"CH\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DZ\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"HK\", \"HU\", \"ID\", \"IE\", \"test-id-17\", \"IT\", \"JO\", \"JP\", \"KW\", \"LB\", \"LT\", \"LU\", \"LV\", \"MA\", \"MT\", \"MY\", \"NL\", \"NO\", \"NZ\", \"OM\", \"PH\", \"PL\", \"PT\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"VN\", \"ZA\" ],
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/album/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/albums/0123456789\",
+          \"id\" : \"test-id-18\",
+          \"images\" : [ {
+            \"height\" : 640,
+            \"url\" : \"https://i.scdn.co/image/test-url-9\",
+            \"width\" : 640
+          }, {
+            \"height\" : 300,
+            \"url\" : \"https://i.scdn.co/image/test-url-10\",
+            \"width\" : 300
+          }, {
+            \"height\" : 64,
+            \"url\" : \"https://i.scdn.co/image/test-url-11\",
+            \"width\" : 64
+          } ],
+          \"name\" : \"Threat to Survival\",
+          \"release_date\" : \"2015-09-18\",
+          \"release_date_precision\" : \"day\",
+          \"total_tracks\" : 11,
+          \"type\" : \"album\",
+          \"uri\" : \"spotify:album:6665577666\"
+        },
+        \"artists\" : [ {
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+          \"id\" : \"test-id-19\",
+          \"name\" : \"Shinedown\",
+          \"type\" : \"artist\",
+          \"uri\" : \"spotify:artist:6665577666\"
+        } ],
+        \"available_markets\" : [ \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"CA\", \"CH\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DZ\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"HK\", \"HU\", \"ID\", \"IE\", \"test-id-20\", \"IT\", \"JO\", \"JP\", \"KW\", \"LB\", \"LT\", \"LU\", \"LV\", \"MA\", \"MT\", \"MY\", \"NL\", \"NO\", \"NZ\", \"OM\", \"PH\", \"PL\", \"PT\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"VN\", \"ZA\" ],
+        \"disc_number\" : 1,
+        \"duration_ms\" : 205653,
+        \"explicit\" : false,
+        \"external_ids\" : {
+          \"isrc\" : \"test-isrc-3\"
+        },
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/track/11112345\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/tracks/0123456789\",
+        \"id\" : \"test-id-21\",
+        \"is_local\" : false,
+        \"name\" : \"State of My Head\",
+        \"popularity\" : 66,
+        \"preview_url\" : \"https://p.scdn.co/mp3-preview/test-preview-3?cid=test-cid-3\",
+        \"track_number\" : 3,
+        \"type\" : \"track\",
+        \"uri\" : \"spotify:track:6665577666\"
+      }, {
+        \"album\" : {
+          \"album_type\" : \"album\",
+          \"artists\" : [ {
+            \"external_urls\" : {
+              \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+            },
+            \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+            \"id\" : \"test-id-22\",
+            \"name\" : \"Shinedown\",
+            \"type\" : \"artist\",
+            \"uri\" : \"spotify:artist:6665577666\"
+          } ],
+          \"available_markets\" : [ \"AD\", \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"BO\", \"BR\", \"CA\", \"CH\", \"CL\", \"CO\", \"CR\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DO\", \"DZ\", \"EC\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"GT\", \"HK\", \"HN\", \"HU\", \"ID\", \"IE\", \"IL\", \"IS\", \"IT\", \"JO\", \"JP\", \"test-id-23\", \"LB\", \"LI\", \"LT\", \"LU\", \"LV\", \"MA\", \"MC\", \"MT\", \"MX\", \"MY\", \"NI\", \"NL\", \"NO\", \"OM\", \"PA\", \"PE\", \"PH\", \"PL\", \"PS\", \"PT\", \"PY\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"SV\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"UY\", \"VN\", \"ZA\" ],
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/album/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/albums/0123456789\",
+          \"id\" : \"test-id-24\",
+          \"images\" : [ {
+            \"height\" : 640,
+            \"url\" : \"https://i.scdn.co/image/test-url-12\",
+            \"width\" : 640
+          }, {
+            \"height\" : 300,
+            \"url\" : \"https://i.scdn.co/image/test-url-13\",
+            \"width\" : 300
+          }, {
+            \"height\" : 64,
+            \"url\" : \"https://i.scdn.co/image/test-url-14\",
+            \"width\" : 64
+          } ],
+          \"name\" : \"The Sound of Madness\",
+          \"release_date\" : \"2008-06-24\",
+          \"release_date_precision\" : \"day\",
+          \"total_tracks\" : 11,
+          \"type\" : \"album\",
+          \"uri\" : \"spotify:album:6665577666\"
+        },
+        \"artists\" : [ {
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/artist/11112345\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/artists/0123456789\",
+          \"id\" : \"test-id-25\",
+          \"name\" : \"Shinedown\",
+          \"type\" : \"artist\",
+          \"uri\" : \"spotify:artist:6665577666\"
+        } ],
+        \"available_markets\" : [ \"AD\", \"AE\", \"AR\", \"AT\", \"AU\", \"BE\", \"BG\", \"BH\", \"BO\", \"BR\", \"CA\", \"CH\", \"CL\", \"CO\", \"CR\", \"CY\", \"CZ\", \"DE\", \"DK\", \"DO\", \"DZ\", \"EC\", \"EE\", \"EG\", \"ES\", \"FI\", \"FR\", \"GB\", \"GR\", \"GT\", \"HK\", \"HN\", \"HU\", \"ID\", \"IE\", \"IL\", \"IS\", \"IT\", \"JO\", \"JP\", \"test-id-26\", \"LB\", \"LI\", \"LT\", \"LU\", \"LV\", \"MA\", \"MC\", \"MT\", \"MX\", \"MY\", \"NI\", \"NL\", \"NO\", \"OM\", \"PA\", \"PE\", \"PH\", \"PL\", \"PS\", \"PT\", \"PY\", \"QA\", \"RO\", \"SA\", \"SE\", \"SG\", \"SK\", \"SV\", \"TH\", \"TN\", \"TR\", \"TW\", \"US\", \"UY\", \"VN\", \"ZA\" ],
+        \"disc_number\" : 1,
+        \"duration_ms\" : 222066,
+        \"explicit\" : false,
+        \"external_ids\" : {
+          \"isrc\" : \"test-isrc-4\"
+        },
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/track/11112345\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/tracks/0123456789\",
+        \"id\" : \"test-id-27\",
+        \"is_local\" : false,
+        \"name\" : \"Second Chance\",
+        \"popularity\" : 66,
+        \"preview_url\" : \"https://p.scdn.co/mp3-preview/test-preview-4?cid=test-cid-4\",
+        \"track_number\" : 3,
+        \"type\" : \"track\",
+        \"uri\" : \"spotify:track:6665577666\"
+      } ],
+      \"limit\" : 5,
+      \"next\" : \"https://api.spotify.com/v1/search?query=shinedown&type=track&offset=5&limit=5\",
+      \"offset\" : 0,
+      \"previous\" : null,
+      \"total\" : 655
+    }
+  }"
+
+  "A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
+'/v1/search' endpoint.
+
+https://developer.spotify.com/documentation/web-api/reference/search/search/#response-format
+
+Obtained via:  curl -X GET 'https://api.spotify.com/v1/search?query=shinedown&type=track&limit=5' -H 'Authorization: Bearer <insert *spotify-oauth2-token* here>' > search-tracks.txt
+")
+
+
+(defconst spotify-ert/data/connect-api/search-playlist
+  "{
+    \"playlists\" : {
+      \"href\" : \"https://api.spotify.com/v1/search?query=doom+metal&type=playlist&offset=0&limit=5\",
+      \"items\" : [ {
+        \"collaborative\" : false,
+        \"description\" : \"Test playlist description 0.\",
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/playlist/00000000\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/playlists/0123456789\",
+        \"id\" : \"00011011\",
+        \"images\" : [ {
+          \"height\" : 300,
+          \"url\" : \"https://i.scdn.co/image/test-url-0\",
+          \"width\" : 300
+        } ],
+        \"name\" : \"Doom Playlist 0\",
+        \"owner\" : {
+          \"display_name\" : \"test-user-0\",
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/user/test-user-0\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-0\",
+          \"id\" : \"test-user-0\",
+          \"type\" : \"user\",
+          \"uri\" : \"spotify:user:test-user-0\"
+        },
+        \"primary_color\" : null,
+        \"public\" : null,
+        \"snapshot_id\" : \"00011011\",
+        \"tracks\" : {
+          \"href\" : \"https://api.spotify.com/v1/playlists/0123456789/tracks\",
+          \"total\" : 63
+        },
+        \"type\" : \"playlist\",
+        \"uri\" : \"spotify:playlist:222223323232\"
+      }, {
+        \"collaborative\" : false,
+        \"description\" : \"Test playlist description 1.\",
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/playlist/00000000\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/playlists/0123456789\",
+        \"id\" : \"00011011\",
+        \"images\" : [ {
+          \"height\" : null,
+          \"url\" : \"https://pl.scdn.co/images/pl/default/test-url-1\",
+          \"width\" : null
+        } ],
+        \"name\" : \"Doom Playlist 1\",
+        \"owner\" : {
+          \"display_name\" : \"test-user-1\",
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/user/test-user-1\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-1\",
+          \"id\" : \"test-user-1\",
+          \"type\" : \"user\",
+          \"uri\" : \"spotify:user:test-user-1\"
+        },
+        \"primary_color\" : null,
+        \"public\" : null,
+        \"snapshot_id\" : \"00011011\",
+        \"tracks\" : {
+          \"href\" : \"https://api.spotify.com/v1/playlists/0123456789/tracks\",
+          \"total\" : 85
+        },
+        \"type\" : \"playlist\",
+        \"uri\" : \"spotify:playlist:222223323232\"
+      }, {
+        \"collaborative\" : false,
+        \"description\" : \"Test playlist description 2.\",
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/playlist/00000000\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/playlists/0123456789\",
+        \"id\" : \"00011011\",
+        \"images\" : [ {
+          \"height\" : null,
+          \"url\" : \"https://pl.scdn.co/images/pl/default/test-url-2\",
+          \"width\" : null
+        } ],
+        \"name\" : \"Doom Playlist 1\",
+        \"owner\" : {
+          \"display_name\" : \"test-user-1\",
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/user/00000000\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/users/0123456789\",
+          \"id\" : \"00011011\",
+          \"type\" : \"user\",
+          \"uri\" : \"spotify:user:222223323232\"
+        },
+        \"primary_color\" : null,
+        \"public\" : null,
+        \"snapshot_id\" : \"00011011\",
+        \"tracks\" : {
+          \"href\" : \"https://api.spotify.com/v1/playlists/0123456789/tracks\",
+          \"total\" : 143
+        },
+        \"type\" : \"playlist\",
+        \"uri\" : \"spotify:playlist:222223323232\"
+      }, {
+        \"collaborative\" : false,
+        \"description\" : \"Test playlist description 3.\",
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/playlist/00000000\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/playlists/0123456789\",
+        \"id\" : \"00011011\",
+        \"images\" : [ {
+          \"height\" : 640,
+          \"url\" : \"https://mosaic.scdn.co/640/test-url-5\",
+          \"width\" : 640
+        }, {
+          \"height\" : 300,
+          \"url\" : \"https://mosaic.scdn.co/300/test-url-6\",
+          \"width\" : 300
+        }, {
+          \"height\" : 60,
+          \"url\" : \"https://mosaic.scdn.co/60/test-url-7\",
+          \"width\" : 60
+        } ],
+        \"name\" : \"Doom Playlist 3\",
+        \"owner\" : {
+          \"display_name\" : \"test-user-3\",
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/user/test-user-3\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-3\",
+          \"id\" : \"test-user-3\",
+          \"type\" : \"user\",
+          \"uri\" : \"spotify:user:test-user-3\"
+        },
+        \"primary_color\" : null,
+        \"public\" : null,
+        \"snapshot_id\" : \"00011011\",
+        \"tracks\" : {
+          \"href\" : \"https://api.spotify.com/v1/playlists/0123456789/tracks\",
+          \"total\" : 361
+        },
+        \"type\" : \"playlist\",
+        \"uri\" : \"spotify:playlist:222223323232\"
+      }, {
+        \"collaborative\" : false,
+        \"description\" : \"Test playlist description 4.\",
+        \"external_urls\" : {
+          \"spotify\" : \"https://open.spotify.com/playlist/00000000\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/playlists/0123456789\",
+        \"id\" : \"00011011\",
+        \"images\" : [ {
+          \"height\" : 640,
+          \"url\" : \"https://mosaic.scdn.co/640/test-url-8\",
+          \"width\" : 640
+        }, {
+          \"height\" : 300,
+          \"url\" : \"https://mosaic.scdn.co/300/test-url-9\",
+          \"width\" : 300
+        }, {
+          \"height\" : 60,
+          \"url\" : \"https://mosaic.scdn.co/60/test-url-10\",
+          \"width\" : 60
+        } ],
+        \"name\" : \"Doom Playlist 4\",
+        \"owner\" : {
+          \"display_name\" : \"test-user-4\",
+          \"external_urls\" : {
+            \"spotify\" : \"https://open.spotify.com/user/00000000\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-4\",
+          \"id\" : \"00011011\",
+          \"type\" : \"user\",
+          \"uri\" : \"spotify:user:222223323232\"
+        },
+        \"primary_color\" : null,
+        \"public\" : null,
+        \"snapshot_id\" : \"00011011\",
+        \"tracks\" : {
+          \"href\" : \"https://api.spotify.com/v1/playlists/0v9cjE3vjgCv0aVXpeIlHT/tracks\",
+          \"total\" : 924
+        },
+        \"type\" : \"playlist\",
+        \"uri\" : \"spotify:playlist:222223323232\"
+      } ],
+      \"limit\" : 5,
+      \"next\" : \"https://api.spotify.com/v1/search?query=doom+metal&type=playlist&offset=5&limit=5\",
+      \"offset\" : 0,
+      \"previous\" : null,
+      \"total\" : 2077
+    }
+  }"
+  "A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
+'/v1/search' endpoint.
+
+https://developer.spotify.com/documentation/web-api/reference/search/search/#response-format
+
+Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type=playlist&limit=5' -H 'Authorization: Bearer <insert *spotify-oauth2-token* here>' > search-playlist.txt
 ")
 
 
