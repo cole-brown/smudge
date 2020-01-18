@@ -915,7 +915,7 @@ Obtained via:  curl -X GET 'https://api.spotify.com/v1/search?query=shinedown&ty
 ")
 
 
-(defconst spotify-ert/data/connect-api/search-playlist
+(defconst spotify-ert/data/connect-api/search-playlists
   "{
     \"playlists\" : {
       \"href\" : \"https://api.spotify.com/v1/search?query=doom+metal&type=playlist&offset=0&limit=5\",
@@ -1112,6 +1112,92 @@ Obtained via:  curl -X GET 'https://api.spotify.com/v1/search?query=shinedown&ty
 '/v1/search' endpoint.
 
 https://developer.spotify.com/documentation/web-api/reference/search/search/#response-format
+
+Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type=playlist&limit=5' -H 'Authorization: Bearer <insert *spotify-oauth2-token* here>' > search-playlist.txt
+")
+
+
+;; §-TODO-§ [2020-01-17]: sanitize this
+(defconst spotify-ert/data/connect-api/featured-playlists
+  "{
+    \"message\" : \"This is the test featured playlist data!\",
+    \"playlists\" : {
+      \"href\" : \"https://api.spotify.com/v1/browse/featured-playlists?country=SE&timestamp=2015-05-18T06:44:32&offset=0&limit=2\",
+      \"items\" : [ {
+        \"collaborative\" : false,
+        \"description\" : \"test-featured-playlist-0\",
+        \"external_urls\" : {
+          \"spotify\" : \"http://open.spotify.com/user/spotify/playlist/test-featured-playlist-0\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/users/spotify/playlists/test-featured-playlist-0\",
+        \"id\" : \"test-featured-playlist-0\",
+        \"images\" : [ {
+          \"height\" : 300,
+          \"url\" : \"https://i.scdn.co/image/test-featured-playlist-0\",
+          \"width\" : 300
+        } ],
+        \"name\" : \"test-featured-playlist-0\",
+        \"owner\" : {
+          \"external_urls\" : {
+            \"spotify\" : \"http://open.spotify.com/user/spotify\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/users/spotify\",
+          \"id\" : \"spotify\",
+          \"type\" : \"user\",
+          \"uri\" : \"spotify:user:spotify\"
+        },
+        \"public\" : null,
+        \"snapshot_id\" : \"0000/test-featured-playlist-0\",
+        \"tracks\" : {
+          \"href\" : \"https://api.spotify.com/v1/users/spotify/playlists/test-featured-playlist-0/tracks\",
+          \"total\" : 245
+        },
+        \"type\" : \"playlist\",
+        \"uri\" : \"spotify:user:spotify:playlist:test-featured-playlist-0\"
+      }, {
+        \"collaborative\" : false,
+        \"description\" : \"test-featured-playlist-1.\",
+        \"external_urls\" : {
+          \"spotify\" : \"http://open.spotify.com/user/test-featured-playlist-1./playlist/test-featured-playlist-1\"
+        },
+        \"href\" : \"https://api.spotify.com/v1/users/spotify__sverige/playlists/4uOEx4OUrkoGNZoIlWMUbO\",
+        \"id\" : \"4uOEx4OUrkoGNZoIlWMUbO\",
+        \"images\" : [ {
+          \"height\" : 300,
+          \"url\" : \"https://i.scdn.co/image/24aa1d1b491dd529b9c03392f350740ed73438d8\",
+          \"width\" : 300
+        } ],
+        \"name\" : \"Upp och hoppa!\",
+        \"owner\" : {
+          \"external_urls\" : {
+            \"spotify\" : \"http://open.spotify.com/user/spotify__sverige\"
+          },
+          \"href\" : \"https://api.spotify.com/v1/users/spotify__sverige\",
+          \"id\" : \"spotify__sverige\",
+          \"type\" : \"user\",
+          \"uri\" : \"spotify:user:spotify__sverige\"
+        },
+        \"public\" : null,
+        \"snapshot_id\" : \"0j9Rcbt2KtCXEXKtKy/tnSL5r4byjDBOIVY1dn4S6GV73EEUgNuK2hU+QyDuNnXz\",
+        \"tracks\" : {
+          \"href\" : \"https://api.spotify.com/v1/users/spotify__sverige/playlists/4uOEx4OUrkoGNZoIlWMUbO/tracks\",
+          \"total\" : 38
+        },
+        \"type\" : \"playlist\",
+        \"uri\" : \"spotify:user:spotify__sverige:playlist:4uOEx4OUrkoGNZoIlWMUbO\"
+      } ],
+      \"limit\" : 2,
+      \"next\" : \"https://api.spotify.com/v1/browse/featured-playlists?country=SE&timestamp=2015-05-18T06:44:32&offset=2&limit=2\",
+      \"offset\" : 0,
+      \"previous\" : null,
+      \"total\" : 12
+    }
+  }"
+
+  "A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
+'/v1/browse/featured-playlists' endpoint.
+
+https://developer.spotify.com/documentation/web-api/reference-beta/#endpoint-get-featured-playlists
 
 Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type=playlist&limit=5' -H 'Authorization: Bearer <insert *spotify-oauth2-token* here>' > search-playlist.txt
 ")

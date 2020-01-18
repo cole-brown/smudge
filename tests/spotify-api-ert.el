@@ -289,7 +289,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   (spotify-ert/util/with-json
       ;; Choose either valid data or nil, depending on setup.
       (if spotify-ert/mock/spotify-api-device-list/is-active
-          spotify-ert/data/connect-api/search-playlist
+          spotify-ert/data/connect-api/search-playlists
         nil)
 
     ;; Get spotify-api using spotify-api-json?
