@@ -387,7 +387,29 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (let ((album (spotify-get-track-album json-obj)))
+      (should (string= (gethash 'name album)
+                       "Mandatory Fun"))
+      (should (string= (gethash 'release_date album)
+                       "2014-07-15"))))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (let ((album (spotify-get-track-album json-obj)))
+  ;;     (should (null (gethash 'name album)))
+  ;;     (should (null (gethash 'release_date album)))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -404,7 +426,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (= (spotify-get-track-number json-obj) 3))
+    (should (= (gethash 'track_number json-obj) 3)))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null (spotify-get-track-number json-obj)))
+  ;;   (should (null (gethash 'track_number json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -421,7 +461,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (= (spotify-get-disc-number json-obj) 1))
+    (should (= (gethash 'disc_number json-obj) 1)))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null (spotify-get-disc-number json-obj)))
+  ;;   (should (null (gethash 'disc_number json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -438,7 +496,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (= (spotify-get-track-duration json-obj) 142946))
+    (should (= (gethash 'duration_ms json-obj) 142946)))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null (spotify-get-track-duration json-obj)))
+  ;;   (should (null (gethash 'duration_ms json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
