@@ -184,12 +184,6 @@ API and saves to `*spotify-user*', then returns it."
 
 
 ;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
-(defun spotify-get-search-playlist-items (json)
-  "Return the playlist items from the given search results JSON object."
-  (spotify-get-items (gethash 'playlists json)))
-
-
-;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-get-track-album (json)
   "Return the simplified album object from the given track JSON object."
   (gethash 'album json))

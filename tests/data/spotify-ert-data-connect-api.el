@@ -1117,7 +1117,6 @@ Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type
 ")
 
 
-;; §-TODO-§ [2020-01-17]: sanitize this
 (defconst spotify-ert/data/connect-api/featured-playlists
   "{
     \"message\" : \"This is the test featured playlist data!\",
@@ -1127,9 +1126,9 @@ Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type
         \"collaborative\" : false,
         \"description\" : \"test-featured-playlist-0\",
         \"external_urls\" : {
-          \"spotify\" : \"http://open.spotify.com/user/spotify/playlist/test-featured-playlist-0\"
+          \"spotify\" : \"http://open.spotify.com/user/test-user-0/playlist/test-featured-playlist-0\"
         },
-        \"href\" : \"https://api.spotify.com/v1/users/spotify/playlists/test-featured-playlist-0\",
+        \"href\" : \"https://api.spotify.com/v1/users/test-user-0/playlists/test-featured-playlist-0\",
         \"id\" : \"test-featured-playlist-0\",
         \"images\" : [ {
           \"height\" : 300,
@@ -1139,52 +1138,52 @@ Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type
         \"name\" : \"test-featured-playlist-0\",
         \"owner\" : {
           \"external_urls\" : {
-            \"spotify\" : \"http://open.spotify.com/user/spotify\"
+            \"spotify\" : \"http://open.spotify.com/user/test-user-0\"
           },
-          \"href\" : \"https://api.spotify.com/v1/users/spotify\",
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-0\",
           \"id\" : \"spotify\",
           \"type\" : \"user\",
-          \"uri\" : \"spotify:user:spotify\"
+          \"uri\" : \"spotify:user:test-user-0\"
         },
         \"public\" : null,
         \"snapshot_id\" : \"0000/test-featured-playlist-0\",
         \"tracks\" : {
-          \"href\" : \"https://api.spotify.com/v1/users/spotify/playlists/test-featured-playlist-0/tracks\",
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-0/playlists/test-featured-playlist-0/tracks\",
           \"total\" : 245
         },
         \"type\" : \"playlist\",
-        \"uri\" : \"spotify:user:spotify:playlist:test-featured-playlist-0\"
+        \"uri\" : \"spotify:user:test-user-0:playlist:test-featured-playlist-0\"
       }, {
         \"collaborative\" : false,
-        \"description\" : \"test-featured-playlist-1.\",
+        \"description\" : \"test-featured-playlist-1\",
         \"external_urls\" : {
-          \"spotify\" : \"http://open.spotify.com/user/test-featured-playlist-1./playlist/test-featured-playlist-1\"
+          \"spotify\" : \"http://open.spotify.com/user/test-user-1/playlist/test-featured-playlist-1\"
         },
-        \"href\" : \"https://api.spotify.com/v1/users/spotify__sverige/playlists/4uOEx4OUrkoGNZoIlWMUbO\",
+        \"href\" : \"https://api.spotify.com/v1/users/test-user-1/playlists/test-featured-playlist-1\",
         \"id\" : \"4uOEx4OUrkoGNZoIlWMUbO\",
         \"images\" : [ {
           \"height\" : 300,
-          \"url\" : \"https://i.scdn.co/image/24aa1d1b491dd529b9c03392f350740ed73438d8\",
+          \"url\" : \"https://i.scdn.co/image/test-url-1\",
           \"width\" : 300
         } ],
-        \"name\" : \"Upp och hoppa!\",
+        \"name\" : \"test-featured-playlist-1\",
         \"owner\" : {
           \"external_urls\" : {
-            \"spotify\" : \"http://open.spotify.com/user/spotify__sverige\"
+            \"spotify\" : \"http://open.spotify.com/user/test-user-1\"
           },
-          \"href\" : \"https://api.spotify.com/v1/users/spotify__sverige\",
-          \"id\" : \"spotify__sverige\",
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-1\",
+          \"id\" : \"test-user-1\",
           \"type\" : \"user\",
-          \"uri\" : \"spotify:user:spotify__sverige\"
+          \"uri\" : \"spotify:user:test-user-1\"
         },
         \"public\" : null,
-        \"snapshot_id\" : \"0j9Rcbt2KtCXEXKtKy/tnSL5r4byjDBOIVY1dn4S6GV73EEUgNuK2hU+QyDuNnXz\",
+        \"snapshot_id\" : \"0001/test-featured-playlist-1\",
         \"tracks\" : {
-          \"href\" : \"https://api.spotify.com/v1/users/spotify__sverige/playlists/4uOEx4OUrkoGNZoIlWMUbO/tracks\",
+          \"href\" : \"https://api.spotify.com/v1/users/test-user-1/playlists/test-featured-playlist-1/tracks\",
           \"total\" : 38
         },
         \"type\" : \"playlist\",
-        \"uri\" : \"spotify:user:spotify__sverige:playlist:4uOEx4OUrkoGNZoIlWMUbO\"
+        \"uri\" : \"spotify:user:test-user-1:playlist:test-featured-playlist-1\"
       } ],
       \"limit\" : 2,
       \"next\" : \"https://api.spotify.com/v1/browse/featured-playlists?country=SE&timestamp=2015-05-18T06:44:32&offset=2&limit=2\",
@@ -1200,6 +1199,144 @@ Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type
 https://developer.spotify.com/documentation/web-api/reference-beta/#endpoint-get-featured-playlists
 
 Obtained via: curl -X GET 'https://api.spotify.com/v1/search?q=doom%20metal&type=playlist&limit=5' -H 'Authorization: Bearer <insert *spotify-oauth2-token* here>' > search-playlist.txt
+")
+
+
+(defconst spotify-ert/data/connect-api/playlist-tracks
+  "{
+    \"href\": \"https://api.spotify.com/v1/users/test-user-0/playlists/test-playlist-id-0/tracks\",
+    \"items\": [
+      {
+        \"added_at\": \"2016-10-11T13:44:40Z\",
+        \"added_by\": {
+          \"external_urls\": {
+            \"spotify\": \"http://open.spotify.com/user/test-user-0\"
+          },
+          \"href\": \"https://api.spotify.com/v1/users/test-user-0\",
+          \"id\": \"test-user-0\",
+          \"type\": \"user\",
+          \"uri\": \"spotify:user:test-user-0\"
+        },
+        \"is_local\": false,
+        \"track\": {
+          \"album\": {
+            \"album_type\": \"single\",
+            \"artists\": [
+              {
+                \"external_urls\": {
+                  \"spotify\": \"https://open.spotify.com/artist/test-id-0\"
+                },
+                \"href\": \"https://api.spotify.com/v1/artists/test-id-0\",
+                \"id\": \"test-id-0\",
+                \"name\": \"test-artist-0\",
+                \"type\": \"artist\",
+                \"uri\": \"spotify:artist:test-id-0\"
+              }
+            ],
+            \"available_markets\": [
+              \"TW\",
+              \"UY\"
+            ],
+            \"external_urls\": {
+              \"spotify\": \"https://open.spotify.com/album/test-id-1\"
+            },
+            \"href\": \"https://api.spotify.com/v1/albums/test-id-1\",
+            \"id\": \"test-id-1\",
+            \"images\": [
+              {
+                \"height\": 640,
+                \"url\": \"https://i.scdn.co/image/test-image-id-0\",
+                \"width\": 640
+              },
+              {
+                \"height\": 300,
+                \"url\": \"https://i.scdn.co/image/test-image-id-1\",
+                \"width\": 300
+              },
+              {
+                \"height\": 64,
+                \"url\": \"https://i.scdn.co/image/test-image-id-2\",
+                \"width\": 64
+              }
+            ],
+            \"name\": \"test-album-0\",
+            \"type\": \"album\",
+            \"uri\": \"spotify:album:test-id-1\"
+          },
+          \"artists\": [
+            {
+              \"external_urls\": {
+                \"spotify\": \"https://open.spotify.com/artist/test-id-0\"
+              },
+              \"href\": \"https://api.spotify.com/v1/artists/test-id-0\",
+              \"id\": \"test-id-0\",
+              \"name\": \"test-artist-0\",
+              \"type\": \"artist\",
+              \"uri\": \"spotify:artist:test-id-0\"
+            },
+            {
+              \"external_urls\": {
+                \"spotify\": \"https://open.spotify.com/artist/test-id-1\"
+              },
+              \"href\": \"https://api.spotify.com/v1/artists/test-id-1\",
+              \"id\": \"test-id-1\",
+              \"name\": \"test-artist-1\",
+              \"type\": \"artist\",
+              \"uri\": \"spotify:artist:test-id-1\"
+            }
+          ],
+          \"available_markets\": [
+            \"AD\",
+            \"AR\",
+            \"TW\",
+            \"UY\"
+          ],
+          \"disc_number\": 1,
+          \"duration_ms\": 209453,
+          \"explicit\": false,
+          \"external_ids\": {
+            \"isrc\": \"test-isrc-0\"
+          },
+          \"external_urls\": {
+            \"spotify\": \"https://open.spotify.com/track/test-id-2\"
+          },
+          \"href\": \"https://api.spotify.com/v1/tracks/test-id-2\",
+          \"id\": \"test-id-2\",
+          \"name\": \"test-artist-2 (feat. test-artist-1)\",
+          \"popularity\": 85,
+          \"preview_url\": \"https://p.scdn.co/mp3-preview/test-url-0\",
+          \"track_number\": 1,
+          \"type\": \"track\",
+          \"uri\": \"spotify:track:test-id-2\"
+        }
+      },
+      {
+        \"added_at\": \"2016-10-11T13:44:40Z\",
+        \"added_by\": {
+          \"external_urls\": {
+            \"spotify\": \"http://open.spotify.com/user/test-user-0\"
+          },
+          \"href\": \"https://api.spotify.com/v1/users/test-user-0\",
+          \"id\": \"test-user-0\",
+          \"type\": \"user\",
+          \"uri\": \"spotify:user:test-user-0\"
+        },
+        \"is_local\": false
+      }
+    ],
+    \"limit\": 100,
+    \"next\": null,
+    \"offset\": 0,
+    \"previous\": null,
+    \"total\": 58
+  }"
+
+  "A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
+'/v1/playlists/{playlist-id}/tracks' endpoint.
+
+https://developer.spotify.com/documentation/web-api/reference-beta/#endpoint-get-playlists-tracks
+
+Obtained from Spotify documentation.
 ")
 
 

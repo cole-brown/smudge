@@ -25,6 +25,13 @@
 (require 'spotify-api)
 
 
+
+
+;; §-TODO-§ [2020-01-21]: make better docstrings for some of theses...
+
+
+
+
 ;;------------------------------------------------------------------------------
 ;; Settings, Vars, Helpers
 ;;------------------------------------------------------------------------------
@@ -314,8 +321,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
-    ;; §-TODO-§ [2020-01-15]: --now--
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/featured-playlists
+        nil)
 
+    (should (string= (spotify-get-message json-obj)
+                     "This is the test featured playlist data!")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/featured-playlists
+  ;;       nil)
+  ;;
+  ;;   (should (eq (spotify-get-message json-obj)
+  ;;               nil)))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -332,24 +356,21 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/playlist-tracks
+        nil)
 
+    (let ((tracks (spotify-get-playlist-tracks json-obj)))
+      (should (= (length tracks) 2))
+      (should (string= (spotify-get-track-artist-name (nth 0 tracks))
+                       "test-artist-0"))
 
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-get-search-playlist-items
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-get-search-playlist-items (json)
-;;   "Return the playlist items from the given search results JSON object."
-
-(ert-deftest spotify-ert/spotify-get-search-playlist-items ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
+      ;; It's the example data from the docs, and the 2nd item is pretty
+      ;; sparse... But should it be null now?
+      ;; That's the existing functionality, so we'll go with it for now.
+      (should (null (nth 1 tracks)))))
 
   (spotify-ert/spotify-api/teardown))
 
