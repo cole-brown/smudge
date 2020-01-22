@@ -25,13 +25,6 @@
 (require 'spotify-api)
 
 
-
-
-;; §-TODO-§ [2020-01-21]: make better docstrings for some of theses...
-
-
-
-
 ;;------------------------------------------------------------------------------
 ;; Settings, Vars, Helpers
 ;;------------------------------------------------------------------------------
@@ -226,7 +219,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;;   "Return the list of items from the given JSON object."
 
 (ert-deftest spotify-ert/spotify-get-items ()
-  "Test that this is a thing and something happens maybe.
+  "Test that something called 'items' is gotten from the json object.
 "
   (spotify-ert/spotify-api/setup)
 
@@ -258,7 +251,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;;   "Return track items from the given search results JSON object."
 
 (ert-deftest spotify-ert/spotify-get-search-track-items ()
-  "Test that this is a thing and something happens maybe.
+  "Test that track items can be obtained from search results.
 "
   (spotify-ert/spotify-api/setup)
 
@@ -289,7 +282,8 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;;   "Return playlist items from the given search results JSON object."
 
 (ert-deftest spotify-ert/spotify-get-search-playlist-items ()
-  "Test that this is a thing and something happens maybe.
+  "Test that something called 'items' can be gotten from search
+playlist results.
 "
   (spotify-ert/spotify-api/setup)
 
@@ -300,7 +294,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
         nil)
 
     ;; Get spotify-api using spotify-api-json?
-    (let* ((playlists (spotify-get-search-playlist-items json-obj)))
+    (let ((playlists (spotify-get-search-playlist-items json-obj)))
       ;; We have 'playlists' in our json-obj, and we have the right number...
       ;; so ok whatever.
       (should-not (null playlists))
@@ -317,7 +311,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;;   "Return the message from the featured playlists JSON object."
 
 (ert-deftest spotify-ert/spotify-get-message ()
-  "Test that this is a thing and something happens maybe.
+  "Test that 'message' is in featured playlist data and can be read.
 "
   (spotify-ert/spotify-api/setup)
 
@@ -352,7 +346,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;;   "Return the list of tracks from the given playlist JSON object."
 
 (ert-deftest spotify-ert/spotify-get-playlist-tracks ()
-  "Test that this is a thing and something happens maybe.
+  "Test that track objects can be gotten from a playlist tracks object.
 "
   (spotify-ert/spotify-api/setup)
 
@@ -383,7 +377,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;;   "Return the simplified album object from the given track JSON object."
 
 (ert-deftest spotify-ert/spotify-get-track-album ()
-  "Test that this is a thing and something happens maybe.
+  "Test that we can get album item from track object.
 "
   (spotify-ert/spotify-api/setup)
 
@@ -408,8 +402,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   ;;       nil)
   ;;
   ;;   (let ((album (spotify-get-track-album json-obj)))
-  ;;     (should (null (gethash 'name album)))
-  ;;     (should (null (gethash 'release_date album)))))
+  ;;     (should (null album))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -444,7 +437,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   ;;       nil)
   ;;
   ;;   (should (null (spotify-get-track-number json-obj)))
-  ;;   (should (null (gethash 'track_number json-obj))))
+  ;;   (should (null json-obj)))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -479,7 +472,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   ;;       nil)
   ;;
   ;;   (should (null (spotify-get-disc-number json-obj)))
-  ;;   (should (null (gethash 'disc_number json-obj))))
+  ;;   (should (null json-obj)))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -514,7 +507,7 @@ setup and especially `spotify-ert/setup/error-out-functions'.
   ;;       nil)
   ;;
   ;;   (should (null (spotify-get-track-duration json-obj)))
-  ;;   (should (null (gethash 'duration_ms json-obj))))
+  ;;   (should (null json-obj)))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -531,7 +524,26 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (= (gethash 'duration_ms json-obj) 142946))
+    (should (string= (spotify-get-track-duration-formatted json-obj)
+                     "2:22")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-track-duration json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -548,7 +560,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (string= (spotify-get-track-album-name json-obj)
+                     "Mandatory Fun")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-track-album-name json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -565,7 +595,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (eq (spotify-get-track-artist json-obj)
+                (nth 0 (gethash 'artists json-obj)))))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-track-artist json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -582,7 +630,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (string= (spotify-get-track-artist-name json-obj)
+                     "\"Weird Al\" Yankovic")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-track-artist-name json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -599,298 +665,25 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-is-track-playable
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-is-track-playable (json)
-;;   "Return whether the given track JSON object represents a playable track by
-;; the current user."
-
-(ert-deftest spotify-ert/spotify-is-track-playable ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-get-item-name
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-get-item-name (json)
-;;   "Return the name from the given track/album/artist JSON object."
-
-(ert-deftest spotify-ert/spotify-get-item-name ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-get-item-id
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-get-item-id (json)
-;;   "Return the id from the given JSON object."
-
-(ert-deftest spotify-ert/spotify-get-item-id ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-get-item-uri
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-get-item-uri (json)
-;;   "Return the uri from the given track/album/artist JSON object."
-
-(ert-deftest spotify-ert/spotify-get-item-uri ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-get-playlist-track-count
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-get-playlist-track-count (json)
-;;   "Return the number of tracks of the given playlist JSON object."
-
-(ert-deftest spotify-ert/spotify-get-playlist-track-count ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-get-playlist-owner-id
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-get-playlist-owner-id (json)
-;;   "Return the owner id of the given playlist JSON object."
-
-(ert-deftest spotify-ert/spotify-get-playlist-owner-id ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-search
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-search (type query page callback)
-;;   "Search artists, albums, tracks or playlists that match a keyword string,
-;; depending on the `type' argument."
-
-(ert-deftest spotify-ert/spotify-api-search ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-featured-playlists
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-featured-playlists (page callback)
-;;   "Return the given page of Spotify's featured playlists."
-
-(ert-deftest spotify-ert/spotify-api-featured-playlists ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-user-playlists
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-user-playlists (user-id page callback)
-;;   "Return the playlists for the given user."
-
-(ert-deftest spotify-ert/spotify-api-user-playlists ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-playlist-create
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-playlist-create (user-id name is-public callback)
-;;   "Create a new playlist with the given name for the given user."
-
-(ert-deftest spotify-ert/spotify-api-playlist-create ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-playlist-add-track
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-playlist-add-track (user-id playlist-id track-id callback)
-;;   "Add single track to playlist."
-
-(ert-deftest spotify-ert/spotify-api-playlist-add-track ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-format-id
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-format-id (type id)
-;;   "Wrap raw id to type if necessary."
-
-(ert-deftest spotify-ert/spotify-format-id ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-playlist-add-tracks
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-playlist-add-tracks (user-id playlist-id track-ids callback)
-;;   "Add tracks in list track-ids in playlist."
-
-(ert-deftest spotify-ert/spotify-api-playlist-add-tracks ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-playlist-follow
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-playlist-follow (playlist callback)
-;;   "Add the current user as a follower of a playlist."
-
-(ert-deftest spotify-ert/spotify-api-playlist-follow ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-playlist-unfollow
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-playlist-unfollow (playlist callback)
-;;   "Remove the current user as a follower of a playlist."
-
-(ert-deftest spotify-ert/spotify-api-playlist-unfollow ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-playlist-tracks
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-playlist-tracks (playlist page callback)
-;;   "Return the tracks of the given user's playlist."
-
-(ert-deftest spotify-ert/spotify-api-playlist-tracks ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-;;------------------------------------------------------------------------------
-;; Test: spotify-api-album-tracks
-;;------------------------------------------------------------------------------
-
-;; (defun spotify-api-album-tracks (album page callback)
-;;   "Return the tracks for the given album."
-
-(ert-deftest spotify-ert/spotify-api-album-tracks ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
+
+    (should (= (spotify-get-track-popularity json-obj)
+               49)))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-track-popularity json-obj))))
 
   (spotify-ert/spotify-api/teardown))
 
@@ -908,9 +701,461 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 "
   (spotify-ert/spotify-api/setup)
 
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
 
+    (should (string= (spotify-popularity-bar
+                      (spotify-get-track-popularity json-obj))
+                     "XXXX------")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (string= (spotify-popularity-bar
+  ;;                     (spotify-get-track-popularity json-obj))
+  ;;                    "XXXX------")))
 
   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-is-track-playable
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-is-track-playable (json)
+;;   "Return whether the given track JSON object represents a playable track by
+;; the current user."
+
+(ert-deftest spotify-ert/spotify-is-track-playable ()
+  "Test that this is a thing and something happens maybe.
+"
+  (spotify-ert/spotify-api/setup)
+
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
+
+    (should (eq (spotify-is-track-playable json-obj) t)))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-is-track-playable json-obj))))
+
+  (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-get-item-name
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-get-item-name (json)
+;;   "Return the name from the given track/album/artist JSON object."
+
+(ert-deftest spotify-ert/spotify-get-item-name ()
+  "Test that this is a thing and something happens maybe.
+"
+  (spotify-ert/spotify-api/setup)
+
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
+
+    (should (string= (spotify-get-item-name json-obj)
+                     "Foil")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-item-name json-obj))))
+
+  (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-get-item-id
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-get-item-id (json)
+;;   "Return the id from the given JSON object."
+
+(ert-deftest spotify-ert/spotify-get-item-id ()
+  "Test that this is a thing and something happens maybe.
+"
+  (spotify-ert/spotify-api/setup)
+
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
+
+    (should (string= (spotify-get-item-id json-obj)
+                     "test-track-id-0")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-item-id json-obj))))
+
+  (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-get-item-uri
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-get-item-uri (json)
+;;   "Return the uri from the given track/album/artist JSON object."
+
+(ert-deftest spotify-ert/spotify-get-item-uri ()
+  "Test that this is a thing and something happens maybe.
+"
+  (spotify-ert/spotify-api/setup)
+
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/track
+        nil)
+
+    (should (string= (spotify-get-item-uri json-obj)
+                     "spotify:track:test-track-uri-0")))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/track
+  ;;       nil)
+  ;;
+  ;;   (should (null json-obj))
+  ;;   (should (null (spotify-get-item-uri json-obj))))
+
+  (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-get-playlist-track-count
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-get-playlist-track-count (json)
+;;   "Return the number of tracks of the given playlist JSON object."
+
+(ert-deftest spotify-ert/spotify-get-playlist-track-count ()
+  "Test that we can get count of playlists in playlist search object.
+"
+  (spotify-ert/spotify-api/setup)
+
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/search-playlists
+        nil)
+
+    ;; Get a playlist from the playlist search...
+    (let* ((playlists (spotify-get-search-playlist-items json-obj))
+           (playlist (first playlists)))
+      (should-not (null json-obj))
+      (should-not (null playlists))
+      (should-not (null playlist))
+
+      ;; Now we can get count from the playlist.
+      (should-not (null (gethash 'tracks playlist)))
+      (should-not (null (gethash 'total (gethash 'tracks playlist))))
+      (should (= (spotify-get-playlist-track-count playlist)
+                 63))))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/search-playlists
+  ;;       nil)
+  ;;
+  ;;   ;; Get a playlist from the playlist search...
+  ;;   (let* ((playlists (spotify-get-search-playlist-items json-obj))
+  ;;          (playlist (first playlists)))
+  ;;     (should (null json-obj))
+  ;;     (should (null playlists))
+  ;;
+  ;;     ;; Now we can get count from the playlist.
+  ;;     (should (null (spotify-get-playlist-track-count playlist)))))
+
+  (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-get-playlist-owner-id
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-get-playlist-owner-id (json)
+;;   "Return the owner id of the given playlist JSON object."
+
+(ert-deftest spotify-ert/spotify-get-playlist-owner-id ()
+  "Test that we can get playlist owner id from a playlist object.
+"
+  (spotify-ert/spotify-api/setup)
+
+  (spotify-ert/util/with-json
+      ;; Choose either valid data or nil, depending on setup.
+      (if spotify-ert/mock/spotify-api-device-list/is-active
+          spotify-ert/data/connect-api/search-playlists
+        nil)
+
+    ;; Get a playlist from the playlist search...
+    (let* ((playlists (spotify-get-search-playlist-items json-obj))
+           (playlist (first playlists)))
+      (should-not (null json-obj))
+      (should-not (null playlists))
+      (should-not (null playlist))
+
+      ;; Now we can get the id.
+      (should-not (null (gethash 'owner playlist)))
+      (should (string= (spotify-get-playlist-owner-id playlist)
+                       "test-user-0"))))
+
+  ;; §-TODO-§ [2020-01-21]: This should probably not die.
+  ;; (setq spotify-ert/mock/spotify-api-device-list/is-active nil)
+  ;; (spotify-ert/util/with-json
+  ;;     ;; Choose either valid data or nil, depending on setup.
+  ;;     (if spotify-ert/mock/spotify-api-device-list/is-active
+  ;;         spotify-ert/data/connect-api/search-playlists
+  ;;       nil)
+  ;;
+  ;;   ;; Get a playlist from the playlist search...
+  ;;   (let* ((playlists (spotify-get-search-playlist-items json-obj))
+  ;;          (playlist (first playlists)))
+  ;;     (should (null json-obj))
+  ;;     (should (null playlists))
+  ;;
+  ;;     ;; Now we can get count from the playlist.
+  ;;     (should (null (spotify-get-playlist-track-count playlist)))))
+
+  (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-format-id
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-format-id (type id)
+;;   "Wrap raw id to type if necessary."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+(ert-deftest spotify-ert/spotify-format-id ()
+  "Test that we can format a type & id into a spotify id format.
+"
+  (spotify-ert/spotify-api/setup)
+
+  (should (string= (spotify-format-id 'user "test-user")
+                   "\"spotify:user:test-user\""))
+  (should (string= (spotify-format-id "user" "test-user")
+                   "\"spotify:user:test-user\""))
+
+  ;; id contains 'spotify': implies special format
+  (should (string= (spotify-format-id nil "here-is-spotify-hi")
+                   "\"here-is-spotify-hi\""))
+
+  ;; nils and empties not useful, really... We'd need it throwing better errors,
+  ;; maybe. Right now just an error if id is nil, otherwise it's happy.
+
+  (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-search
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-search (type query page callback)
+;;   "Search artists, albums, tracks or playlists that match a keyword string,
+;; depending on the `type' argument."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-search ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-featured-playlists
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-featured-playlists (page callback)
+;;   "Return the given page of Spotify's featured playlists."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-featured-playlists ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-user-playlists
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-user-playlists (user-id page callback)
+;;   "Return the playlists for the given user."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-user-playlists ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-playlist-create
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-playlist-create (user-id name is-public callback)
+;;   "Create a new playlist with the given name for the given user."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-playlist-create ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-playlist-add-track
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-playlist-add-track (user-id playlist-id track-id callback)
+;;   "Add single track to playlist."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-playlist-add-track ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-playlist-add-tracks
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-playlist-add-tracks (user-id playlist-id track-ids callback)
+;;   "Add tracks in list track-ids in playlist."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-playlist-add-tracks ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-playlist-follow
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-playlist-follow (playlist callback)
+;;   "Add the current user as a follower of a playlist."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-playlist-follow ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-playlist-unfollow
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-playlist-unfollow (playlist callback)
+;;   "Remove the current user as a follower of a playlist."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-playlist-unfollow ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-playlist-tracks
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-playlist-tracks (playlist page callback)
+;;   "Return the tracks of the given user's playlist."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-playlist-tracks ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
+
+
+;;------------------------------------------------------------------------------
+;; Test: spotify-api-album-tracks
+;;------------------------------------------------------------------------------
+
+;; (defun spotify-api-album-tracks (album page callback)
+;;   "Return the tracks for the given album."
+
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-album-tracks ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -920,14 +1165,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-recently-played (page callback)
 ;;   "Retrieve the list of recently played tracks."
 
-(ert-deftest spotify-ert/spotify-api-recently-played ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-recently-played ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -937,14 +1181,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-device-list (callback)
 ;;   "Call CALLBACK with the list of devices available for use with Spotify Connect."
 
-(ert-deftest spotify-ert/spotify-api-device-list ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-device-list ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -954,14 +1197,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-transfer-player (device-id &optional callback)
 ;;   "Transfer playback to DEVICE-ID and determine if it should start playing."
 
-(ert-deftest spotify-ert/spotify-api-transfer-player ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-transfer-player ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -971,14 +1213,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-set-volume (device-id percentage &optional callback)
 ;;   "Set the volume level to PERCENTAGE of max for DEVICE-ID."
 
-(ert-deftest spotify-ert/spotify-api-set-volume ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-set-volume ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -988,14 +1229,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-get-player-status (callback)
 ;;   "Get the Spotify Connect status of the currently active player."
 
-(ert-deftest spotify-ert/spotify-api-get-player-status ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-get-player-status ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -1005,14 +1245,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-play (&optional callback uri context)
 ;;   "Play a track. If no args, resume playing current track. Otherwise, play URI in CONTEXT."
 
-(ert-deftest spotify-ert/spotify-api-play ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-play ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -1022,14 +1261,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-pause (&optional callback)
 ;;   "Pause the currently playing track."
 
-(ert-deftest spotify-ert/spotify-api-pause ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-pause ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -1039,14 +1277,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-next (&optional callback)
 ;;   "Skip to the next track."
 
-(ert-deftest spotify-ert/spotify-api-next ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-next ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -1056,14 +1293,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-previous (&optional callback)
 ;;   "Skip to the previous track."
 
-(ert-deftest spotify-ert/spotify-api-previous ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-previous ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -1073,14 +1309,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-repeat (state &optional callback)
 ;;   "Set repeat of current track to STATE."
 
-(ert-deftest spotify-ert/spotify-api-repeat ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-repeat ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 ;;------------------------------------------------------------------------------
@@ -1090,17 +1325,13 @@ setup and especially `spotify-ert/setup/error-out-functions'.
 ;; (defun spotify-api-shuffle (state &optional callback)
 ;;   "Set repeat of current track to STATE."
 
-(ert-deftest spotify-ert/spotify-api-shuffle ()
-  "Test that this is a thing and something happens maybe.
-"
-  (spotify-ert/spotify-api/setup)
-
-
-
-  (spotify-ert/spotify-api/teardown))
-
-
-
+;; NOTE: Not sure about testing this right now. I think this would be more of a
+;; higher level/system test instead of a simple unit test.
+;; (ert-deftest spotify-ert/spotify-api-shuffle ()
+;;   "Test that this is a thing and something happens maybe.
+;; "
+;;   (spotify-ert/spotify-api/setup)
+;;   (spotify-ert/spotify-api/teardown))
 
 
 

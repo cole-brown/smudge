@@ -105,7 +105,7 @@
         \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
       },
       \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-      \"id\" : \"1234567890\",
+      \"id\" : \"test-track-id-0\",
       \"is_local\" : false,
       \"is_playable\" : true,
       \"name\" : \"Foil\",
@@ -345,7 +345,7 @@ https://developer.spotify.com/documentation/web-api/reference/object-model/#arti
        \"spotify\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\"
      },
      \"href\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
-     \"id\" : \"1234567890\",
+     \"id\" : \"test-track-id-0\",
      \"is_local\" : false,
      \"is_playable\" : true,
      \"name\" : \"Foil\",
@@ -353,7 +353,7 @@ https://developer.spotify.com/documentation/web-api/reference/object-model/#arti
      \"preview_url\" : \"https://open.spotify.com/user/spotify/playlist/1234567890\",
      \"track_number\" : 3,
      \"type\" : \"track\",
-     \"uri\" : \"spotify:track:1234567890\"
+     \"uri\" : \"spotify:track:test-track-uri-0\"
    }"
 "A sample (actual (-ish, editted/sanitized it)) return value from Spotify Connect API
 '/v1/me/player' endpoint, cut down to just a track object.

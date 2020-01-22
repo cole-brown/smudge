@@ -135,6 +135,8 @@ the parsed JSON response."
 ;;------------------------------------------------------------------------------
 ;; Getters
 ;;------------------------------------------------------------------------------
+;; §-TODO-§ [2020-01-22]: Getters out of spotify-api.el? Most look like they
+;; belong in spotify-api-json or spotify-connect anyways...
 
 (defun spotify-current-user (callback)
   "Returns saved `*spotify-user*' or gets from Spotify Connect
@@ -236,6 +238,14 @@ API and saves to `*spotify-user*', then returns it."
   (gethash 'popularity json))
 
 
+(defun spotify-popularity-bar (popularity)
+  "Return the popularity indicator bar proportional to the given parameter,
+which must be a number between 0 and 100."
+  (let ((num-bars (truncate (/ popularity 10))))
+    (concat (make-string num-bars ?X)
+            (make-string (- 10 num-bars) ?-))))
+
+
 ;; §-TODO-§ [2019-11-11]: use spotify-json to build requests?
 (defun spotify-is-track-playable (json)
   "Return whether the given track JSON object represents a playable track by
@@ -272,6 +282,10 @@ the current user."
   "Return the owner id of the given playlist JSON object."
   (spotify-get-item-id (gethash 'owner json)))
 
+
+(defun spotify-format-id (type id)
+  "Wrap raw id to type if necessary."
+   (if (string-match-p "spotify" id) (format "\"%s\"" id) (format "\"spotify:%s:%s\"" type id)))
 
 ;;------------------------------------------------------------------------------
 ;; Spotify Connect API endpoint calls
@@ -334,11 +348,6 @@ depending on the `type' argument."
 (defun spotify-api-playlist-add-track (user-id playlist-id track-id callback)
   "Add single track to playlist."
   (spotify-api-playlist-add-tracks user-id playlist-id (list track-id) callback))
-
-
-(defun spotify-format-id (type id)
-  "Wrap raw id to type if necessary."
-   (if (string-match-p "spotify" id) (format "\"%s\"" id) (format "\"spotify:%s:%s\"" type id)))
 
 
 (defun spotify-api-playlist-add-tracks (user-id playlist-id track-ids callback)
@@ -410,14 +419,6 @@ depending on the `type' argument."
                                      nil t))
      nil
      callback)))
-
-
-(defun spotify-popularity-bar (popularity)
-  "Return the popularity indicator bar proportional to the given parameter,
-which must be a number between 0 and 100."
-  (let ((num-bars (truncate (/ popularity 10))))
-    (concat (make-string num-bars ?X)
-            (make-string (- 10 num-bars) ?-))))
 
 
 (defun spotify-api-recently-played (page callback)
