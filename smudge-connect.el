@@ -50,7 +50,9 @@ Returns a JSON string in the format:
                       (format "\"player_repeating\":%s"
                               (if (string= (gethash 'repeat_state status) "off") "false" "true"))
                       "}")))
-         (smudge-controller-update-metadata json)
+         (progn
+           (smudge-cache-update-status status)
+           (smudge-controller-update-metadata json))
        (smudge-controller-update-metadata nil)))))
 
 (defmacro smudge-connect-when-device-active (body)
@@ -122,12 +124,15 @@ Returns a JSON string in the format:
   (smudge-connect-when-device-active
    (smudge-api-get-player-status
     (lambda (status)
-      (let ((volume (smudge-connect-get-volume status)))
-        (if (eq volume 0)
-            (smudge-api-set-volume (smudge-connect-get-device-id status) 100
-                                    (lambda (_) (message "Volume unmuted")))
-          (smudge-api-set-volume (smudge-connect-get-device-id status) 0
-                                  (lambda (_) (message "Volume muted")))))))))
+      (let* ((device-id      (smudge-connect-get-device-id status))
+             (current-volume (smudge-connect-get-volume    status))
+             (unmute-volume  (smudge-cache-get-volume      :id device-id 100)))
+        (if (eq current-volume 0)
+            ;; Unmute to cached volume or full blast if nothing cached.
+            (smudge-api-set-volume unmute-volume
+                                   (lambda (_) (message "Volume unmuted to %d%%" unmute-volume)))
+          (smudge-api-set-volume device-id 0
+                                 (lambda (_) (message "Volume muted")))))))))
 
 (defun smudge-connect-toggle-repeat ()
   "Toggle repeat for the current track."
@@ -151,6 +156,7 @@ Returns a JSON string in the format:
 (defun smudge-connect-get-volume (player-status)
   "Get the volume from PLAYER-STATUS of the currently playing device, if any."
   (when player-status
+    (smudge-cache-update-status player-status)
     (gethash 'volume_percent (gethash 'device player-status))))
 
 (defun smudge-connect--is-shuffling (player-status)
