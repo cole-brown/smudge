@@ -244,6 +244,19 @@ From `smudge-connect-player-status'.")
       (puthash :volume volume full-cache))))
 
 
+;;------------------------------------------------------------------------------
+;; Helpers: Misc
+;;------------------------------------------------------------------------------
+
+(defun test-smudge-cache--float= (x y)
+  "Test that floats X and Y are equal enough for float maths."
+  (or (= x y)
+      (< (/ (abs (- x y))
+            (max (abs x) (abs y)))
+         ;; fuzz factor
+         1.0e-6)))
+
+
 ;; ╔═════════════════════════════╤═══════════╤═════════════════════════════════╗
 ;; ╟─────────────────────────────┤ ERT TESTS ├─────────────────────────────────╢
 ;; ╠═════════════════════════╤═══╧═══════════╧════╤════════════════════════════╣
@@ -266,6 +279,38 @@ From `smudge-connect-player-status'.")
               (smudge-cache--time-keyword :status)))
   (should (eq :timestamp:test
               (smudge-cache--time-keyword :test))))
+
+
+;;------------------------------
+;; smudge-cache--get-data
+;;------------------------------
+
+(ert-deftest test-smudge-cache--get-data ()
+  "Test that `smudge-cache--get-data' puts a key/value pair, and also its
+timestamp pair, into a device's cache correctly."
+  ;; Create the cache with a device and some data.
+  (let* ((timestamp-key   (smudge-cache--time-keyword :volume))
+         (timestamp-value (smudge-cache--current-timestamp))
+         (data (list (cons :volume       42)
+                     (cons timestamp-key timestamp-value)))
+         (smudge-cache--data (list (cons test-smudge-cache--device-id
+                                         data)))
+         ;; This is what we're testing
+         (device-data (smudge-cache--get-data test-smudge-cache--device-id)))
+
+    ;; Should have something.
+    (should device-data)
+    (should (listp device-data))
+
+    ;; And it should be an alist with the proper values.
+    (let ((timestamp (alist-get timestamp-key device-data))
+          (volume    (alist-get :volume device-data)))
+      (should (test-smudge-cache--float= timestamp-value
+                                         timestamp))
+      (should (eq 42
+                  volume)))))
+
+
 
 ;; TODO: more tests
 

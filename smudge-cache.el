@@ -22,91 +22,84 @@
 (defvar smudge-cache--device nil
   "Alist of Device Names to Device IDs.")
 
-(defvar smudge-cache--status nil
-  "Alist of Device IDs to hash tables of cached values w/ timestamps.
+(defvar smudge-cache--data nil
+  "Alist of Device IDs to 'device data' (w/ timestamps).
 
-Hash-Table Keys & Values:
-  - `:volume' - integer
-  - `:status' - JSON hash-table player status
-
-Each key/value pair also has a twinned timestamp. The timestamp's key is created
-by `smudge-cache--time-keyword' and the value by
-`smudge-cache--current-timestamp', though other \"time of day\" values could be
-used. See: Info node `(elisp) Time of Day'.")
-;; TODO: should this be the simplified JSON created by `smudge-connect-player-status', or the full status?
-;;   - I think it should be the full status?
-
-;; NOTE: Using device's ID, so case sensitive comparison is ok. If using
-;; device's name, a case insensitive comparison should probably be performed instead.
-(defun smudge-cache--hash-test-string-cmp  (a b)
-  "Compare strings A and B for hash table."
-  ;; `compare-strings' returns t or integer.
-  ;; Convert that to a bool t/nil.
-  (eq t
-      ;; Compare the strings.
-      (compare-strings a nil nil
-                       b nil nil
-                       ;; "Ignore case" boolean.
-                       nil)))
-
-;; NOTE: Using device's ID, so case sensitive comparison is ok. If using
-;; device's name, a case insensitive comparison should be performed instead.
-(defun smudge-cache--hash-test-string-hash (keyword)
-  "Get a hashed value for the KEYWORD of the hash table."
-  (sxhash-equal keyword))
-
-;; String comparison hash table.
-(define-hash-table-test 'smudge-cache--hash-test-string
-  'smudge-cache--hash-test-string-cmp
-  'smudge-cache--hash-test-string-hash)
+'Device data' is an alist of keywords to values:
+  - `:volume'  - integer
+  - `:status'  - JSON hash-table player status
+  - timestamps - twinned to one of the above keywords
+    - keys:   keywords from `smudge-cache--time-keyword'
+    - values: floats from `smudge-cache--current-timestamp'
+      - Other \"time of day\" values could be used.
+        See: Info node `(elisp) Time of Day'.")
 
 (defun smudge-cache--time-keyword (keyword)
-  "Return timestamp keyword for KEYWORD's entry in `smudge-cache--status'."
+  "Return timestamp keyword for KEYWORD's entry in `smudge-cache--data'."
   (intern (concat ":timestamp"
                   (symbol-name keyword))))
 ;; (smudge-cache--time-keyword :volume)
 
-(defun smudge-cache--put-value (keyword value timestamp hash-table)
-  "Put KEYWORD == VALUE into the HASH-TABLE with TIMESTAMP.
-
-Timestamp will be under concatenated keyword: :timestamp + KEYWORD
-  example: `:volume' -> `:timestamp:volume'"
-  ;; Put the value...
-  (puthash keyword
-           value
-           hash-table)
-  ;; ...and put the value's timestamp.
-  (puthash (smudge-cache--time-keyword keyword)
-           timestamp
-           hash-table))
-
-(defun smudge-cache--make-hash-table (keyword value timestamp)
-  "Create a new hash table with VALUE and TIMESTAMP entries.
-
-Sets using `smudge-cache--put-value' so that KEYWORD gets corresponding
-timestamp keyword.
-
-Adds the hash table to the cache; returns the hash table."
-  (let ((cache (make-hash-table :test 'smudge-cache--hash-test-string)))
-    (smudge-cache--put-value keyword value timestamp cache)
-    cache))
-
 (defun smudge-cache--current-timestamp ()
-  "Return current time in the format used in the `smudge-cache--status'."
+  "Return current time in the format used in the `smudge-cache--data'."
   ;; Could use `float-time' or `current-time'.
   (float-time))
 ;; (smudge-cache--current-timestamp)
 
-(defun smudge-cache--get-device-cache (device-id &optional default)
-  "Get DEVICE-ID's cached hash table (w/ `:status', `:volume', etc).
+(defun smudge-cache--get-data (device-id &optional default)
+  "Get DEVICE-ID's cached data (w/ `:status', `:volume', etc).
 
 Returns DEFAULT if nothing is cached."
   (alist-get device-id
-             smudge-cache--status
+             smudge-cache--data
              default
              nil
              #'string=))
-;; (smudge-cache--get-device-cache smudge-cache-test--device-id)
+
+(defun smudge-cache--set-values (keyword value timestamp device-data-cache)
+  "Put KEYWORD == VALUE into the DEVICE-DATA-CACHE with TIMESTAMP.
+
+Timestamp's keyword will be from: (smudge-cache--time-keyword keyword)
+  example: `:volume' -> `:timestamp:volume'"
+  ;; Nothing to do? No cache and no value to set.
+  (cond ((and (null device-data-cache)
+              (null value))
+         nil)
+
+        ;; NOTE: Always act on both KEYWORD and its timestamp keyword!
+
+        ;; NOTE: The device data alist is keywords, so don't use `string=' for the test function.
+
+        ;; Create cache.
+        ((null device-data-cache)
+         (setq device-data-cache (list (cons keyword value)
+                                       (cons (smudge-cache--time-keyword keyword)
+                                             timestamp))))
+
+        ;; Delete from cache.
+        ((null value)
+         (setf (alist-get keyword
+                          device-data-cache
+                          nil
+                          'remove)
+               nil)
+         (setf (alist-get (smudge-cache--time-keyword keyword)
+                          device-data-cache
+                          nil
+                          'remove)
+               nil))
+
+        ;; Update cache.
+        (t
+         (setf (alist-get keyword
+                          device-data-cache)
+               value)
+         (setf (alist-get (smudge-cache--time-keyword keyword)
+                          device-data-cache)
+               value)))
+
+  ;; And return updated DEVICE-DATA-CACHE, which could be a new alist...
+  device-data-cache)
 
 (defun smudge-cache--get (device-id keyword &optional default)
   "Get CACHE's value for DEVICE-ID's KEYWORD.
@@ -115,12 +108,13 @@ can also exist in the `:status'.
 
 Returns DEFAULT if DEVICE-ID has nothing cached or if KEYWORD is not in
 DEVICE-ID's cached JSON hash-table."
-  (if-let* ((device-cache (smudge-cache--get-device-cache device-id default))
-            (value (gethash keyword device-cache)))
-      ;; Found; return the value.
-      value
-    ;; Not in `smudge-cache--status'; return DEFAULT.
-    default))
+  (let ((cached-assoc (assoc keyword
+                              (smudge-cache--get-data device-id default))))
+    (if (null cached-assoc)
+        ;; No keyword found in cache.
+        default
+      ;; Keyword was found; return value (even if nil).
+      (cdr cached-assoc))))
 ;; (smudge-cache--get smudge-cache-test--device-id :volume)
 ;; (smudge-cache--get smudge-cache-test--device-id :volume :dne)
 ;; (smudge-cache--get smudge-cache-test--device-id (smudge-cache--time-keyword :volume) :also-dne)
@@ -145,40 +139,25 @@ Updates timstamp in cache to now."
       (if (< (length plist) 2)
           (setq continue nil)
 
-        (let ((device-cache (smudge-cache--get-device-cache device-id))
+        (let ((device-cache (smudge-cache--get-data device-id))
               (keyword (pop plist))
               (value   (pop plist)))
+
           ;; Smudge hardly ever raises an error so just ignore invalid keys.
           (when (keywordp keyword)
-            ;; Create a new cache.
-            (cond ((null smudge-cache--status)
-                   (setq smudge-cache--status (list (cons device-id
-                                                  (smudge-cache--make-hash-table keyword
-                                                                                 value
-                                                                                 timestamp)))))
-
-                  ;; Create a new cache value for this DEVICE-ID.
-                  ((null device-cache)
-                   (push (cons device-id
-                               (smudge-cache--make-hash-table keyword
-                                                              value
-                                                              timestamp))
-                         smudge-cache--status))
-
-                  ;; Set/update DEVICE-ID's cache value.
-                  (t
-                   ;; Set/update the value w/ timestamp.
-                   (smudge-cache--put-value keyword
+            (setq device-cache
+                  (smudge-cache--set-values keyword
                                             value
                                             timestamp
-                                            device-cache)))
+                                            device-cache))
             (setq cache-updated t)))))
+
     ;; Return whether or not we updated a cache value.
     cache-updated))
-;; (setq smudge-cache--status nil)
-;; smudge-cache--status
+;; (setq smudge-cache--data nil)
+;; smudge-cache--data
 ;; (smudge-cache--set smudge-cache-test--device-id :status (smudge-cache-test--json-full))
-;; (length smudge-cache--status)
+;; (length smudge-cache--data)
 
 (defun smudge-cache--device-get (device-name &optional default)
   "Get device-id for DEVICE-NAME from the devices cache.
@@ -278,12 +257,11 @@ CALLBACK is a function."
   ;; Invoke callback.
   (when (functionp callback)
     (apply callback callback-args)))
-
-;; (setq smudge-cache--status nil)
-;; smudge-cache--status
+;; (setq smudge-cache--data nil)
+;; smudge-cache--data
 ;; (smudge-cache-update-status (smudge-cache-test--json-full) (lambda () (message "Hello there.")))
-;; (length smudge-cache--status)
-;; smudge-cache--status
+;; (length smudge-cache--data)
+;; smudge-cache--data
 
 (defun smudge-cache-get-status (device-type device)
   "Get DEVICE's status from the cache.
@@ -388,12 +366,13 @@ DEVICE should be a string - either the device's ID or the device's name,
 depending on DEVICE-TYPE.
 
 Will return non-nil if nothing cached."
-  (if-let ((volume (smudge-cache-get-volume device-type device)))
-      ;; We got something so it /should/ be a volume percentage.
-      (= volume 0)
-    ;; Don't have any info about the device so...
-    ;; assume it's inactive and not playing and thus "muted"?
-    t))
+  (let ((volume (smudge-cache-get-volume device-type device)))
+    (if (integerp volume)
+        ;; We got something so it /should/ be a volume percentage.
+        (= volume 0)
+      ;; Don't have any info about the device so...
+      ;; assume it's inactive and not playing and thus "muted"?
+      t)))
 ;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
 ;; (smudge-cache-is-muted :id smudge-cache-test--device-id)
 ;; (smudge-cache-test--force-volume smudge-cache-test--device-id 99)
