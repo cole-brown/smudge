@@ -60,7 +60,9 @@ Returns DEFAULT if nothing is cached."
   "Put KEYWORD == VALUE into the DEVICE-DATA-CACHE with TIMESTAMP.
 
 Timestamp's keyword will be from: (smudge-cache--time-keyword keyword)
-  example: `:volume' -> `:timestamp:volume'"
+  example: `:volume' -> `:timestamp:volume'
+
+Returns updated device data cache, which may not be DEVICE-DATA-CACHE anymore."
   ;; Nothing to do? No cache and no value to set.
   (cond ((and (null device-data-cache)
               (null value))
@@ -96,7 +98,7 @@ Timestamp's keyword will be from: (smudge-cache--time-keyword keyword)
                value)
          (setf (alist-get (smudge-cache--time-keyword keyword)
                           device-data-cache)
-               value)))
+               timestamp)))
 
   ;; And return updated DEVICE-DATA-CACHE, which could be a new alist...
   device-data-cache)

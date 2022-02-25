@@ -248,13 +248,19 @@ From `smudge-connect-player-status'.")
 ;; Helpers: Misc
 ;;------------------------------------------------------------------------------
 
-(defun test-smudge-cache--float= (x y)
-  "Test that floats X and Y are equal enough for float maths."
-  (or (= x y)
-      (< (/ (abs (- x y))
-            (max (abs x) (abs y)))
-         ;; fuzz factor
-         1.0e-6)))
+(defun test-smudge-cache--float= (x y &optional precision)
+  "Test that floats X and Y are equal enough for float maths.
+
+PRECISION should be a positive integer of the significant digits of X and Y.
+A good default is 6, but for our tests and `float-time' we'll use 13."
+  (let ((fuzz-factor (expt 10 (- (if (integerp precision)
+                                     precision
+                                   13)))))
+    (or (= x y)
+        (< (/ (abs (- x y))
+              (max (abs x) (abs y)))
+           fuzz-factor))))
+;; (test-smudge-cache--float= 1645809977.6945927 1645809978.6945927)
 
 
 ;; ╔═════════════════════════════╤═══════════╤═════════════════════════════════╗
@@ -309,6 +315,103 @@ timestamp pair, into a device's cache correctly."
                                          timestamp))
       (should (eq 42
                   volume)))))
+
+
+;;------------------------------
+;; smudge-cache--set-values
+;;------------------------------
+
+(ert-deftest test-smudge-cache--set-values ()
+  "Test that `smudge-cache--set-values' puts a key/value pair, and also its
+timestamp pair, into a device's cache correctly."
+  ;; Create the cache with a device and some data.
+  (let* ((timestamp-value        (smudge-cache--current-timestamp))
+         ;; Start off with null cache.
+         device-data)
+
+    (should-not device-data)
+
+    ;;---
+    ;; Set values into a null cache.
+    ;;---
+    (let ((key   :volume)
+          (value 42))
+      (setq device-data (smudge-cache--set-values key
+                                                  value
+                                                  timestamp-value
+                                                  device-data))
+      ;; Check returned alist is correct.
+      (should device-data)
+      (should (listp device-data))
+      (let ((timestamp    (alist-get (smudge-cache--time-keyword key) device-data))
+            (actual-value (alist-get key device-data)))
+        (should timestamp)
+        (should actual-value)
+        (should (test-smudge-cache--float= timestamp-value
+                                           timestamp))
+        (should (eq 42
+                    actual-value))))
+
+    ;;---
+    ;; Set other values into existing cache.
+    ;;---
+    (let ((key   :test-key)
+          (value :test-value))
+      (setq device-data (smudge-cache--set-values key
+                                                  value
+                                                  timestamp-value
+                                                  device-data))
+      ;; Check returned alist is correct.
+      (should device-data)
+      (should (listp device-data))
+      ;; Should still have volume from before.
+      (should (test-smudge-cache--float= timestamp-value
+                                         (alist-get (smudge-cache--time-keyword :volume)
+                                                    device-data)))
+      (should (eq 42
+                  (alist-get :volume device-data)))
+      ;; And we should have the new key/value.
+      (let ((timestamp    (alist-get (smudge-cache--time-keyword key) device-data))
+            (actual-value (alist-get key device-data)))
+        (should timestamp)
+        (should actual-value)
+        (should (test-smudge-cache--float= timestamp-value
+                                           timestamp))
+        (should (eq value actual-value))))
+
+    ;;---
+    ;; Update values in cache.
+    ;;---
+    (let ((key   :test-key)
+          (value '(hello "there"))
+          (new-timestamp-value (1+ timestamp-value)))
+      (setq device-data (smudge-cache--set-values key
+                                                  value
+                                                  new-timestamp-value
+                                                  device-data))
+      ;; Check returned alist is correct.
+      (should device-data)
+      (should (listp device-data))
+      ;; Should still have volume from before.
+      (should (test-smudge-cache--float= timestamp-value
+                                         (alist-get (smudge-cache--time-keyword :volume)
+                                                    device-data)))
+      (should (eq 42
+                  (alist-get :volume device-data)))
+      ;; And we should have the key updated to the new value & timestamp.
+      (let ((timestamp    (alist-get (smudge-cache--time-keyword key) device-data))
+            (actual-value (alist-get key device-data)))
+        (should timestamp)
+        (should actual-value)
+        ;; Timestamp should be updated.
+        (should-not (test-smudge-cache--float= timestamp-value
+                                               timestamp))
+        (should (test-smudge-cache--float= new-timestamp-value
+                                           timestamp))
+        ;; Value should be updated.
+        (should (listp actual-value))
+        (should (eq 'hello (nth 0 actual-value)))
+        (should (string= "there" (nth 1 actual-value)))))))
 
 
 
