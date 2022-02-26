@@ -270,7 +270,7 @@ A good default is 6, but for our tests and `float-time' we'll use 13."
 ;; ╚═════════════════════════╧════════════════════╧════════════════════════════╝
 
 ;;------------------------------------------------------------------------------
-;; Tests: Feature Helpers
+;; Tests: Time
 ;;------------------------------------------------------------------------------
 
 ;;------------------------------
@@ -286,6 +286,10 @@ A good default is 6, but for our tests and `float-time' we'll use 13."
   (should (eq :timestamp:test
               (smudge-cache--time-keyword :test))))
 
+
+;;------------------------------------------------------------------------------
+;; Tests: Smudge Data Cache accessors
+;;------------------------------------------------------------------------------
 
 ;;------------------------------
 ;; smudge-cache--get-data
@@ -414,8 +418,105 @@ timestamp pair, into a device's cache correctly."
         (should (string= "there" (nth 1 actual-value)))))))
 
 
+;;------------------------------
+;; TODO: smudge-cache--get
+;;------------------------------
+;; (smudge-cache--get smudge-cache-test--device-id :volume)
+;; (smudge-cache--get smudge-cache-test--device-id :volume :dne)
+;; (smudge-cache--get smudge-cache-test--device-id (smudge-cache--time-keyword :volume) :also-dne)
+;; (smudge-cache--get smudge-cache-test--device-id :status)
+;; (smudge-cache--get smudge-cache-test--device-id :status :jeff)
+;; (smudge-cache--get smudge-cache-test--device-id (smudge-cache--time-keyword :status))
 
-;; TODO: more tests
+;;------------------------------
+;; TODO: smudge-cache--set
+;;------------------------------
+;; (setq smudge-cache--data nil)
+;; smudge-cache--data
+;; (smudge-cache--set smudge-cache-test--device-id :status (smudge-cache-test--json-full))
+;; (length smudge-cache--data)
+
+
+;;------------------------------------------------------------------------------
+;; Tests: Smudge Device Cache accessors
+;;------------------------------------------------------------------------------
+
+;;------------------------------
+;; TODO: smudge-cache--device-get
+;;------------------------------
+;; (smudge-cache--device-get smudge-cache-test--device-name)
+
+;;------------------------------
+;; TODO: smudge-cache--device-set
+;;------------------------------
+
+
+;;------------------------------------------------------------------------------
+;; Tests: Smudge Device Name/ID helpers
+;;------------------------------------------------------------------------------
+
+;;------------------------------
+;; TODO: smudge-cache--device-name-from-status
+;;------------------------------
+;; (smudge-cache--device-name-from-status (smudge-cache-test--json-full))
+
+;;------------------------------
+;; TODO: smudge-cache--device-id-from-status
+;;------------------------------
+;; (smudge-cache--device-id-from-status (smudge-cache-test--json-full))
+
+;;------------------------------
+;; TODO: smudge-cache--device-id-from-type
+;;------------------------------
+;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
+;; (smudge-cache--device-id-from-type :name smudge-cache-test--device-name)
+
+
+;;------------------------------------------------------------------------------
+;; Tests: Smudge Cache API Functions
+;;------------------------------------------------------------------------------
+
+;;------------------------------
+;; TODO: smudge-cache-update-status
+;;------------------------------
+;; (setq smudge-cache--data nil)
+;; smudge-cache--data
+;; (smudge-cache-update-status (smudge-cache-test--json-full) (lambda () (message "Hello there.")))
+;; (length smudge-cache--data)
+;; smudge-cache--data
+
+;;------------------------------
+;; TODO: smudge-cache-get-status
+;;------------------------------
+;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
+;; (smudge-cache-get-status :id smudge-cache-test--device-id)
+;; (smudge-cache-get-status :name smudge-cache-test--device-name)
+
+;;------------------------------
+;; TODO: smudge-cache-update-volume
+;;------------------------------
+;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
+;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
+;; (smudge-cache-update-volume smudge-cache-test--device-id 55 (message "volume says hello"))
+
+;;------------------------------
+;; TODO: smudge-cache-get-volume
+;;------------------------------
+;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
+;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
+
+;;------------------------------
+;; TODO: smudge-cache-is-muted
+;;------------------------------
+;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
+;; (smudge-cache-is-muted :id smudge-cache-test--device-id)
+;; (smudge-cache-test--force-volume smudge-cache-test--device-id 99)
+;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
+;; (smudge-cache-is-muted :id smudge-cache-test--device-id)
+;; (smudge-cache-test--force-volume smudge-cache-test--device-id 0)
+;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
+;; (smudge-cache-is-muted :id smudge-cache-test--device-id)
+
 
 (provide 'test-smudge-cache)
 ;;; test-smudge-cache.el ends here
