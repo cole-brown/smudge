@@ -28,7 +28,7 @@
     \"is_active\" : true,
     \"is_private_session\" : false,
     \"is_restricted\" : false,
-    \"name\" : \"smudge-cache-test-device\",
+    \"name\" : \"test-smudge-cache-device\",
     \"type\" : \"Computer\",
     \"volume_percent\" : 58
   },
@@ -639,14 +639,48 @@ timestamp pair, into a device's cache correctly."
 ;;------------------------------------------------------------------------------
 
 ;;------------------------------
-;; TODO: smudge-cache--device-name-from-status
+;; smudge-cache--device-name-from-status
 ;;------------------------------
-;; (smudge-cache--device-name-from-status (smudge-cache-test--json-full))
+(ert-deftest test-smudge-cache--device-name-from-status ()
+  "Test that `smudge-cache--device-name-from-status' can get the device name."
+
+  ;; Expected name should be a string.
+  (should (stringp test-smudge-cache--device-name))
+
+  (let ((status (test-smudge-cache--json-full)))
+    (should status)
+    (should (hash-table-p status))
+    (should-not (hash-table-empty-p status))
+
+    ;; Get and compare.
+    (let ((device-name (smudge-cache--device-name-from-status status)))
+      (should device-name)
+      (should (stringp device-name))
+      (should (string= test-smudge-cache--device-name
+                       device-name)))))
+
 
 ;;------------------------------
-;; TODO: smudge-cache--device-id-from-status
+;; smudge-cache--device-id-from-status
 ;;------------------------------
-;; (smudge-cache--device-id-from-status (smudge-cache-test--json-full))
+(ert-deftest test-smudge-cache--device-id-from-status ()
+  "Test that `smudge-cache--device-id-from-status' can get the device id."
+
+  ;; Expected id should be a string.
+  (should (stringp test-smudge-cache--device-id))
+
+  (let ((status (test-smudge-cache--json-full)))
+    (should status)
+    (should (hash-table-p status))
+    (should-not (hash-table-empty-p status))
+
+    ;; Get and compare.
+    (let ((device-id (smudge-cache--device-id-from-status status)))
+      (should device-id)
+      (should (stringp device-id))
+      (should (string= test-smudge-cache--device-id
+                       device-id)))))
+
 
 ;;------------------------------
 ;; TODO: smudge-cache--device-id-from-type
