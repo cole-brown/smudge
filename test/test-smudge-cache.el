@@ -588,8 +588,50 @@ timestamp pair, into a device's cache correctly."
       (should (string= test-smudge-cache--device-id device-id)))))
 
 ;;------------------------------
-;; TODO: smudge-cache--device-set
+;; smudge-cache--device-set
 ;;------------------------------
+(ert-deftest test-smudge-cache--device-set ()
+  "Test that `smudge-cache--device-set' can set device id/name into device cache."
+
+  ;; ID and Name are both strings.
+  (should (stringp test-smudge-cache--device-id))
+  (should (stringp test-smudge-cache--device-name))
+
+  ;;------------------------------
+  ;; Test setting device cache values.
+  ;;------------------------------
+  (let* ((expected-device-id   "expected-device-id")
+         (expected-device-name "expected-device-name")
+         ;; Start off with null device cache.
+         smudge-cache--device)
+
+    (should-not smudge-cache--device)
+
+    ;;---
+    ;; Set first entry.
+    ;;---
+    (smudge-cache--device-set expected-device-name
+                              expected-device-id)
+    (should smudge-cache--device)
+    (let ((device-id (smudge-cache--device-get expected-device-name)))
+      (should (stringp device-id))
+      (should (string= expected-device-id device-id)))
+
+    ;;---
+    ;; Set second entry.
+    ;;---
+    (smudge-cache--device-set test-smudge-cache--device-name
+                              test-smudge-cache--device-id)
+
+    (should smudge-cache--device)
+    ;; First should still be there.
+    (let ((device-id (smudge-cache--device-get expected-device-name)))
+      (should (stringp device-id))
+      (should (string= expected-device-id device-id)))
+    ;; And second should be there now too.
+    (let ((device-id (smudge-cache--device-get test-smudge-cache--device-name)))
+      (should (stringp device-id))
+      (should (string= test-smudge-cache--device-id device-id)))))
 
 
 ;;------------------------------------------------------------------------------
