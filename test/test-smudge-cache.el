@@ -557,9 +557,35 @@ timestamp pair, into a device's cache correctly."
 ;;------------------------------------------------------------------------------
 
 ;;------------------------------
-;; TODO: smudge-cache--device-get
+;; smudge-cache--device-get
 ;;------------------------------
-;; (smudge-cache--device-get smudge-cache-test--device-name)
+(ert-deftest test-smudge-cache--device-get ()
+  "Test that `smudge-cache--device-get' can get a device-id from a device-name."
+
+  ;; ID and Name are both strings.
+  (should (stringp test-smudge-cache--device-id))
+  (should (stringp test-smudge-cache--device-name))
+
+  ;;------------------------------
+  ;; Create the cache with some data.
+  ;;------------------------------
+  (let* ((expected-device-id   "expected-device-id")
+         (expected-device-name "expected-device-name")
+         (smudge-cache--device (list (cons expected-device-name
+                                           expected-device-id)
+                                     (cons test-smudge-cache--device-name
+                                           test-smudge-cache--device-id))))
+
+    ;;------------------------------
+    ;; Test getting from cache.
+    ;;------------------------------
+    (let ((device-id (smudge-cache--device-get expected-device-name)))
+      (should (stringp device-id))
+      (should (string= expected-device-id device-id)))
+
+    (let ((device-id (smudge-cache--device-get test-smudge-cache--device-name)))
+      (should (stringp device-id))
+      (should (string= test-smudge-cache--device-id device-id)))))
 
 ;;------------------------------
 ;; TODO: smudge-cache--device-set
