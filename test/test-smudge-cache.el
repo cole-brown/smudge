@@ -330,13 +330,12 @@ timestamp pair, into a device's cache correctly."
 timestamp pair, into a device's cache correctly."
   ;; Create the cache with a device and some data.
   (let* ((timestamp-value        (smudge-cache--current-timestamp))
-         ;; Start off with null cache.
          device-data)
 
     (should-not device-data)
 
     ;;---
-    ;; Set values into a null cache.
+    ;; Set values.
     ;;---
     (let ((key   :volume)
           (value 42))
@@ -419,14 +418,70 @@ timestamp pair, into a device's cache correctly."
 
 
 ;;------------------------------
-;; TODO: smudge-cache--get
+;; smudge-cache--get
 ;;------------------------------
-;; (smudge-cache--get smudge-cache-test--device-id :volume)
-;; (smudge-cache--get smudge-cache-test--device-id :volume :dne)
-;; (smudge-cache--get smudge-cache-test--device-id (smudge-cache--time-keyword :volume) :also-dne)
-;; (smudge-cache--get smudge-cache-test--device-id :status)
-;; (smudge-cache--get smudge-cache-test--device-id :status :jeff)
-;; (smudge-cache--get smudge-cache-test--device-id (smudge-cache--time-keyword :status))
+(ert-deftest test-smudge-cache--get ()
+  "Test that `smudge-cache--get' puts a key/value pair, and also its
+timestamp pair, into a device's cache correctly."
+  ;;------------------------------
+  ;; Create the cache with some data.
+  ;;------------------------------
+  (let* ((expected-timestamp (smudge-cache--current-timestamp))
+         (expected-volume    42)
+         (expected-test-data '(hello "there"))
+         ;; Start with null cache.
+         smudge-cache--data
+         device-data)
+    ;;---
+    ;; Create Device Cache's data.
+    ;;---
+    (setq device-data (smudge-cache--set-values :volume
+                                                expected-volume
+                                                expected-timestamp
+                                                device-data))
+    (setq device-data (smudge-cache--set-values :test-key
+                                                expected-test-data
+                                                expected-timestamp
+                                                device-data))
+    ;;---
+    ;; Set Device Cache into `smudge-cache--data'.
+    ;;---
+    (should-not smudge-cache--data)
+    (setq smudge-cache--data (list (cons test-smudge-cache--device-id
+                                         device-data)))
+
+    ;;------------------------------
+    ;; Test getting data from cache.
+    ;;------------------------------
+    (let* ((key       :volume)
+           (timestamp (smudge-cache--get test-smudge-cache--device-id
+                                         (smudge-cache--time-keyword key)))
+           (volume    (smudge-cache--get test-smudge-cache--device-id
+                                         key)))
+        (should timestamp)
+        (should volume)
+        (should (test-smudge-cache--float= expected-timestamp
+                                           timestamp))
+        (should (eq expected-volume
+                    volume)))
+
+    (let* ((key       :test-key)
+           (timestamp (smudge-cache--get test-smudge-cache--device-id
+                                         (smudge-cache--time-keyword key)))
+           (test-data (smudge-cache--get test-smudge-cache--device-id
+                                         key)))
+      (should timestamp)
+      (should test-data)
+      (should (test-smudge-cache--float= expected-timestamp
+                                         timestamp))
+      (should (listp test-data))
+      (should (symbolp (nth 0 test-data)))
+      (should (eq (nth 0 expected-test-data)
+                  (nth 0 test-data)))
+      (should (stringp (nth 1 test-data)))
+      (should (string= (nth 1 expected-test-data)
+                       (nth 1 test-data))))))
+
 
 ;;------------------------------
 ;; TODO: smudge-cache--set
