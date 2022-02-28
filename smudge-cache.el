@@ -136,10 +136,14 @@ Updates timstamp in cache to now."
         (let ((device-cache (smudge-cache--get-data device-id))
               (keyword (pop plist))
               (value   (pop plist)))
-
           ;; Smudge hardly ever raises an error so just ignore invalid keys.
           (when (keywordp keyword)
-            (setq device-cache
+            ;; Updated `device-id' cache to new values.
+            (setf (alist-get device-id
+                             smudge-cache--data
+                             nil
+                             nil
+                             #'string=)
                   (smudge-cache--set-values keyword
                                             value
                                             timestamp

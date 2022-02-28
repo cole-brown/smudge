@@ -263,6 +263,19 @@ A good default is 6, but for our tests and `float-time' we'll use 13."
 ;; (test-smudge-cache--float= 1645809977.6945927 1645809978.6945927)
 
 
+(defun test-smudge-cache--float-within (x y &optional tolerance)
+  "Test that the absolute value of the difference between X and Y is in TOLERANCE.
+
+TOLERANCE should be a positive number. Defaults to 1.0."
+  (let ((tolerance (if (numberp tolerance)
+                       tolerance
+                     1.0)))
+    (or (= x y)
+        (< (abs (- x y)) tolerance))))
+;; (test-smudge-cache--float-within 5000.0 5000.4738)
+;; (test-smudge-cache--float-within 5000.0 5040.4738)
+
+
 ;; ╔═════════════════════════════╤═══════════╤═════════════════════════════════╗
 ;; ╟─────────────────────────────┤ ERT TESTS ├─────────────────────────────────╢
 ;; ╠═════════════════════════╤═══╧═══════════╧════╤════════════════════════════╣
@@ -484,12 +497,59 @@ timestamp pair, into a device's cache correctly."
 
 
 ;;------------------------------
-;; TODO: smudge-cache--set
+;; smudge-cache--set
 ;;------------------------------
-;; (setq smudge-cache--data nil)
-;; smudge-cache--data
-;; (smudge-cache--set smudge-cache-test--device-id :status (smudge-cache-test--json-full))
-;; (length smudge-cache--data)
+(ert-deftest test-smudge-cache--set ()
+  "Test that `smudge-cache--set' puts a key/value pair, and also its
+timestamp pair, into a device's cache correctly."
+  ;;------------------------------
+  ;; Create the cache with some data.
+  ;;------------------------------
+  (let* ((expected-volume 42)
+         (expected-status (test-smudge-cache--json-full))
+         (approx-timestamp (smudge-cache--current-timestamp))
+         ;; Start with null cache.
+         smudge-cache--data)
+
+    ;;------------------------------
+    ;; Test: Create Device Cache's data.
+    ;;------------------------------
+    (should (smudge-cache--set test-smudge-cache--device-id
+                               :volume expected-volume
+                               :status expected-status))
+    (should smudge-cache--data)
+
+    ;;------------------------------
+    ;; Verify: Get values to ensure they were set correctly.
+    ;;------------------------------
+    (let* ((key       :volume)
+           (timestamp (smudge-cache--get test-smudge-cache--device-id
+                                         (smudge-cache--time-keyword key)))
+           (volume    (smudge-cache--get test-smudge-cache--device-id
+                                         key)))
+      (should timestamp)
+      (should (floatp timestamp))
+      (should volume)
+      ;; Our approximate timestamp should be within a second of the `smudge-cache--set' timestamp.
+      (should (test-smudge-cache--float-within approx-timestamp
+                                               timestamp))
+      (should (eq expected-volume
+                  volume)))
+
+    (let* ((key       :status)
+           (timestamp (smudge-cache--get test-smudge-cache--device-id
+                                         (smudge-cache--time-keyword key)))
+           (status    (smudge-cache--get test-smudge-cache--device-id
+                                         key)))
+      (should timestamp)
+      (should (floatp timestamp))
+      (should status)
+      ;; Our approximate timestamp should be within a second of the `smudge-cache--set' timestamp.
+      (should (test-smudge-cache--float-within approx-timestamp
+                                               timestamp))
+      ;; Expect to get back the same exact hash table.
+      (should (eq expected-status
+                  status)))))
 
 
 ;;------------------------------------------------------------------------------
