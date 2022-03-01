@@ -235,13 +235,27 @@ From `smudge-connect-player-status'.")
 
 (defun test-smudge-cache--force-volume (device-id volume)
   "Set DEVICE-ID's :volume and :status->\"device\"->\"volume_percent\" to VOLUME."
-  (when-let ((full-cache (smudge-cache--get-device-cache device-id)))
-    (when-let* ((status-cache (gethash :status full-cache))
-                (device-cache (gethash 'device status-cache)))
-      (puthash 'volume volume device-cache))
+  (let ((full-cache (smudge-cache--get-data device-id))
+        status-cache
+        ;; The plist of args to send to `smudge-cache--set' for the forced update.
+        args)
+    (when full-cache
+      (setq status-cache (alist-get :status full-cache))
+      ;; Add device status w/ updated volume if we have device status.
+      (when status-cache
+        (puthash 'volume volume
+                 (gethash 'device status-cache))
+        (push status-cache args)
+        (push :status args))
 
-    (when (gethash :volume full-cache)
-      (puthash :volume volume full-cache))))
+      ;; Add volume if we have it separately in the full device cache.
+      (when (assoc :volume full-cache)
+        (push volume args)
+        (push :volume args))
+
+      ;; Set updated volumes to the cache.
+      (when args
+        (apply #'smudge-cache--set device-id args)))))
 
 
 ;;------------------------------------------------------------------------------
@@ -783,70 +797,149 @@ timestamp pair, into a device's cache correctly."
   "Test that `smudge-cache-update-status' updates the device's data.
 
 Should update both status and volume."
+  (let (smudge-cache--data
+        (volume-overwrite 99))
 
-  ;;------------------------------
-  ;; Update empty cache.
-  ;;------------------------------
-  (let* (smudge-cache--data
-         callback-called?
-         (expected-status (test-smudge-cache--json-full))
-         (callback (lambda (json-status &rest arg)
-                     "Sanity check JSON-STATUS, set `callback-called?' to ARG or t."
-                     (should json-status)
-                     (should (hash-table-p json-status))
-                     (should-not (hash-table-empty-p json-status))
-                     (should (eq expected-status json-status))
-                     (setq callback-called? (or arg t)))))
+    ;;------------------------------
+    ;; Update empty cache.
+    ;;------------------------------
+    (let* (callback-called?
+           (expected-status (test-smudge-cache--json-full))
+           (callback (lambda (json-status &rest args)
+                       "Sanity check JSON-STATUS, set `callback-called?' to ARGS or t."
+                       (should json-status)
+                       (should (hash-table-p json-status))
+                       (should-not (hash-table-empty-p json-status))
+                       (should (eq expected-status json-status))
+                       (setq callback-called? (or args t)))))
 
-    ;;---
-    ;; Verify data pre-update.
-    ;;---
-    (should-not smudge-cache--data)
+      ;;---
+      ;; Verify data pre-update.
+      ;;---
+      (should-not smudge-cache--data)
 
-    (should expected-status)
-    (should (hash-table-p expected-status))
-    (should-not (hash-table-empty-p expected-status))
+      (should expected-status)
+      (should (hash-table-p expected-status))
+      (should-not (hash-table-empty-p expected-status))
 
-    ;;---
-    ;; Update.
-    ;;---
-    ;; Expect status and volume to be set with same timestamp.
-    (smudge-cache-update-status expected-status callback)
+      ;;---
+      ;; Update.
+      ;;---
+      ;; Expect status and volume to be set with same timestamp.
+      (smudge-cache-update-status expected-status callback)
 
-    ;;---
-    ;; Verify data post-update.
-    ;;---
-    ;; Callback called?
-    (should (eq callback-called? t))
+      ;;---
+      ;; Verify data post-update.
+      ;;---
+      ;; Callback called?
+      (should (eq callback-called? t))
 
-    (should smudge-cache--data)
+      (should smudge-cache--data)
 
-    ;; Status set?
-    (let ((actual-status (smudge-cache--get test-smudge-cache--device-id :status)))
-      (should actual-status)
-      (should (hash-table-p actual-status))
-      (should-not (hash-table-empty-p actual-status))
-      (should (eq expected-status
-                  actual-status)))
+      ;; Status set?
+      (let ((actual-status (smudge-cache--get test-smudge-cache--device-id :status)))
+        (should actual-status)
+        (should (hash-table-p actual-status))
+        (should-not (hash-table-empty-p actual-status))
+        (should (eq expected-status
+                    actual-status)))
 
-    ;; Volume set?
-    (let ((actual-volume (smudge-cache--get test-smudge-cache--device-id :volume)))
-      (should actual-volume)
-      (should (integerp actual-volume))
-      (should (> actual-volume 0))
-      (should (= (gethash 'volume_percent (gethash 'device expected-status))
-                 actual-volume)))
+      ;; Volume set?
+      (let ((actual-volume (smudge-cache--get test-smudge-cache--device-id :volume)))
+        (should actual-volume)
+        (should (integerp actual-volume))
+        (should (> actual-volume 0))
+        (should (= (gethash 'volume_percent (gethash 'device expected-status))
+                   actual-volume))
+        ;; And make sure it's not what we will change it to soon.
+        (should-not (= actual-volume volume-overwrite)))
 
-    ;; Timestamps set?
-    (let ((timestamp-volume (smudge-cache--get test-smudge-cache--device-id
-                                               (smudge-cache--time-keyword :volume)))
-          (timestamp-status (smudge-cache--get test-smudge-cache--device-id
-                                               (smudge-cache--time-keyword :status))))
-      (should timestamp-volume)
-      (should timestamp-status)
-      (should (floatp timestamp-volume))
-      (should (floatp timestamp-status))
-      (should (test-smudge-cache--float= timestamp-volume timestamp-status)))))
+      ;; Timestamps set?
+      (let ((timestamp-volume (smudge-cache--get test-smudge-cache--device-id
+                                                 (smudge-cache--time-keyword :volume)))
+            (timestamp-status (smudge-cache--get test-smudge-cache--device-id
+                                                 (smudge-cache--time-keyword :status))))
+        (should timestamp-volume)
+        (should timestamp-status)
+        (should (floatp timestamp-volume))
+        (should (floatp timestamp-status))
+        (should (test-smudge-cache--float= timestamp-volume timestamp-status))))
+
+    ;;------------------------------
+    ;; Change volume in current status so we know when we have a new status.
+    ;;------------------------------
+    (test-smudge-cache--force-volume test-smudge-cache--device-id
+                                     volume-overwrite)
+
+    ;;------------------------------
+    ;; Update cache with existing status/volume for device.
+    ;;------------------------------
+    (let* (callback-called?
+           (expected-status (test-smudge-cache--json-full))
+           (callback (lambda (json-status &rest arg)
+                       "Sanity check JSON-STATUS, set `callback-called?' to ARG or t."
+                       (should json-status)
+                       (should (hash-table-p json-status))
+                       (should-not (hash-table-empty-p json-status))
+                       (should (eq expected-status json-status))
+                       (setq callback-called? (or arg t)))))
+
+      ;;---
+      ;; Verify data pre-update.
+      ;;---
+      ;; Should already have something this time.
+      (should smudge-cache--data)
+
+      (should expected-status)
+      (should (hash-table-p expected-status))
+      (should-not (hash-table-empty-p expected-status))
+
+      ;;---
+      ;; Update.
+      ;;---
+      ;; Expect status and volume to be set with same timestamp.
+      (smudge-cache-update-status expected-status callback :test-arg)
+
+      ;;---
+      ;; Verify data post-update.
+      ;;---
+      ;; Callback called w/ correct arg?
+      (should callback-called?)
+      (should (listp callback-called?))
+      (should (= 1 (length callback-called?)))
+      (should (eq :test-arg
+                  (car callback-called?)))
+
+      (should smudge-cache--data)
+
+      ;; Status set?
+      (let ((actual-status (smudge-cache--get test-smudge-cache--device-id :status)))
+        (should actual-status)
+        (should (hash-table-p actual-status))
+        (should-not (hash-table-empty-p actual-status))
+        (should (eq expected-status
+                    actual-status)))
+
+      ;; Volume set?
+      (let ((actual-volume (smudge-cache--get test-smudge-cache--device-id :volume)))
+        (should actual-volume)
+        (should (integerp actual-volume))
+        (should (> actual-volume 0))
+        (should (= (gethash 'volume_percent (gethash 'device expected-status))
+                   actual-volume))
+        ;; And make sure it's not what we change it to - should be back to the hard-coded value.
+        (should-not (= actual-volume volume-overwrite)))
+
+      ;; Timestamps set?
+      (let ((timestamp-volume (smudge-cache--get test-smudge-cache--device-id
+                                                 (smudge-cache--time-keyword :volume)))
+            (timestamp-status (smudge-cache--get test-smudge-cache--device-id
+                                                 (smudge-cache--time-keyword :status))))
+        (should timestamp-volume)
+        (should timestamp-status)
+        (should (floatp timestamp-volume))
+        (should (floatp timestamp-status))
+        (should (test-smudge-cache--float= timestamp-volume timestamp-status))))))
 
 
 ;;------------------------------
