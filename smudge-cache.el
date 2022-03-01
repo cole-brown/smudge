@@ -226,8 +226,11 @@ depending on DEVICE-TYPE."
 
 STATUS should be a JSON hash-table.
 
-CALLBACK should be a function or nil. Calls CALLBACK with CALLBACK-ARGS if
-CALLBACK is a function."
+CALLBACK should be a function or nil.
+
+CALLBACK functions should have params for STATUS and any CALLBACK-ARGS sent.
+That is, it should be compatible with calling via `apply':
+  (apply CALLBACK STATUS CALLBACK-ARGS)"
   (let* ((device-id (smudge-cache--device-id-from-status status))
          (volume    (gethash 'volume_percent (gethash 'device status)))
          ;; Don't update cached volume if muted.
@@ -243,9 +246,9 @@ CALLBACK is a function."
                          (when update-volume :volume)
                          (when update-volume volume))))
 
-  ;; Invoke callback.
+  ;; Invoke callback w/ status and its args.
   (when (functionp callback)
-    (apply callback callback-args)))
+    (apply callback status callback-args)))
 
 (defun smudge-cache-get-status (device-type device)
   "Get DEVICE's status from the cache.
