@@ -264,7 +264,7 @@ A good default is 6, but for our tests and `float-time' we'll use 13."
 
 
 (defun test-smudge-cache--float-within (x y &optional tolerance)
-  "Test that the absolute value of the difference between X and Y is in TOLERANCE.
+  "The absolute value of the difference between X and Y less than TOLERANCE.
 
 TOLERANCE should be a positive number. Defaults to 1.0."
   (let ((tolerance (if (numberp tolerance)
@@ -274,6 +274,77 @@ TOLERANCE should be a positive number. Defaults to 1.0."
         (< (abs (- x y)) tolerance))))
 ;; (test-smudge-cache--float-within 5000.0 5000.4738)
 ;; (test-smudge-cache--float-within 5000.0 5040.4738)
+
+
+;;------------------------------------------------------------------------------
+;; Helpers: Smudge Caches
+;;------------------------------------------------------------------------------
+
+(defmacro test-smudge-cache-device-let (id-name-pairs &rest body)
+  "Lexically define `smudge-cache--device' and ID-NAME-PAIRS then run BODY.
+
+ID-NAME-PAIRS should be an alist of symbols to let-bind to strings:
+   '((device-id-00-symbol \"device-id-00-string\")
+     (device-name-00-symbol \"device-name-00\")
+     ...)
+
+`smudge-cache--device' will always include:
+   `test-smudge-cache--device-id' -> `test-smudge-cache--device-name'
+
+The id & name strings in ID-NAME-PAIRS will be added to `smudge-cache--device'
+after those.
+
+Example:
+  (test-smudge-cache-device-let
+      ((expected-device-id   \"expected-device-id\")
+       (expected-device-name \"expected-device-name\"))
+   (message \"Hello, %s.\" expected-device-name))"
+  (declare (indent 1))
+
+  (let (devices-to-add)
+    ;;------------------------------
+    ;; Process let bindings into id/name strings for cache?
+    ;;------------------------------
+    (when id-name-pairs
+      (setq devices-to-add
+                              ;; Add each string of the let bindings ((id "xx") (name "yy")) to
+                  ;; our "device names/ids to add to cache" list.
+                  (mapcar (lambda (entry) (nth 1 entry))
+                          id-name-pairs))
+      ;; Start off with `list' function so it will be correct in macro expansion.
+      (push 'list devices-to-add))
+
+    ;;------------------------------
+    ;; Create `smudge-cache--device' with default & any additional devices.
+    ;;------------------------------
+    `(progn
+       (let ((smudge-cache--device (list (cons test-smudge-cache--device-name
+                                             test-smudge-cache--device-id)))
+           (macro:devices-to-add ,devices-to-add))
+       (while macro:devices-to-add
+         (when-let ((id (pop macro:devices-to-add))
+                    (name (pop macro:devices-to-add)))
+           (push (cons name id) smudge-cache--device)))
+
+       ;;------------------------------
+       ;; Build caller's bindings.
+       ;;------------------------------
+       (let* ,(setq id-name-pairs (internal--build-bindings id-name-pairs))
+
+         ;;------------------------------
+         ;; Run caller's body with `smudge-cache--device' and their lexical bindings.
+         ;;------------------------------
+         ,@body)))))
+;; (test-smudge-cache-device-let
+;;     ((a "expected-id")
+;;      (b "expected-name"))
+;;   (message (mapconcat #'identity
+;;                       '("test-smudge-cache-device-let:"
+;;                         "  a: %S"
+;;                         "  b: %S"
+;;                         "  smudge-cache--device: %S")
+;;                       "\n")
+;;            a b smudge-cache--device))
 
 
 ;; ╔═════════════════════════════╤═══════════╤═════════════════════════════════╗
@@ -569,13 +640,9 @@ timestamp pair, into a device's cache correctly."
   ;;------------------------------
   ;; Create the cache with some data.
   ;;------------------------------
-  (let* ((expected-device-id   "expected-device-id")
-         (expected-device-name "expected-device-name")
-         (smudge-cache--device (list (cons expected-device-name
-                                           expected-device-id)
-                                     (cons test-smudge-cache--device-name
-                                           test-smudge-cache--device-id))))
-
+  (test-smudge-cache-device-let
+      ((expected-device-id   "expected-device-id")
+       (expected-device-name "expected-device-name"))
     ;;------------------------------
     ;; Test getting from cache.
     ;;------------------------------
@@ -683,10 +750,26 @@ timestamp pair, into a device's cache correctly."
 
 
 ;;------------------------------
-;; TODO: smudge-cache--device-id-from-type
+;; smudge-cache--device-id-from-type
 ;;------------------------------
-;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
-;; (smudge-cache--device-id-from-type :name smudge-cache-test--device-name)
+(ert-deftest test-smudge-cache--device-id-from-type ()
+  "Test that `smudge-cache--device-id-from-type' returns the device id."
+
+  ;; Expected id should be a string.
+  (should (stringp test-smudge-cache--device-id))
+  (test-smudge-cache-device-let
+      ((expected-device-id   "expected-device-id")
+       (expected-device-name "expected-device-name"))
+
+    (should (string= expected-device-id
+                     (smudge-cache--device-id-from-type :id expected-device-id)))
+    (should (string= expected-device-id
+                     (smudge-cache--device-id-from-type :name expected-device-name)))
+
+    (should (string= test-smudge-cache--device-id
+                     (smudge-cache--device-id-from-type :id test-smudge-cache--device-id)))
+    (should (string= test-smudge-cache--device-id
+                     (smudge-cache--device-id-from-type :name test-smudge-cache--device-name)))))
 
 
 ;;------------------------------------------------------------------------------

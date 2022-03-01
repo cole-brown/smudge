@@ -154,7 +154,7 @@ Updates timstamp in cache to now."
     cache-updated))
 
 (defun smudge-cache--device-get (device-name &optional default)
-  "Get device-id for DEVICE-NAME from the devices cache.
+  "Get DEVICE-ID for DEVICE-NAME from the devices cache.
 
 Returns DEFAULT if DEVICE-NAME is not cached."
   (alist-get device-name
