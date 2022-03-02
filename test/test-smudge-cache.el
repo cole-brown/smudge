@@ -1207,16 +1207,37 @@ up-to-date."
        (should-not (= volume volume-volume))))))
 
 ;;------------------------------
-;; TODO: smudge-cache-is-muted
+;; smudge-cache-is-muted
 ;;------------------------------
-;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
-;; (smudge-cache-is-muted :id smudge-cache-test--device-id)
-;; (smudge-cache-test--force-volume smudge-cache-test--device-id 99)
-;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
-;; (smudge-cache-is-muted :id smudge-cache-test--device-id)
-;; (smudge-cache-test--force-volume smudge-cache-test--device-id 0)
-;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
-;; (smudge-cache-is-muted :id smudge-cache-test--device-id)
+(ert-deftest test-smudge-cache-is-muted ()
+  "Test that `smudge-cache-is-muted' gets the device's most recent volume.
+
+Should check both `:volume' and `:status' timestamps to see what's the most
+up-to-date."
+  ;;------------------------------
+  ;; Lexically bind `smudge-cache--data' and `expected-status'.
+  ;;------------------------------
+  (test-smudge-cache-data-let
+   (let ((volume-default (smudge-cache-get-volume :id test-smudge-cache--device-id
+                                                  :volume))
+         (volume-mute 0))
+
+     ;;------------------------------
+     ;; Check volumes in existing (default) data.
+     ;;------------------------------
+     (should (integerp volume-default))
+     (should (> volume-default 0))
+     (should (<= volume-default 100))
+     ;; This implies we should not be muted right now.
+     (should-not (smudge-cache-is-muted :id test-smudge-cache--device-id))
+
+     ;;------------------------------
+     ;; Set volume to 0 in status for muting.
+     ;;------------------------------
+     (test-smudge-cache--force-volume test-smudge-cache--device-id
+                                      volume-mute
+                                      :status)
+     (should (smudge-cache-is-muted :id test-smudge-cache--device-id)))))
 
 
 (provide 'test-smudge-cache)
