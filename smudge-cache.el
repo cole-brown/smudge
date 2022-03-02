@@ -261,24 +261,26 @@ Examples:
     ...)
   (defun example-2 (status arg0 &optional arg1)
     ...)"
-  (let* ((device-id (smudge-cache--device-id-from-status status))
-         (volume    (gethash 'volume_percent (gethash 'device status)))
-         ;; Don't update cached volume if muted.
-         (update-volume (and (integerp volume)
-                             (> volume 0))))
-    ;; Is there enough info to update caches?
-    (when (stringp device-id)
-      (smudge-cache--device-set (smudge-cache--device-name-from-status status)
-                                device-id)
-      (smudge-cache--set device-id
-                         :status status
-                         ;; nil will be ignored as keyword so we provide that when we don't want to update volume.
-                         (when update-volume :volume)
-                         (when update-volume volume))))
+  ;; Ignore nil statues.
+  (when (hash-table-p status)
+    (let* ((device-id (smudge-cache--device-id-from-status status))
+           (volume    (gethash 'volume_percent (gethash 'device status)))
+           ;; Don't update cached volume if muted.
+           (update-volume (and (integerp volume)
+                               (> volume 0))))
+      ;; Is there enough info to update caches?
+      (when (stringp device-id)
+        (smudge-cache--device-set (smudge-cache--device-name-from-status status)
+                                  device-id)
+        (smudge-cache--set device-id
+                           :status status
+                           ;; nil will be ignored as keyword so we provide that when we don't want to update volume.
+                           (when update-volume :volume)
+                           (when update-volume volume))))
 
-  ;; Invoke callback w/ status and its args.
-  (when (functionp callback)
-    (apply callback status callback-args)))
+    ;; Invoke callback w/ status and its args.
+    (when (functionp callback)
+      (apply callback status callback-args))))
 
 
 (defun smudge-cache-lambda (&optional callback)
