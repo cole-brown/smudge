@@ -943,11 +943,41 @@ Should update both status and volume."
 
 
 ;;------------------------------
-;; TODO: smudge-cache-get-status
+;; smudge-cache-get-status
 ;;------------------------------
-;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
-;; (smudge-cache-get-status :id smudge-cache-test--device-id)
-;; (smudge-cache-get-status :name smudge-cache-test--device-name)
+(ert-deftest test-smudge-cache-get-status ()
+  "`smudge-cache-get-status' should return the device's status from the cache.
+
+Should update both status and volume."
+  (let (smudge-cache--data
+        (expected-status (test-smudge-cache--json-full)))
+
+    (should-not smudge-cache--data)
+    (should expected-status)
+    (should (hash-table-p expected-status))
+    (should-not (hash-table-empty-p expected-status))
+
+    ;;------------------------------
+    ;; Add something to the cache so we can actually get it back.
+    ;;------------------------------
+    (smudge-cache-update-status expected-status)
+    (should smudge-cache--data)
+
+    ;;------------------------------
+    ;; Get status & verify.
+    ;;------------------------------
+    (let ((actual-status (smudge-cache-get-status :id test-smudge-cache--device-id)))
+      (should actual-status)
+      (should (hash-table-p actual-status))
+      (should-not (hash-table-empty-p actual-status))
+
+      ;; We should have the same hash table we put in.
+      (should (eq expected-status actual-status))
+
+      ;; Getting using name should be exactly the same.
+      (should (eq expected-status
+                  (smudge-cache-get-status :name test-smudge-cache--device-name))))))
+
 
 ;;------------------------------
 ;; TODO: smudge-cache-update-volume
