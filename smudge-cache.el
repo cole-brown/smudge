@@ -109,7 +109,7 @@ can also exist in the `:status'.
 Returns DEFAULT if DEVICE-ID has nothing cached or if KEYWORD is not in
 DEVICE-ID's cached JSON hash-table."
   (let ((cached-assoc (assoc keyword
-                              (smudge-cache--get-data device-id default))))
+                             (smudge-cache--get-data device-id default))))
     (if (null cached-assoc)
         ;; No keyword found in cache.
         default
@@ -279,6 +279,14 @@ Examples:
   ;; Invoke callback w/ status and its args.
   (when (functionp callback)
     (apply callback status callback-args)))
+
+
+(defun smudge-cache-lambda (&optional callback)
+  "Return a lambda that will: take status, update cache, and call CALLBACK."
+  (lambda (status)
+    "Update smudge cache with STATUS, then calls callback with same STATUS."
+    (smudge-cache-update-status status callback)))
+
 
 (defun smudge-cache-get-status (device-type device)
   "Get DEVICE's status from the cache.

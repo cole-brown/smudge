@@ -281,8 +281,8 @@ Call CALLBACK with the parsed JSON response."
     :encoding 'utf-8
     :data data
     :success (cl-function
-	      (lambda (&rest data &key response &allow-other-keys)
-		(when callback (funcall callback (request-response-data response)))))
+              (lambda (&rest data &key response &allow-other-keys)
+                (when callback (funcall callback (request-response-data response)))))
     :error (cl-function
 	    (lambda (&rest args &key error-thrown &allow-other-keys)
 	      (message "Got error: %S" error-thrown)))))
@@ -565,7 +565,8 @@ Call CALLBACK with result if provided."
    "GET"
    "/me/player"
    nil
-   callback))
+   (smudge-cache-lambda callback)))
+   ;; callback))
 
 (defun smudge-api-play (&optional callback uri context)
   "Play a track.  If no args, resume playing current track.
