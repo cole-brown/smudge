@@ -372,7 +372,8 @@ Runs BODY in the context of `smudge-cache--data' and `expected-status'.
 `smudge-cache--data' will always include:
    `test-smudge-cache--device-id' ->
       `:status' -> `expected-status'
-Does not set any other keywords (e.g. `:volume').
+Will also always include anything `smudge-cache-update-status' sets
+\(e.g. `:volume' if found in device's status).
 
 Example:
   (test-smudge-cache-data-let
@@ -1007,12 +1008,67 @@ Should update both status and volume."
 
 
 ;;------------------------------
-;; TODO: smudge-cache-update-volume
+;; smudge-cache-update-volume
 ;;------------------------------
-;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
-;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
-;; (smudge-cache-update-volume smudge-cache-test--device-id 55 (message "volume says hello"))
+(ert-deftest test-smudge-cache-update-volume ()
+  "Test that `smudge-cache-update-volume' updates the device's volume.
 
+Should update volume in only the separate `:volume' cache entry."
+  ;;------------------------------
+  ;; Lexically bind `smudge-cache--data' and `expected-status'.
+  ;;------------------------------
+  (test-smudge-cache-data-let
+   (let ((volume-default    (smudge-cache--get test-smudge-cache--device-id :volume))
+         (volume-overwrite  99)
+         (timestamp-default (smudge-cache-get-timestamp :id test-smudge-cache--device-id
+                                                        :volume)))
+
+     ;;------------------------------
+     ;; Check volumes in existing (default) data.
+     ;;------------------------------
+     (should volume-default)
+     (should (integerp volume-default))
+     (should (> volume-default 0))
+     (should (<= volume-default 100))
+     (should-not (= volume-default volume-overwrite))
+
+     ;; Check that status' volume is the same.
+     (should (= volume-default
+                (gethash 'volume_percent (gethash 'device expected-status))))
+
+     ;; Timestamp should be a positive float.
+     (should timestamp-default)
+     (should (floatp timestamp-default))
+     (should (> timestamp-default 0))
+
+     ;;------------------------------
+     ;; Test `smudge-cache-update-volume'.
+     ;;------------------------------
+     ;; This should only set volume (and its timestamp) - that is, it should not
+     ;; go into the device's status to update that volume field.
+     (smudge-cache-update-volume test-smudge-cache--device-id
+                                 volume-overwrite)
+
+     (let ((volume-actual    (smudge-cache--get test-smudge-cache--device-id :volume))
+           (timestamp-actual (smudge-cache-get-timestamp :id test-smudge-cache--device-id
+                                                         :volume)))
+       ;; Check that status has the new volume.
+       (should volume-actual)
+       (should (integerp volume-actual))
+       (should (> volume-actual 0))
+       (should (<= volume-actual 100))
+       (should-not (= volume-default volume-actual))
+       (should (= volume-overwrite volume-actual))
+
+       ;; Check that `:volume' entry in cache is now different from status' volume.
+       (should-not (= volume-actual
+                      (gethash 'volume_percent (gethash 'device expected-status))))
+
+       ;; Timestamp should be newer as well.
+       (should timestamp-actual)
+       (should (floatp timestamp-actual))
+       (should (> timestamp-actual 0))
+       (should (> timestamp-actual timestamp-default))))))
 
 ;;------------------------------
 ;; TODO: smudge-cache-get-volume

@@ -206,7 +206,7 @@ If DEVICE-ID is nil, deletes device from devices cache."
   (gethash 'id (gethash 'device status)))
 
 (defun smudge-cache--device-id-from-type (device-type device)
-  "Get DEVICE's volume from the cache.
+  "Get DEVICE's device-id string based on DEVICE-TYPE.
 
 DEVICE-TYPE should be one of these keywords:
   - :id
@@ -221,16 +221,46 @@ depending on DEVICE-TYPE."
         (t
          nil)))
 
+(defun smudge-cache-get-timestamp (device-type device keyword &optional default)
+  "Get the timestamp value from the cache for the DEVICE's KEYWORD entry.
+
+DEVICE-TYPE should be one of these keywords:
+  - :id
+  - :name
+
+DEVICE should be a string - either the device's ID or the device's name,
+depending on DEVICE-TYPE.
+
+KEYWORD should be:
+  - :status
+  - :volume
+
+Returns:
+  - raw timestamp value (float; see `smudge-cache--current-timestamp')
+  - DEFAULT if nothing found in cache"
+  (smudge-cache--get (smudge-cache--device-id-from-type device-type device)
+                     (smudge-cache--time-keyword keyword)
+                     default))
+
 (defun smudge-cache-update-status (status &optional callback &rest callback-args)
-  "Update device cache with STATUS and then invoke CALLBACK.
+  "Update device's `:status' cache with STATUS and then invoke CALLBACK.
+
+Will also update other cache keywords with values from the status as applicable.
+For example, updates `:volume' with device's volume from STATUS.
 
 STATUS should be a JSON hash-table.
 
 CALLBACK should be a function or nil.
 
 CALLBACK functions should have params for STATUS and any CALLBACK-ARGS sent.
-That is, it should be compatible with calling via `apply':
-  (apply CALLBACK STATUS CALLBACK-ARGS)"
+So it should, at a minimum, take the STATUS param.
+Examples:
+  (defun example-0 (status)
+    ...)
+  (defun example-1 (status &rest args)
+    ...)
+  (defun example-2 (status arg0 &optional arg1)
+    ...)"
   (let* ((device-id (smudge-cache--device-id-from-status status))
          (volume    (gethash 'volume_percent (gethash 'device status)))
          ;; Don't update cached volume if muted.
