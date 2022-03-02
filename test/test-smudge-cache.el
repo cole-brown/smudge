@@ -830,6 +830,55 @@ timestamp pair, into a device's cache correctly."
 ;;------------------------------------------------------------------------------
 
 ;;------------------------------
+;; smudge-cache-get-timestamp
+;;------------------------------
+(ert-deftest test-smudge-cache-get-timestamp ()
+  "Test that `smudge-cache-get-timestamp' returns the correct timestamp."
+  ;;------------------------------
+  ;; Lexically bind `smudge-cache--data' and `expected-status'.
+  ;;------------------------------
+  (test-smudge-cache-data-let
+   (let ((timestamp-default (smudge-cache-get-timestamp :id test-smudge-cache--device-id
+                                                        :status)))
+
+     ;;------------------------------
+     ;; Check this existing timestamp.
+     ;;------------------------------
+     ;; Timestamp should be a positive float.
+     (should (floatp timestamp-default))
+     (should (> timestamp-default 0))
+
+     ;;------------------------------
+     ;; Update timestamp.
+     ;;------------------------------
+     (let ((timestamp-now (smudge-cache--current-timestamp))
+           (device-data (smudge-cache--get-data test-smudge-cache--device-id)))
+       (should (floatp timestamp-now))
+       (should (> timestamp-now timestamp-default))
+
+       (should device-data)
+       ;; Same status, new timestamp.
+       (setf (alist-get test-smudge-cache--device-id
+                        smudge-cache--data
+                        nil
+                        nil
+                        #'string=)
+             (smudge-cache--set-values :status
+                                       (test-smudge-cache--json-full)
+                                       timestamp-now
+                                       device-data)))
+
+     ;;------------------------------
+     ;; Test `smudge-cache-get-timestamp'.
+     ;;------------------------------
+     (let ((timestamp-actual (smudge-cache-get-timestamp :id test-smudge-cache--device-id
+                                                         :status)))
+       (should (floatp timestamp-actual))
+       (should (> timestamp-actual timestamp-default))
+       (should (test-smudge-cache--float= timestamp-actual timestamp-default))))))
+
+
+;;------------------------------
 ;; smudge-cache-update-status
 ;;------------------------------
 (ert-deftest test-smudge-cache-update-status ()
