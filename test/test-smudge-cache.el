@@ -361,6 +361,44 @@ Example:
 ;;            a b smudge-cache--device))
 
 
+(defmacro test-smudge-cache-data-let (&rest body)
+  "Lexically define `smudge-cache--data' w/ default data then run BODY.
+
+Also lexically defines `expected-status' as the hash-table return value of
+`test-smudge-cache--json-full'.
+
+Runs BODY in the context of `smudge-cache--data' and `expected-status'.
+
+`smudge-cache--data' will always include:
+   `test-smudge-cache--device-id' ->
+      `:status' -> `expected-status'
+Does not set any other keywords (e.g. `:volume').
+
+Example:
+  (test-smudge-cache-data-let
+   (message \"Default data cache: %S\" smudge-cache--data))"
+  ;;------------------------------
+  ;; Set our important lexical variables.
+  ;;------------------------------
+  `(let (smudge-cache--data
+         (expected-status (test-smudge-cache--json-full)))
+     ;; Sanity checks.
+     (should-not smudge-cache--data)
+     (should expected-status)
+     (should (hash-table-p expected-status))
+     (should-not (hash-table-empty-p expected-status))
+
+     ;;------------------------------
+     ;; Populate `smudge-cache--data' with the default status.
+     ;;------------------------------
+     (smudge-cache-update-status expected-status)
+
+     ;;------------------------------
+     ;; Run caller's body with `smudge-cache--device' and their lexical bindings.
+     ;;------------------------------
+     ,@body))
+
+
 ;; ╔═════════════════════════════╤═══════════╤═════════════════════════════════╗
 ;; ╟─────────────────────────────┤ ERT TESTS ├─────────────────────────────────╢
 ;; ╠═════════════════════════╤═══╧═══════════╧════╤════════════════════════════╣
@@ -946,37 +984,26 @@ Should update both status and volume."
 ;; smudge-cache-get-status
 ;;------------------------------
 (ert-deftest test-smudge-cache-get-status ()
-  "`smudge-cache-get-status' should return the device's status from the cache.
+  "`smudge-cache-get-status' should return the device's status from the cache."
 
-Should update both status and volume."
-  (let (smudge-cache--data
-        (expected-status (test-smudge-cache--json-full)))
+  ;;------------------------------
+  ;; Lexically bind `smudge-cache--data' and `expected-status'.
+  ;;------------------------------
+  (test-smudge-cache-data-let
+   ;;------------------------------
+   ;; Get status & verify.
+   ;;------------------------------
+   (let ((actual-status (smudge-cache-get-status :id test-smudge-cache--device-id)))
+     (should actual-status)
+     (should (hash-table-p actual-status))
+     (should-not (hash-table-empty-p actual-status))
 
-    (should-not smudge-cache--data)
-    (should expected-status)
-    (should (hash-table-p expected-status))
-    (should-not (hash-table-empty-p expected-status))
+     ;; We should have the same hash table we put in.
+     (should (eq expected-status actual-status))
 
-    ;;------------------------------
-    ;; Add something to the cache so we can actually get it back.
-    ;;------------------------------
-    (smudge-cache-update-status expected-status)
-    (should smudge-cache--data)
-
-    ;;------------------------------
-    ;; Get status & verify.
-    ;;------------------------------
-    (let ((actual-status (smudge-cache-get-status :id test-smudge-cache--device-id)))
-      (should actual-status)
-      (should (hash-table-p actual-status))
-      (should-not (hash-table-empty-p actual-status))
-
-      ;; We should have the same hash table we put in.
-      (should (eq expected-status actual-status))
-
-      ;; Getting using name should be exactly the same.
-      (should (eq expected-status
-                  (smudge-cache-get-status :name test-smudge-cache--device-name))))))
+     ;; Getting using name should be exactly the same.
+     (should (eq expected-status
+                 (smudge-cache-get-status :name test-smudge-cache--device-name))))))
 
 
 ;;------------------------------
@@ -985,6 +1012,7 @@ Should update both status and volume."
 ;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
 ;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
 ;; (smudge-cache-update-volume smudge-cache-test--device-id 55 (message "volume says hello"))
+
 
 ;;------------------------------
 ;; TODO: smudge-cache-get-volume
