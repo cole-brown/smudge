@@ -233,23 +233,34 @@ From `smudge-connect-player-status'.")
 ;; Helpers: Cached Data
 ;;------------------------------------------------------------------------------
 
-(defun test-smudge-cache--force-volume (device-id volume)
-  "Set DEVICE-ID's :volume and :status->\"device\"->\"volume_percent\" to VOLUME."
-  (let ((full-cache (smudge-cache--get-data device-id))
+(defun test-smudge-cache--force-volume (device-id volume &rest keywords)
+  "Force volume of DEVICE-ID's to new value (VOLUME).
+
+If KEYWORDS is nil, forces all volumes to new VOLUME.
+  - :volume and :status->\"device\"->\"volume_percent\" to VOLUME.
+Else force the volume to new VOLUME based on supplied KEYWORDS:
+  - `:volume' - Force device-data keyword `:volume' to new VOLUME.
+  - `:status' - Force device-data keyword `:status' hash entry
+    \"device\"->\"volume_percent\" to new VOLUME."
+  (let ((keywords (or keywords
+                      '(:volume :status)))
+        (full-cache (smudge-cache--get-data device-id))
         status-cache
         ;; The plist of args to send to `smudge-cache--set' for the forced update.
         args)
     (when full-cache
       (setq status-cache (alist-get :status full-cache))
       ;; Add device status w/ updated volume if we have device status.
-      (when status-cache
-        (puthash 'volume volume
+      (when (and status-cache
+                 (memq :status keywords))
+        (puthash 'volume_percent volume
                  (gethash 'device status-cache))
         (push status-cache args)
         (push :status args))
 
       ;; Add volume if we have it separately in the full device cache.
-      (when (assoc :volume full-cache)
+      (when (and (assoc :volume full-cache)
+                 (memq :volume keywords))
         (push volume args)
         (push :volume args))
 
@@ -1119,11 +1130,81 @@ Should update volume in only the separate `:volume' cache entry."
        (should (> timestamp-actual 0))
        (should (> timestamp-actual timestamp-default))))))
 
+
 ;;------------------------------
-;; TODO: smudge-cache-get-volume
+;; smudge-cache-get-volume
 ;;------------------------------
-;; (smudge-cache--device-id-from-type :id smudge-cache-test--device-id)
-;; (smudge-cache-get-volume :id smudge-cache-test--device-id)
+(ert-deftest test-smudge-cache-get-volume ()
+  "Test that `smudge-cache-get-volume' gets the device's most recent volume.
+
+Should check both `:volume' and `:status' timestamps to see what's the most
+up-to-date."
+  ;;------------------------------
+  ;; Lexically bind `smudge-cache--data' and `expected-status'.
+  ;;------------------------------
+  (test-smudge-cache-data-let
+   (let ((volume-default    (smudge-cache-get-volume :id test-smudge-cache--device-id
+                                                     :volume))
+         (volume-overwrite-volume  99)
+         (volume-overwrite-status  42))
+
+     ;;------------------------------
+     ;; Check volumes in existing (default) data.
+     ;;------------------------------
+     (should volume-default)
+     (should (integerp volume-default))
+     (should (> volume-default 0))
+     (should (<= volume-default 100))
+
+     ;; Check that status' volume is the same.
+     (should (= volume-default
+                (gethash 'volume_percent (gethash 'device expected-status))))
+
+     ;;------------------------------
+     ;; Test `:volume' newer than `:status'.
+     ;;------------------------------
+     (test-smudge-cache--force-volume test-smudge-cache--device-id
+                                      volume-overwrite-volume
+                                      :volume)
+
+     ;; Expect to get volume from `:volume', compare against volume from `:status'.
+     (let ((volume (smudge-cache-get-volume :id test-smudge-cache--device-id
+                                            :volume))
+           (volume-status (gethash 'volume_percent
+                                   (gethash 'device
+                                            (smudge-cache--get test-smudge-cache--device-id
+                                                               :status)))))
+       (should volume)
+       (should (integerp volume))
+       (should (> volume 0))
+       (should (<= volume 100))
+       (should-not (= volume-default volume))
+       (should (= volume-overwrite-volume volume))
+
+       ;; Check that `:volume' entry in cache is now different from status' volume.
+       (should-not (= volume volume-status)))
+
+     ;;------------------------------
+     ;; Test `:status' newer than `:volume'.
+     ;;------------------------------
+     (test-smudge-cache--force-volume test-smudge-cache--device-id
+                                      volume-overwrite-status
+                                      :status)
+     ;; Expect to get volume from `:status', compare against volume from `:volume'.
+     (let ((volume (smudge-cache-get-volume :id test-smudge-cache--device-id
+                                            :volume))
+           (volume-volume (smudge-cache--get test-smudge-cache--device-id
+                                             :volume)))
+       (should volume)
+       (should (integerp volume))
+       (should (> volume 0))
+       (should (<= volume 100))
+       (should-not (= volume-default volume))
+       (should-not (= volume-overwrite-volume volume))
+       (should (= volume-overwrite-status volume))
+
+       ;; Check that `:volume' entry in cache is now different from status' volume.
+       (should-not (= volume volume-volume))))))
 
 ;;------------------------------
 ;; TODO: smudge-cache-is-muted

@@ -351,13 +351,14 @@ Returns volume integer or DEFAULT if no cached value exists."
            ;; Choose the most recent valid time.
            (cond ((and (not (floatp volume-timestamp))
                        (not (floatp status-timestamp)))
-                  ;; No valid times - default to cached volume?
+                  ;; No valid times - default to... `:volume' cached value?
+                  ;; NOTE: Could change to default to the status if that seems more reliable but this seems simpler.
                   volume-cached)
                  ;; Use the valid timestamp's volume?
-                 ((floatp volume-timestamp)
-                  volume-cached)
-                 ((floatp status-timestamp)
+                 ((not (floatp volume-timestamp))
                   volume-status)
+                 ((not (floatp status-timestamp))
+                  volume-cached)
                  ;; Both valid; choose most recent.
                  (t
                   (if (time-less-p volume-timestamp status-timestamp)
