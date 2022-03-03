@@ -1041,6 +1041,18 @@ Should update both status and volume."
         (should (test-smudge-cache--float= timestamp-volume timestamp-status))))))
 
 
+(ert-deftest test-smudge-cache-update-status--nil-status ()
+  "Regression test for `smudge-cache-update-status'.
+
+Should not not throw an error on a null status."
+  ;;------------------------------
+  ;; Lexically bind `smudge-cache--data' and `expected-status'.
+  ;;------------------------------
+  (test-smudge-cache-data-let
+   ;; Update with nil. Expect no error signal.
+   (smudge-cache-update-status nil)))
+
+
 ;;------------------------------
 ;; smudge-cache-get-status
 ;;------------------------------
