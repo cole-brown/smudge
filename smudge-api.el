@@ -262,6 +262,23 @@ of fetching via another call to this method."
               token))
         smudge-api-oauth2-token))))
 
+(cl-defun smudge-api-call-async--handle-error (&rest args &key error-thrown symbol-status &allow-other-keys)
+  "Handle errors from `smudge-api-call-async' request.
+
+ERROR-THROWN is the error signal (ERROR-SYMBOL . DATA), or nil.
+
+SYMBOL-STATUS is a status from `request`
+\(success/error/timeout/abort/parse-error).
+
+ARGS are ignored.
+
+See `request' for allowable params/keys."
+  (message "Smudge: `%s' errored with status '%S' & error: `%S' -> \"%s\""
+           "smudge-api-call-async"
+           symbol-status
+           (car error-thrown)
+           (error-message-string error-thrown)))
+
 (defun smudge-api-call-async (method uri &optional data callback)
   "Make a request to the given Spotify service endpoint URI via METHOD.
 Call CALLBACK with the parsed JSON response."
@@ -283,9 +300,7 @@ Call CALLBACK with the parsed JSON response."
     :success (cl-function
               (lambda (&rest data &key response &allow-other-keys)
                 (when callback (funcall callback (request-response-data response)))))
-    :error (cl-function
-	    (lambda (&rest args &key error-thrown &allow-other-keys)
-	      (message "Got error: %S" error-thrown)))))
+    :error #'smudge-api-call-async--handle-error))
 
 (defun smudge-api-current-user (callback)
   "Call CALLBACK with the currently logged in user."
