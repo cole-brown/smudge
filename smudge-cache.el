@@ -19,6 +19,10 @@
 ;;   - TODO: Should I rename `smudge-controller-player-metadata' to `smudge-cache-active-metadata'?
 ;;     - TODO: Rename and then defalias and/or mark as deprecated?
 
+;;------------------------------------------------------------------------------
+;; Variables
+;;------------------------------------------------------------------------------
+
 (defvar smudge-cache--device nil
   "Alist of Device Names to Device IDs.")
 
@@ -34,6 +38,31 @@
       - Other \"time of day\" values could be used.
         See: Info node `(elisp) Time of Day'.")
 
+;;------------------------------------------------------------------------------
+;; Internal Helpers
+;;------------------------------------------------------------------------------
+
+;;------------------------------
+;; Errors
+;;------------------------------
+
+(defmacro smudge-cache--condition-case (&rest body)
+  "Generic \"catch all errors\" condition case wth message.
+
+Run BODY, catch any error-based signal and convert into a `message' string."
+  `(condition-case-unless-debug error-signal
+      (progn
+        ,@body)
+    (error
+     (message "Smudge Cache errored: `%S' -> \"%s\""
+              (car error-signal)
+              (error-message-string error-signal)))))
+
+
+;;------------------------------
+;; Timestamp
+;;------------------------------
+
 (defun smudge-cache--time-keyword (keyword)
   "Return timestamp keyword for KEYWORD's entry in `smudge-cache--data'."
   (intern (concat ":timestamp"
@@ -43,6 +72,11 @@
   "Return current time in the format used in the `smudge-cache--data'."
   ;; Could use `float-time' or `current-time'.
   (float-time))
+
+
+;;------------------------------
+;; Data Cache
+;;------------------------------
 
 (defun smudge-cache--get-data (device-id &optional default)
   "Get DEVICE-ID's cached data (w/ `:status', `:volume', etc).
@@ -153,6 +187,11 @@ Updates timstamp in cache to now."
     ;; Return whether or not we updated a cache value.
     cache-updated))
 
+
+;;------------------------------
+;; Device Cache
+;;------------------------------
+
 (defun smudge-cache--device-get (device-name &optional default)
   "Get DEVICE-ID for DEVICE-NAME from the devices cache.
 
@@ -197,6 +236,11 @@ If DEVICE-ID is nil, deletes device from devices cache."
                           #'string=)
                device-id))))
 
+
+;;------------------------------
+;; Device ID / Name
+;;------------------------------
+
 (defun smudge-cache--device-name-from-status (status)
   "Get device's name from JSON hash-table STATUS."
   (gethash 'name (gethash 'device status)))
@@ -221,26 +265,12 @@ depending on DEVICE-TYPE."
         (t
          nil)))
 
-(defun smudge-cache-get-timestamp (device-type device keyword &optional default)
-  "Get the timestamp value from the cache for the DEVICE's KEYWORD entry.
-
-DEVICE-TYPE should be one of these keywords:
-  - :id
-  - :name
-
-DEVICE should be a string - either the device's ID or the device's name,
-depending on DEVICE-TYPE.
-
-KEYWORD should be:
-  - :status
-  - :volume
-
-Returns:
-  - raw timestamp value (float; see `smudge-cache--current-timestamp')
-  - DEFAULT if nothing found in cache"
-  (smudge-cache--get (smudge-cache--device-id-from-type device-type device)
-                     (smudge-cache--time-keyword keyword)
-                     default))
+;;------------------------------------------------------------------------------
+;; API Functions: Internal (Mainly Intended for Smudge Use)
+;;------------------------------------------------------------------------------
+;; NOTE: APIs for use in Smudge must have contents wrapped with
+;; `smudge-cache--condition-case' in order to make sure we can trace the error
+;; back to the cache.
 
 (defun smudge-cache-update-status (status &optional callback &rest callback-args)
   "Update device's `:status' cache with STATUS and then invoke CALLBACK.
@@ -261,27 +291,27 @@ Examples:
     ...)
   (defun example-2 (status arg0 &optional arg1)
     ...)"
-  ;; Ignore nil statues.
-  (when (hash-table-p status)
-    (let* ((device-id (smudge-cache--device-id-from-status status))
-           (volume    (gethash 'volume_percent (gethash 'device status)))
-           ;; Don't update cached volume if muted.
-           (update-volume (and (integerp volume)
-                               (> volume 0))))
-      ;; Is there enough info to update caches?
-      (when (stringp device-id)
-        (smudge-cache--device-set (smudge-cache--device-name-from-status status)
-                                  device-id)
-        (smudge-cache--set device-id
-                           :status status
-                           ;; nil will be ignored as keyword so we provide that when we don't want to update volume.
-                           (when update-volume :volume)
-                           (when update-volume volume))))
+  (smudge-cache--condition-case
+   ;; Ignore nil statues.
+   (when (hash-table-p status)
+     (let* ((device-id (smudge-cache--device-id-from-status status))
+            (volume    (gethash 'volume_percent (gethash 'device status)))
+            ;; Don't update cached volume if muted.
+            (update-volume (and (integerp volume)
+                                (> volume 0))))
+       ;; Is there enough info to update caches?
+       (when (stringp device-id)
+         (smudge-cache--device-set (smudge-cache--device-name-from-status status)
+                                   device-id)
+         (smudge-cache--set device-id
+                            :status status
+                            ;; nil will be ignored as keyword so we provide that when we don't want to update volume.
+                            (when update-volume :volume)
+                            (when update-volume volume))))
 
-    ;; Invoke callback w/ status and its args.
-    (when (functionp callback)
-      (apply callback status callback-args))))
-
+     ;; Invoke callback w/ status and its args.
+     (when (functionp callback)
+       (apply callback status callback-args)))))
 
 (defun smudge-cache-lambda (&optional callback)
   "Return a lambda that will: take status, update cache, and call CALLBACK."
@@ -289,8 +319,50 @@ Examples:
     "Update smudge cache with STATUS, then calls callback with same STATUS."
     (smudge-cache-update-status status callback)))
 
+(defun smudge-cache-get-volume (device-type device &optional default)
+  "Get DEVICE's volume from the cache.
 
-(defun smudge-cache-get-status (device-type device)
+DEVICE-TYPE should be one of these keywords:
+  - :id
+  - :name
+
+DEVICE should be a string - either the device's ID or the device's name,
+depending on DEVICE-TYPE.
+
+When getting from cache, prefers the most recent non-zero (unmuted) volume.
+Returns volume integer or DEFAULT if no cached value exists."
+  (smudge-cache--condition-case
+   (smudge-cache-api-get-volume device-type device default)))
+
+
+;;------------------------------------------------------------------------------
+;; API Functions: External
+;;------------------------------------------------------------------------------
+;; NOTE: Main difference - these don't require the use of
+;; `smudge-cache--condition-case`.
+
+(defun smudge-cache-api-get-timestamp (device-type device keyword &optional default)
+  "Get the timestamp value from the cache for the DEVICE's KEYWORD entry.
+
+DEVICE-TYPE should be one of these keywords:
+  - :id
+  - :name
+
+DEVICE should be a string - either the device's ID or the device's name,
+depending on DEVICE-TYPE.
+
+KEYWORD should be:
+  - :status
+  - :volume
+
+Returns:
+  - raw timestamp value (float; see `smudge-cache--current-timestamp')
+  - DEFAULT if nothing found in cache"
+  (smudge-cache--get (smudge-cache--device-id-from-type device-type device)
+                     (smudge-cache--time-keyword keyword)
+                     default))
+
+(defun smudge-cache-api-get-status (device-type device)
   "Get DEVICE's status from the cache.
 
 DEVICE-TYPE should be one of these keywords:
@@ -304,7 +376,7 @@ Returns the JSON hash-table status or nil."
   (smudge-cache--get (smudge-cache--device-id-from-type device-type device)
                      :status))
 
-(defun smudge-cache-update-volume (device-id volume &optional callback &rest callback-args)
+(defun smudge-cache-api-update-volume (device-id volume &optional callback &rest callback-args)
   "Update DEVICE-ID in cache with VOLUME and then invoke CALLBACK.
 
 VOLUME should be an integer. It will be clamped to range: [0, 100]
@@ -324,7 +396,7 @@ CALLBACK is a function."
                        (when (functionp callback)
                          (apply callback callback-args)))))
 
-(defun smudge-cache-get-volume (device-type device &optional default)
+(defun smudge-cache-api-get-volume (device-type device &optional default)
   "Get DEVICE's volume from the cache.
 
 DEVICE-TYPE should be one of these keywords:
@@ -375,7 +447,7 @@ Returns volume integer or DEFAULT if no cached value exists."
                       volume-status
                     volume-cached)))))))
 
-(defun smudge-cache-is-muted (device-type device)
+(defun smudge-cache-api-is-muted (device-type device)
   "Return non-nil if device is muted (cached volume == 0).
 
 DEVICE-TYPE should be one of these keywords:
@@ -393,6 +465,7 @@ Will return non-nil if nothing cached."
       ;; Don't have any info about the device so...
       ;; assume it's inactive and not playing and thus "muted"?
       t)))
+
 
 (provide 'smudge-cache)
 ;;; smudge-cache.el ends here
