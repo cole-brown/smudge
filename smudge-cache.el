@@ -265,6 +265,26 @@ depending on DEVICE-TYPE."
         (t
          nil)))
 
+(defun smudge-cache--device-name-from-type (device-type device)
+  "Get DEVICE's name string based on DEVICE-TYPE.
+
+DEVICE-TYPE should be one of these keywords:
+  - :id
+  - :name
+
+DEVICE should be a string - either the device's ID or the device's name,
+depending on DEVICE-TYPE."
+  (cond ((eq device-type :name)
+         device)
+        ((eq device-type :id)
+         (when-let ((device-assoc (rassoc device
+                                          smudge-cache--device)))
+           (car device-assoc)))
+        (t
+         nil)))
+;; (smudge-cache--device-name-from-type :id "b9e016fbc8772cdd96dea6f0dc89b556238444c3")
+
+
 ;;------------------------------------------------------------------------------
 ;; API Functions: Internal (Mainly Intended for Smudge Use)
 ;;------------------------------------------------------------------------------

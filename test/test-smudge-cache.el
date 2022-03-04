@@ -6,11 +6,12 @@
 
 ;;; Commentary:
 ;;
-;; TODO something in here...
+;; Unit Tests for 'smudge-cache.el' functions.
 ;;
 ;;; Code:
 
 (require 'json)
+(require 'smudge-cache)
 
 
 ;;------------------------------------------------------------------------------
