@@ -129,7 +129,7 @@ Returns a JSON string in the format:
              (unmute-volume  (smudge-cache-get-volume      :id device-id 100)))
         (if (eq current-volume 0)
             ;; Unmute to cached volume or full blast if nothing cached.
-            (smudge-api-set-volume unmute-volume
+            (smudge-api-set-volume device-id unmute-volume
                                    (lambda (_) (message "Volume unmuted to %d%%" unmute-volume)))
           (smudge-api-set-volume device-id 0
                                  (lambda (_) (message "Volume muted")))))))))

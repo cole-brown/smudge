@@ -439,6 +439,7 @@ Returns volume integer or DEFAULT if no cached value exists."
                                               :status))
          (volume-status    (when status
                              (gethash 'volume_percent (gethash 'device status)))))
+
     ;; No valid volumes?
     (cond ((and (not (integerp volume-cached))
                 (not (integerp volume-status)))
@@ -448,6 +449,11 @@ Returns volume integer or DEFAULT if no cached value exists."
            volume-status)
           ((not (integerp volume-status))
            volume-cached)
+          ;; One non-zero volume?
+          ((= 0 volume-status)
+           volume-cached)
+          ((= 0 volume-cached)
+           volume-status)
           ;; Two valid volumes?
           (t
            ;; Choose the most recent valid time.
