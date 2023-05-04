@@ -38,6 +38,7 @@
 (require 'smudge-device-select)
 (require 'smudge-controller)
 (require 'smudge-remote)
+(require 'smudge-cache)
 
 (smudge-when-darwin    (require 'smudge-apple))
 (smudge-when-gnu-linux (require 'smudge-dbus))
