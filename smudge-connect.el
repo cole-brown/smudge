@@ -95,12 +95,54 @@ Returns a JSON string in the format:
   (smudge-connect-when-device-active
    (smudge-api-previous)))
 
+(defun smudge-connect-volume-get-next (current-volume direction)
+  "Return current volume +/- the delta for changing volume, clamped [0, 100].
+
+CURRENT-VOLUME should be the most up-to-date volume of the Spotify device from
+e.g. cache (`smudge-cache-get-volume'), status (`smudge-connect-get-volume').
+Example:
+  (smudge-connect-when-device-active
+   (smudge-api-get-player-status
+    (lambda (status)
+      (message \"'Volume Up' would increase volume: %d%% -> %d%%\"
+               (smudge-connect-get-volume status)
+               (smudge-connect-volume-get-next
+                (smudge-connect-get-volume status)
+                +1)))))
+
+DIRECTION should be a positive or negative non-zero integer."
+  ;; Clamp between 0 and 100.
+  (max (min
+        (+ current-volume
+           ;; Multiply delta by direction to get the correct +/-.
+           (* smudge-volume-percent-delta
+              ;; Normalize to +1 or -1.
+              (/ direction (abs direction))))
+        100)
+       0))
+;; (smudge-connect-when-device-active
+;;  (smudge-api-get-player-status
+;;   (lambda (status)
+;;     (message "'Volume Up' would increase volume: %d%% -> %d%%"
+;;              (smudge-connect-get-volume status)
+;;              (smudge-connect-volume-get-next
+;;               (smudge-connect-get-volume status)
+;;               +1)))))
+;; (smudge-connect-when-device-active
+;;  (smudge-api-get-player-status
+;;   (lambda (status)
+;;     (message "'Volume Down' would decrease volume: %d%% -> %d%%"
+;;              (smudge-connect-get-volume status)
+;;              (smudge-connect-volume-get-next
+;;               (smudge-connect-get-volume status)
+;;               -11)))))
+
 (defun smudge-connect-volume-up ()
   "Turn up the volume on the actively playing device."
   (smudge-connect-when-device-active
    (smudge-api-get-player-status
     (lambda (status)
-      (let ((new-volume (min (+ (smudge-connect-get-volume status) 10) 100)))
+      (let ((new-volume (smudge-connect-volume-get-next (smudge-connect-get-volume status) +1)))
         (smudge-api-set-volume
          (smudge-connect-get-device-id status)
          new-volume
@@ -112,7 +154,7 @@ Returns a JSON string in the format:
   (smudge-connect-when-device-active
    (smudge-api-get-player-status
     (lambda (status)
-      (let ((new-volume (max (- (smudge-connect-get-volume status) 10) 0)))
+      (let ((new-volume (smudge-connect-volume-get-next (smudge-connect-get-volume status) -1)))
         (smudge-api-set-volume
          (smudge-connect-get-device-id status)
          new-volume

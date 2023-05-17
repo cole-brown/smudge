@@ -99,6 +99,11 @@ The following placeholders are supported:
   :type 'string
   :group 'smudge)
 
+(defcustom smudge-volume-percent-delta 10
+  "Volume up/down should change the volume by this amount."
+  :type 'natnum
+  :group 'smudge)
+
 (defvar smudge-controller-timer nil)
 
 (defvar smudge-controller-player-status ""
