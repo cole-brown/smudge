@@ -655,7 +655,16 @@ Call CALLBACK if provided."
            artist-id)
    nil
    callback))
-;; (smudge-api-artist "6XyY86QOPPrYVGvF9ch6wz" #'pp) ;; Linkin Park
+
+(defun smudge-api-playlist (playlist-id &optional callback)
+  "Get a playlist owned by a Spotify user.
+Call CALLBACK if provided."
+  (smudge-api-call-async
+   "GET"
+   (concat "/playlists/"
+           playlist-id)
+   nil
+   callback))
 
 (provide 'smudge-api)
 ;;; smudge-api.el ends here
